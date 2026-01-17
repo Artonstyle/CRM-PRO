@@ -3,1387 +3,637 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>InfinitySuite – ALL IN (CRM + Admin + Chat + Drive + Meetings)</title>
-
+  <title>CRM PRO – All-in-One + Video (Supabase)</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <style>
-    [x-cloak]{display:none!important;}
-    .btn{ @apply px-3 py-2 rounded-xl font-black border bg-white hover:bg-slate-50; }
-    .btnP{ @apply px-3 py-2 rounded-xl font-black bg-blue-600 text-white hover:bg-blue-700; }
-    .card{ @apply bg-white border rounded-2xl p-4; }
-    .chip{ @apply text-xs font-black px-2 py-1 rounded-lg; }
+    .card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+    .btn{padding:.65rem 1rem;border-radius:14px;font-weight:900}
+    .navbtn{padding:.7rem 1rem;border-radius:14px;font-weight:900;background:#f1f5f9}
+    .navbtn.active{background:#0f172a;color:#fff}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+    video{background:#0b1220}
   </style>
 </head>
 
-<body class="bg-slate-100 text-slate-800" x-data="app()" x-init="init()" x-cloak>
+<body class="bg-slate-100 text-slate-900">
+<div id="toast" class="hidden fixed bottom-4 left-1/2 -translate-x-1/2 px-4 py-3 rounded-xl shadow-lg text-sm font-bold z-50 bg-slate-900 text-white"></div>
 
-<!-- ===================== LOGIN ===================== -->
-<div x-show="!session" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-950 to-blue-950">
-  <div class="w-full max-w-md bg-white/95 rounded-2xl shadow-2xl p-8 border border-white/20">
-    <div class="flex items-center gap-3 mb-6">
-      <div class="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black">∞</div>
+<script>
+  // =========================
+  // FIX: Keys sind gesetzt (wie du wolltest)
+  // =========================
+  const SUPABASE_URL = "https://pgcjsyzoukyynkufupms.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_uyKhe83Crckp93AjCrIruw_NAuV16p2";
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const $ = (id)=>document.getElementById(id);
+  const toast = (msg, type="info")=>{
+    const el = $("toast");
+    el.textContent = msg;
+    el.className = "fixed bottom-4 left-1/2 -translate-x-1/2 px-4 py-3 rounded-xl shadow-lg text-sm font-bold z-50 " +
+      (type==="err" ? "bg-red-600 text-white" : type==="ok" ? "bg-green-600 text-white" : "bg-slate-900 text-white");
+    el.classList.remove("hidden");
+    clearTimeout(window.__t);
+    window.__t = setTimeout(()=>el.classList.add("hidden"), 2500);
+  };
+  const escapeHtml = (str)=> String(str ?? "").replace(/[&<>"']/g, s=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[s]));
+  const fmt = (d)=> new Date(d).toLocaleString("de-DE");
+
+  // =========================
+  // App State
+  // =========================
+  const state = {
+    user:null,
+    profile:null,
+    workspaces:[],
+    activeWorkspace:null,
+
+    // Realtime channels
+    rt:null,
+
+    // Video/WebRTC
+    call: {
+      roomId:"",
+      inRoom:false,
+      role:null, // "caller" | "answerer"
+      pc:null,
+      localStream:null,
+      remoteStream:null,
+      channel:null,
+      micOn:true,
+      camOn:true,
+      ready:false,
+    }
+  };
+
+  // =========================
+  // UI helpers
+  // =========================
+  function show(view){
+    ["view_login","view_app"].forEach(v=>$(v).classList.add("hidden"));
+    $(view).classList.remove("hidden");
+  }
+  function nav(id){
+    document.querySelectorAll("[data-panel]").forEach(p=>p.classList.add("hidden"));
+    $(id).classList.remove("hidden");
+    document.querySelectorAll(".navbtn").forEach(b=>b.classList.remove("active"));
+    $("nav_"+id).classList.add("active");
+  }
+
+  // =========================
+  // AUTH
+  // =========================
+  async function signIn(){
+    const email = $("li_email").value.trim();
+    const password = $("li_pass").value.trim();
+    if(!email || !password) return toast("Bitte Email & Passwort.", "err");
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if(error) return toast(error.message, "err");
+
+    await boot();
+    toast("Eingeloggt.", "ok");
+  }
+
+  async function signUp(){
+    const email = $("su_email").value.trim();
+    const password = $("su_pass").value.trim();
+    const username = $("su_user").value.trim() || email.split("@")[0];
+    if(!email || !password) return toast("Bitte Email & Passwort.", "err");
+
+    const { error } = await supabase.auth.signUp({ email, password });
+    if(error) return toast(error.message, "err");
+
+    toast("Account erstellt. Falls Email-Confirm aktiv: bestätigen.", "ok");
+    // Wenn Session direkt da ist, booten:
+    await boot();
+    if(state.user) await ensureProfile(username);
+  }
+
+  async function signOut(){
+    await supabase.auth.signOut();
+    location.reload();
+  }
+
+  async function loadSession(){
+    const { data, error } = await supabase.auth.getUser();
+    if(error) console.warn(error);
+    state.user = data?.user || null;
+  }
+
+  // =========================
+  // PROFILE / WORKSPACE
+  // =========================
+  async function ensureProfile(usernameFallback="User"){
+    if(!state.user) return;
+    const { data: prof, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", state.user.id)
+      .maybeSingle();
+
+    if(error) console.warn(error);
+
+    if(!prof){
+      // Versuch insert (wenn RLS das erlaubt)
+      const ins = await supabase.from("profiles").insert({
+        user_id: state.user.id,
+        username: usernameFallback,
+        role: "user"
+      });
+      if(ins.error) console.warn(ins.error);
+      const res = await supabase.from("profiles").select("*").eq("user_id", state.user.id).maybeSingle();
+      state.profile = res.data || null;
+    } else {
+      state.profile = prof;
+    }
+    renderHeader();
+  }
+
+  async function loadWorkspaces(){
+    const { data, error } = await supabase.from("workspaces").select("*").order("created_at",{ascending:false});
+    if(error){ console.warn(error); state.workspaces=[]; return; }
+    state.workspaces = data || [];
+  }
+
+  async function ensureWorkspace(){
+    await loadWorkspaces();
+    if(state.workspaces.length === 0){
+      const name = (state.profile?.username || "Mein") + " Workspace";
+      const { data: ws, error } = await supabase.from("workspaces").insert({ name }).select("*").single();
+      if(error) { console.warn(error); return; }
+
+      const m = await supabase.from("workspace_members").insert({
+        workspace_id: ws.id,
+        user_id: state.user.id,
+        member_role: "admin"
+      });
+      if(m.error) console.warn(m.error);
+
+      await loadWorkspaces();
+    }
+    state.activeWorkspace = state.workspaces[0] || null;
+    renderWorkspacePicker();
+  }
+
+  async function createWorkspace(){
+    const name = prompt("Workspace Name:");
+    if(!name) return;
+    const { data: ws, error } = await supabase.from("workspaces").insert({ name }).select("*").single();
+    if(error) return toast(error.message,"err");
+
+    const m = await supabase.from("workspace_members").insert({
+      workspace_id: ws.id,
+      user_id: state.user.id,
+      member_role: "admin"
+    });
+    if(m.error) console.warn(m.error);
+
+    await loadWorkspaces();
+    state.activeWorkspace = state.workspaces.find(w=>w.id===ws.id) || state.workspaces[0];
+    renderWorkspacePicker();
+    toast("Workspace erstellt.","ok");
+  }
+
+  async function switchWorkspace(id){
+    state.activeWorkspace = state.workspaces.find(w=>w.id===id) || null;
+    renderWorkspacePicker();
+    toast("Workspace gewechselt.","ok");
+    // Video room trennt sich automatisch, damit es sauber bleibt
+    await leaveRoom(true);
+  }
+
+  function renderHeader(){
+    $("hdr_email").textContent = state.user?.email || "—";
+    $("hdr_uid").textContent = state.user?.id ? state.user.id.slice(0,8) : "—";
+    $("hdr_name").textContent = state.profile?.username || "User";
+    $("hdr_admin").classList.toggle("hidden", !state.profile?.is_admin);
+  }
+
+  function renderWorkspacePicker(){
+    const sel = $("ws_select");
+    sel.innerHTML = state.workspaces.map(w=>`
+      <option value="${w.id}" ${state.activeWorkspace?.id===w.id ? "selected":""}>
+        ${escapeHtml(w.name)} (${w.id.slice(0,6)})
+      </option>
+    `).join("");
+    $("ws_name").textContent = state.activeWorkspace?.name || "—";
+  }
+
+  // =========================
+  // VIDEO / WEBRTC (Meetings)
+  // Signaling über Supabase Realtime Broadcast
+  // =========================
+  const ICE_SERVERS = [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" },
+  ];
+
+  function randomRoom(){
+    return "room_" + Math.random().toString(36).slice(2,10);
+  }
+
+  async function initLocalMedia(){
+    if(state.call.localStream) return;
+    try{
+      state.call.localStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:true });
+      $("localVideo").srcObject = state.call.localStream;
+      state.call.micOn = true;
+      state.call.camOn = true;
+      renderCallState();
+    } catch(e){
+      console.error(e);
+      toast("Kamera/Mikro blockiert. Browser erlauben.", "err");
+      throw e;
+    }
+  }
+
+  function makePC(){
+    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+    state.call.remoteStream = new MediaStream();
+    $("remoteVideo").srcObject = state.call.remoteStream;
+
+    pc.ontrack = (ev)=>{
+      ev.streams[0].getTracks().forEach(t=> state.call.remoteStream.addTrack(t));
+    };
+
+    pc.onicecandidate = (ev)=>{
+      if(ev.candidate){
+        sendSignal({ type:"ice", candidate: ev.candidate });
+      }
+    };
+
+    pc.onconnectionstatechange = ()=>{
+      $("connState").textContent = pc.connectionState;
+      if(pc.connectionState === "connected") toast("Verbunden ✅", "ok");
+    };
+
+    // Local tracks
+    state.call.localStream.getTracks().forEach(track=>{
+      pc.addTrack(track, state.call.localStream);
+    });
+
+    return pc;
+  }
+
+  async function joinRoom(asNew=false){
+    if(!state.activeWorkspace) return toast("Kein Workspace.", "err");
+
+    const room = (asNew ? randomRoom() : $("roomInput").value.trim());
+    if(!room) return toast("Room-ID fehlt.", "err");
+
+    state.call.roomId = room;
+    $("roomInput").value = room;
+
+    await initLocalMedia();
+
+    // Channel unique pro workspace + room
+    const chanName = `call:${state.activeWorkspace.id}:${room}`;
+
+    // cleanup
+    if(state.call.channel) supabase.removeChannel(state.call.channel);
+
+    state.call.channel = supabase.channel(chanName);
+
+    // Broadcast listener
+    state.call.channel.on("broadcast", { event:"signal" }, async (payload)=>{
+      const msg = payload.payload;
+      if(!msg || msg.from === state.user.id) return;
+
+      // Only accept same room
+      if(msg.room !== state.call.roomId) return;
+
+      try{
+        if(msg.type === "offer"){
+          // I'm answerer
+          if(!state.call.pc){
+            state.call.role = "answerer";
+            state.call.pc = makePC();
+          }
+          await state.call.pc.setRemoteDescription(msg.offer);
+          const answer = await state.call.pc.createAnswer();
+          await state.call.pc.setLocalDescription(answer);
+          sendSignal({ type:"answer", answer });
+          state.call.inRoom = true;
+          renderCallState();
+        } else if(msg.type === "answer"){
+          if(state.call.pc){
+            await state.call.pc.setRemoteDescription(msg.answer);
+            state.call.inRoom = true;
+            renderCallState();
+          }
+        } else if(msg.type === "ice"){
+          if(state.call.pc && msg.candidate){
+            await state.call.pc.addIceCandidate(msg.candidate);
+          }
+        } else if(msg.type === "hangup"){
+          toast("Gegenstelle hat aufgelegt.", "info");
+          await leaveRoom(true);
+        }
+      } catch(e){
+        console.error(e);
+        toast("Signaling Fehler: "+ (e?.message||e), "err");
+      }
+    });
+
+    const { error } = await state.call.channel.subscribe();
+    if(error){
+      console.error(error);
+      return toast("Realtime subscribe failed: "+error.message, "err");
+    }
+
+    state.call.inRoom = true;
+    state.call.role = null;
+    state.call.pc = null;
+    renderCallState();
+    toast("Im Raum: "+room, "ok");
+  }
+
+  function sendSignal(payload){
+    if(!state.call.channel) return;
+    state.call.channel.send({
+      type:"broadcast",
+      event:"signal",
+      payload: {
+        ...payload,
+        room: state.call.roomId,
+        from: state.user.id,
+        ts: Date.now()
+      }
+    });
+  }
+
+  async function startCall(){
+    if(!state.call.inRoom) return toast("Erst Raum joinen.", "err");
+    await initLocalMedia();
+
+    // Caller creates offer
+    state.call.role = "caller";
+    state.call.pc = makePC();
+
+    const offer = await state.call.pc.createOffer({ offerToReceiveAudio:true, offerToReceiveVideo:true });
+    await state.call.pc.setLocalDescription(offer);
+    sendSignal({ type:"offer", offer });
+    renderCallState();
+    toast("Anruf gestartet…", "info");
+  }
+
+  async function leaveRoom(silent=false){
+    try{
+      if(state.call.pc){
+        state.call.pc.ontrack = null;
+        state.call.pc.onicecandidate = null;
+        state.call.pc.close();
+      }
+    } catch(e){}
+
+    if(state.call.channel){
+      try { supabase.removeChannel(state.call.channel); } catch(e){}
+    }
+
+    state.call.channel = null;
+    state.call.pc = null;
+    state.call.role = null;
+    state.call.inRoom = false;
+    $("connState").textContent = "idle";
+
+    if(!silent) toast("Raum verlassen.", "info");
+    renderCallState();
+  }
+
+  async function hangup(){
+    sendSignal({ type:"hangup" });
+    await leaveRoom(true);
+    toast("Aufgelegt.", "info");
+  }
+
+  function toggleMic(){
+    if(!state.call.localStream) return;
+    state.call.micOn = !state.call.micOn;
+    state.call.localStream.getAudioTracks().forEach(t=> t.enabled = state.call.micOn);
+    renderCallState();
+  }
+
+  function toggleCam(){
+    if(!state.call.localStream) return;
+    state.call.camOn = !state.call.camOn;
+    state.call.localStream.getVideoTracks().forEach(t=> t.enabled = state.call.camOn);
+    renderCallState();
+  }
+
+  function renderCallState(){
+    $("roomBadge").textContent = state.call.roomId || "—";
+    $("roleBadge").textContent = state.call.role || "—";
+    $("micBadge").textContent = state.call.micOn ? "Mic ON" : "Mic OFF";
+    $("camBadge").textContent = state.call.camOn ? "Cam ON" : "Cam OFF";
+
+    $("btnStartCall").disabled = !state.call.inRoom;
+    $("btnHangup").disabled = !state.call.inRoom;
+
+    $("btnMic").textContent = state.call.micOn ? "Mic aus" : "Mic an";
+    $("btnCam").textContent = state.call.camOn ? "Cam aus" : "Cam an";
+  }
+
+  // =========================
+  // Boot
+  // =========================
+  async function boot(){
+    await loadSession();
+    if(!state.user){
+      show("view_login");
+      return;
+    }
+    show("view_app");
+    await ensureProfile();
+    await ensureWorkspace();
+    renderHeader();
+    nav("panel_meetings");
+  }
+
+  // expose
+  window.signIn = signIn;
+  window.signUp = signUp;
+  window.signOut = signOut;
+  window.createWorkspace = createWorkspace;
+  window.switchWorkspace = switchWorkspace;
+  window.nav = nav;
+
+  window.joinRoomNew = ()=> joinRoom(true);
+  window.joinRoom = ()=> joinRoom(false);
+  window.startCall = startCall;
+  window.leaveRoom = leaveRoom;
+  window.hangup = hangup;
+  window.toggleMic = toggleMic;
+  window.toggleCam = toggleCam;
+
+  window.addEventListener("load", ()=>{
+    // Wichtig: sofort boot – wenn Supabase mal kurz nicht antwortet, bleibt Login sichtbar
+    boot().catch(e=>{
+      console.error(e);
+      show("view_login");
+      toast("Startfehler: "+(e?.message||e), "err");
+    });
+  });
+</script>
+
+<!-- LOGIN -->
+<div id="view_login" class="min-h-screen flex items-center justify-center p-6">
+  <div class="card w-full max-w-3xl p-8">
+    <div class="flex items-center justify-between gap-4">
       <div>
-        <div class="text-2xl font-black">InfinitySuite</div>
-        <div class="text-xs text-slate-500 font-semibold">ALL IN • Supabase</div>
+        <div class="text-3xl font-black">CRM PRO</div>
+        <div class="text-slate-500 font-semibold">Supabase Login • Admin • Meetings (WebRTC)</div>
+      </div>
+      <div class="px-3 py-2 rounded-xl bg-slate-900 text-white font-black">LIVE</div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6 mt-8">
+      <div class="p-5 rounded-2xl bg-slate-50 border">
+        <div class="font-black text-lg mb-3">Login</div>
+        <input id="li_email" class="w-full border p-3 rounded-xl mb-2" placeholder="Email">
+        <input id="li_pass" type="password" class="w-full border p-3 rounded-xl mb-3" placeholder="Passwort">
+        <button class="btn bg-blue-600 text-white w-full" onclick="signIn()">Login</button>
+      </div>
+
+      <div class="p-5 rounded-2xl bg-slate-50 border">
+        <div class="font-black text-lg mb-3">Signup</div>
+        <input id="su_user" class="w-full border p-3 rounded-xl mb-2" placeholder="Username (optional)">
+        <input id="su_email" class="w-full border p-3 rounded-xl mb-2" placeholder="Email">
+        <input id="su_pass" type="password" class="w-full border p-3 rounded-xl mb-3" placeholder="Passwort">
+        <button class="btn bg-slate-900 text-white w-full" onclick="signUp()">Account erstellen</button>
       </div>
     </div>
 
-    <div class="space-y-3">
-      <div>
-        <label class="text-xs font-black uppercase text-slate-500">Email</label>
-        <input class="w-full border rounded-xl p-3 bg-slate-50" x-model="login.email" placeholder="admin@firma.de" />
-      </div>
-      <div>
-        <label class="text-xs font-black uppercase text-slate-500">Passwort</label>
-        <input class="w-full border rounded-xl p-3 bg-slate-50" type="password" x-model="login.password" placeholder="••••••••••" />
-      </div>
-
-      <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-xl" @click="signIn()">Login</button>
-      <button class="w-full bg-slate-900 hover:bg-black text-white font-black py-3 rounded-xl" @click="signUp()">Registrieren (Dev)</button>
-
-      <div x-show="authError" class="bg-red-50 text-red-700 p-3 rounded-xl text-sm font-bold" x-text="authError"></div>
-      <div class="text-xs text-slate-500 mt-2">Wenn Email-Confirm aktiv ist: erst bestätigen.</div>
+    <div class="mt-6 text-xs text-slate-500">
+      Hinweis: <span class="mono">sb_publishable</span> ist ok im Browser. <span class="mono">sb_secret</span> niemals.
     </div>
   </div>
 </div>
 
-<!-- ===================== BLOCKED / SUSPENDED ===================== -->
-<div x-show="session && (profile?.is_blocked || activeWorkspace?.is_suspended)" class="min-h-screen flex items-center justify-center p-6">
-  <div class="max-w-xl w-full bg-white rounded-2xl p-8 shadow border">
-    <div class="text-2xl font-black text-red-600">Zugriff gesperrt</div>
-    <div class="mt-2 text-slate-600">
-      <template x-if="profile?.is_blocked"><div>Benutzer gesperrt. Bitte Admin kontaktieren.</div></template>
-      <template x-if="activeWorkspace?.is_suspended"><div>Workspace gesperrt (z.B. Zahlung offen).</div></template>
-    </div>
-    <div class="mt-6 flex gap-2">
-      <button class="btn" @click="signOut()">Logout</button>
-      <button class="btnP" @click="reloadAll()">Neu laden</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===================== APP ===================== -->
-<div x-show="session && !profile?.is_blocked && !activeWorkspace?.is_suspended" class="h-screen flex overflow-hidden">
-
-  <!-- Sidebar -->
-  <aside class="w-72 bg-slate-950 text-white flex flex-col">
-    <div class="p-5 border-b border-white/10">
+<!-- APP -->
+<div id="view_app" class="hidden">
+  <div class="max-w-7xl mx-auto p-6">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center font-black">∞</div>
-        <div class="flex-1">
-          <div class="font-black leading-tight">InfinitySuite</div>
-          <div class="text-xs text-white/60 font-semibold" x-text="profile?.is_admin ? 'Admin' : 'User'"></div>
-        </div>
-      </div>
-
-      <!-- Workspace Switch -->
-      <div class="mt-4">
-        <div class="text-[10px] uppercase font-black text-white/50 mb-1">Workspace</div>
-        <select class="w-full bg-white/10 border border-white/10 rounded-xl p-2 text-sm"
-                x-model="activeWorkspaceId"
-                @change="onWorkspaceChange()">
-          <template x-for="w in myWorkspaces" :key="w.id">
-            <option :value="w.id" x-text="w.name"></option>
-          </template>
-        </select>
-
-        <div class="flex gap-2 mt-2">
-          <button class="flex-1 bg-white/10 hover:bg-white/15 border border-white/10 rounded-xl p-2 text-xs font-black"
-                  @click="openWorkspaceModal=true">
-            + Workspace
-          </button>
-          <button class="bg-white/10 hover:bg-white/15 border border-white/10 rounded-xl p-2 text-xs font-black"
-                  title="Reload"
-                  @click="reloadAll()">
-            ⟳
-          </button>
-        </div>
-
-        <template x-if="activeWorkspace">
-          <div class="mt-2 text-xs text-white/60">
-            Plan: <span class="font-black" x-text="activeWorkspace.plan"></span>
-            • Billing: <span class="font-black" x-text="activeWorkspace.billing_status"></span>
-          </div>
-        </template>
-      </div>
-    </div>
-
-    <nav class="p-3 space-y-1 overflow-y-auto flex-1">
-      <div class="text-[10px] uppercase font-black text-white/40 px-3 mt-2">Workspace</div>
-
-      <button class="w-full text-left px-3 py-2 rounded-xl font-semibold hover:bg-white/10"
-              :class="view==='dashboard'?'bg-white/10':''" @click="view='dashboard'">📊 Dashboard</button>
-      <button class="w-full text-left px-3 py-2 rounded-xl font-semibold hover:bg-white/10"
-              :class="view==='tickets'?'bg-white/10':''" @click="view='tickets'">🎫 Tickets</button>
-      <button class="w-full text-left px-3 py-2 rounded-xl font-semibold hover:bg-white/10"
-              :class="view==='chat'?'bg-white/10':''" @click="view='chat'">💬 Chat</button>
-      <button class="w-full text-left px-3 py-2 rounded-xl font-semibold hover:bg-white/10"
-              :class="view==='calendar'?'bg-white/10':''" @click="view='calendar'">🗓️ Kalender</button>
-      <button class="w-full text-left px-3 py-2 rounded-xl font-semibold hover:bg-white/10"
-              :class="view==='docs'?'bg-white/10':''" @click="view='docs'">📄 Docs</button>
-      <button class="w-full text-left px-3 py-2 rounded-xl font-semibold hover:bg-white/10"
-              :class="view==='drive'?'bg-white/10':''" @click="view='drive'; loadDrive()">🗂️ Drive</button>
-      <button class="w-full text-left px-3 py-2 rounded-xl font-semibold hover:bg-white/10"
-              :class="view==='meetings'?'bg-white/10':''" @click="view='meetings'">🎥 Meetings</button>
-
-      <div class="text-[10px] uppercase font-black text-white/40 px-3 mt-5">Collaboration</div>
-      <button class="w-full text-left px-3 py-2 rounded-xl font-semibold hover:bg-white/10"
-              :class="view==='feed'?'bg-white/10':''" @click="view='feed'; loadFeed()">📰 Feed</button>
-      <button class="w-full text-left px-3 py-2 rounded-xl font-semibold hover:bg-white/10"
-              :class="view==='webmail'?'bg-white/10':''" @click="view='webmail'">✉️ Webmail</button>
-
-      <div class="text-[10px] uppercase font-black text-white/40 px-3 mt-5">Admin</div>
-      <template x-if="profile?.is_admin">
-        <div class="space-y-1">
-          <button class="w-full text-left px-3 py-2 rounded-xl font-black hover:bg-red-500/20"
-                  :class="view==='admin_dashboard'?'bg-red-500/20':''"
-                  @click="view='admin_dashboard'; adminRefreshAll();">👑 Admin Dashboard</button>
-          <button class="w-full text-left px-3 py-2 rounded-xl font-black hover:bg-red-500/20"
-                  :class="view==='admin_users'?'bg-red-500/20':''"
-                  @click="view='admin_users'; adminLoadUsers();">👥 Users</button>
-          <button class="w-full text-left px-3 py-2 rounded-xl font-black hover:bg-red-500/20"
-                  :class="view==='admin_workspaces'?'bg-red-500/20':''"
-                  @click="view='admin_workspaces'; adminLoadWorkspaces();">🏢 Workspaces</button>
-          <button class="w-full text-left px-3 py-2 rounded-xl font-black hover:bg-red-500/20"
-                  :class="view==='admin_logs'?'bg-red-500/20':''"
-                  @click="view='admin_logs'; adminLoadLogs();">📜 Audit Logs</button>
-        </div>
-      </template>
-    </nav>
-
-    <div class="p-4 border-t border-white/10 bg-black/20">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center font-black text-xs"
-             x-text="(profile?.username||'U').slice(0,2).toUpperCase()"></div>
-        <div class="flex-1 overflow-hidden">
-          <div class="font-black text-sm truncate" x-text="profile?.username || session?.user?.email"></div>
-          <div class="text-xs text-white/60 truncate" x-text="session?.user?.email"></div>
-        </div>
-        <button class="text-white/70 hover:text-white" title="Logout" @click="signOut()">⎋</button>
-      </div>
-    </div>
-  </aside>
-
-  <!-- Main -->
-  <main class="flex-1 overflow-y-auto p-6">
-    <!-- Top bar -->
-    <div class="flex items-center justify-between mb-6">
-      <div>
-        <div class="text-2xl font-black" x-text="headline()"></div>
-        <div class="text-sm text-slate-500" x-text="activeWorkspace ? activeWorkspace.name : 'Kein Workspace'"></div>
-      </div>
-      <div class="flex gap-2 items-center">
-        <div class="hidden md:flex items-center gap-2 bg-white border rounded-xl px-3 py-2">
-          <span class="text-xs font-black text-slate-500">Online:</span>
-          <span class="text-xs font-black" x-text="onlineUsers.length"></span>
-        </div>
-        <button class="btn" @click="quickSeed()">Demo-Daten</button>
-      </div>
-    </div>
-
-    <!-- DASHBOARD -->
-    <section x-show="view==='dashboard'" class="space-y-4">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="card"><div class="text-xs uppercase font-black text-slate-400">Offene Tickets</div><div class="text-3xl font-black" x-text="tickets.filter(t=>t.status!=='Erledigt').length"></div></div>
-        <div class="card"><div class="text-xs uppercase font-black text-slate-400">Chats</div><div class="text-3xl font-black" x-text="groups.length"></div></div>
-        <div class="card"><div class="text-xs uppercase font-black text-slate-400">Events</div><div class="text-3xl font-black" x-text="events.length"></div></div>
-        <div class="card"><div class="text-xs uppercase font-black text-slate-400">Docs</div><div class="text-3xl font-black" x-text="docs.length"></div></div>
-      </div>
-
-      <div class="card">
-        <div class="font-black mb-2">Schnellaktionen</div>
-        <div class="flex flex-wrap gap-2">
-          <button class="btnP" @click="view='chat'">Chat</button>
-          <button class="btn" @click="view='drive'; loadDrive()">Drive</button>
-          <button class="btn" @click="view='meetings'">Meetings</button>
-          <button class="btn" @click="view='feed'; loadFeed()">Feed</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- TICKETS -->
-    <section x-show="view==='tickets'" class="space-y-4">
-      <div class="flex justify-between items-center">
-        <div class="font-black text-xl">Tickets</div>
-        <button class="btnP" @click="openTicketModal=true; ticketForm={subject:'',description:'',priority:'Normal',status:'Offen'}">+ Ticket</button>
-      </div>
-
-      <div class="bg-white border rounded-2xl overflow-hidden">
-        <table class="w-full">
-          <thead class="bg-slate-50 text-xs uppercase font-black text-slate-500">
-            <tr><th class="p-4 text-left">Betreff</th><th class="p-4 text-left">Priorität</th><th class="p-4 text-left">Status</th><th class="p-4 text-right">Aktion</th></tr>
-          </thead>
-          <tbody class="divide-y">
-            <template x-for="t in tickets" :key="t.id">
-              <tr class="hover:bg-slate-50">
-                <td class="p-4 font-black" x-text="t.subject"></td>
-                <td class="p-4">
-                  <span class="chip" :class="t.priority==='High'?'bg-red-100 text-red-700':(t.priority==='Normal'?'bg-blue-100 text-blue-700':'bg-slate-100 text-slate-700')" x-text="t.priority"></span>
-                </td>
-                <td class="p-4">
-                  <select class="border rounded-lg p-2 text-sm" x-model="t.status" @change="updateTicketStatus(t)">
-                    <option>Offen</option><option>In Arbeit</option><option>Erledigt</option>
-                  </select>
-                </td>
-                <td class="p-4 text-right">
-                  <button class="text-red-600 font-black" @click="deleteTicket(t)">Löschen</button>
-                </td>
-              </tr>
-            </template>
-            <tr x-show="tickets.length===0"><td colspan="4" class="p-6 text-slate-500">Keine Tickets.</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- CHAT + PRESENCE -->
-    <section x-show="view==='chat'" class="grid grid-cols-1 lg:grid-cols-4 gap-4">
-      <div class="card lg:col-span-1">
-        <div class="flex items-center justify-between mb-3">
-          <div class="font-black">Gruppen</div>
-          <button class="btnP px-3 py-1" @click="openGroupModal=true; groupForm={name:'',description:''}">+</button>
-        </div>
-        <div class="space-y-2">
-          <template x-for="g in groups" :key="g.id">
-            <button class="w-full text-left p-3 rounded-xl border hover:bg-slate-50"
-                    :class="activeGroupId===g.id?'border-blue-500 bg-blue-50':''"
-                    @click="selectGroup(g)">
-              <div class="font-black" x-text="g.name"></div>
-              <div class="text-xs text-slate-500 truncate" x-text="g.description || '—'"></div>
-            </button>
-          </template>
-          <div x-show="groups.length===0" class="text-slate-500 text-sm">Noch keine Gruppe.</div>
-        </div>
-
-        <div class="mt-4 border-t pt-4">
-          <div class="font-black mb-2">Online im Workspace</div>
-          <div class="space-y-1">
-            <template x-for="u in onlineUsers" :key="u.key">
-              <div class="text-sm flex items-center justify-between">
-                <span class="font-semibold truncate" x-text="u.username"></span>
-                <span class="chip bg-green-100 text-green-700">online</span>
-              </div>
-            </template>
-            <div x-show="onlineUsers.length===0" class="text-slate-500 text-sm">Niemand online.</div>
+        <div class="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-black">CP</div>
+        <div>
+          <div class="text-2xl font-black">CRM PRO</div>
+          <div class="text-slate-500 font-semibold">
+            Workspace: <span id="ws_name" class="font-black text-slate-900">—</span>
           </div>
         </div>
       </div>
 
-      <div class="card lg:col-span-3 flex flex-col">
-        <div class="flex items-center justify-between mb-3">
-          <div>
-            <div class="font-black" x-text="activeGroup?.name || 'Kein Chat ausgewählt'"></div>
-            <div class="text-xs text-slate-500" x-text="activeGroup?.description || ''"></div>
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="card px-4 py-3">
+          <div class="font-black" id="hdr_name">—</div>
+          <div class="text-xs text-slate-500">
+            <span id="hdr_email">—</span> • <span id="hdr_uid" class="mono">—</span>
+            <span id="hdr_admin" class="ml-2 inline-block px-2 py-1 rounded-full bg-red-100 text-red-700 font-black text-xs hidden">ADMIN</span>
           </div>
-          <button class="btn" @click="loadMessages()">Reload</button>
         </div>
 
-        <div class="flex-1 overflow-y-auto border rounded-xl p-3 bg-slate-50" id="msgBox">
-          <template x-for="m in messages" :key="m.id">
-            <div class="mb-2">
-              <div class="text-xs text-slate-500 font-semibold" x-text="(m.sender_id===session.user.id?'Du':'User') + ' • ' + new Date(m.created_at).toLocaleString('de-DE')"></div>
-              <div class="inline-block bg-white border rounded-xl px-3 py-2 font-semibold" x-text="m.text"></div>
+        <div class="card px-3 py-2 flex items-center gap-2">
+          <select id="ws_select" class="border rounded-xl p-2 font-black" onchange="switchWorkspace(this.value)"></select>
+          <button class="btn bg-slate-900 text-white" onclick="createWorkspace()">+ Workspace</button>
+        </div>
+
+        <button class="btn bg-red-600 text-white" onclick="signOut()">Logout</button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Sidebar -->
+      <div class="lg:col-span-3">
+        <div class="card p-3 grid gap-2">
+          <button id="nav_panel_meetings" class="navbtn active" onclick="nav('panel_meetings')">📹 Meetings</button>
+          <button id="nav_panel_info" class="navbtn" onclick="nav('panel_info')">ℹ️ Info</button>
+        </div>
+
+        <div class="card p-4 mt-6">
+          <div class="font-black mb-2">Meeting Status</div>
+          <div class="text-sm text-slate-600 space-y-1">
+            <div>Room: <span id="roomBadge" class="mono font-black">—</span></div>
+            <div>Role: <span id="roleBadge" class="mono font-black">—</span></div>
+            <div>Conn: <span id="connState" class="mono font-black">idle</span></div>
+            <div class="flex gap-2 mt-2">
+              <span id="micBadge" class="px-2 py-1 rounded-full bg-slate-200 font-black text-xs">—</span>
+              <span id="camBadge" class="px-2 py-1 rounded-full bg-slate-200 font-black text-xs">—</span>
             </div>
-          </template>
-          <div x-show="activeGroupId && messages.length===0" class="text-slate-500 text-sm">Keine Nachrichten.</div>
-          <div x-show="!activeGroupId" class="text-slate-500 text-sm">Wähle links eine Gruppe.</div>
-        </div>
-
-        <div class="mt-3 flex gap-2">
-          <input class="flex-1 border rounded-xl p-3" placeholder="Nachricht…" x-model="messageText"
-                 @keydown.enter="sendMessage()" :disabled="!activeGroupId" />
-          <button class="btnP px-4" @click="sendMessage()" :disabled="!activeGroupId">Senden</button>
+          </div>
         </div>
       </div>
-    </section>
 
-    <!-- CALENDAR -->
-    <section x-show="view==='calendar'" class="space-y-4">
-      <div class="flex justify-between items-center">
-        <div class="font-black text-xl">Kalender</div>
-        <button class="btnP" @click="openEventModal=true; eventForm={title:'',date:''}">+ Event</button>
-      </div>
-      <div class="card space-y-2">
-        <template x-for="e in events" :key="e.id">
-          <div class="p-3 rounded-xl border flex items-center justify-between hover:bg-slate-50">
+      <!-- Content -->
+      <div class="lg:col-span-9">
+        <!-- Meetings -->
+        <div id="panel_meetings" data-panel class="card p-6">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <div class="font-black" x-text="e.title"></div>
-              <div class="text-xs text-slate-500" x-text="e.date || '—'"></div>
+              <div class="text-2xl font-black">Online-Meetings & Videoanrufe</div>
+              <div class="text-slate-500 font-semibold">WebRTC + Supabase Realtime Signaling</div>
             </div>
-            <button class="text-red-600 font-black" @click="deleteEvent(e)">Löschen</button>
+            <div class="flex flex-wrap gap-2">
+              <button class="btn bg-slate-900 text-white" onclick="joinRoomNew()">Neuen Raum</button>
+              <button class="btn bg-slate-200" onclick="joinRoom()">Join</button>
+              <button id="btnStartCall" class="btn bg-blue-600 text-white" onclick="startCall()">Call starten</button>
+              <button id="btnHangup" class="btn bg-red-600 text-white" onclick="hangup()">Auflegen</button>
+              <button class="btn bg-slate-200" onclick="leaveRoom()">Leave</button>
+            </div>
           </div>
-        </template>
-        <div x-show="events.length===0" class="text-slate-500 text-sm">Keine Events.</div>
-      </div>
-    </section>
 
-    <!-- DOCS -->
-    <section x-show="view==='docs'" class="space-y-4">
-      <div class="flex justify-between items-center">
-        <div class="font-black text-xl">Docs</div>
-        <button class="btnP" @click="openDocModal=true; docForm={doc_type:'Rechnung',number:'',client_name:'',date:'',status:'Offen',total:0}">+ Doc</button>
-      </div>
-
-      <div class="bg-white border rounded-2xl overflow-hidden">
-        <table class="w-full">
-          <thead class="bg-slate-50 text-xs uppercase font-black text-slate-500">
-            <tr><th class="p-4 text-left">Typ</th><th class="p-4 text-left">Nr.</th><th class="p-4 text-left">Kunde</th><th class="p-4 text-left">Status</th><th class="p-4 text-right">Total</th><th class="p-4 text-right">Aktion</th></tr>
-          </thead>
-          <tbody class="divide-y">
-            <template x-for="d in docs" :key="d.id">
-              <tr class="hover:bg-slate-50">
-                <td class="p-4 font-black" x-text="d.doc_type"></td>
-                <td class="p-4 font-mono text-blue-600 font-black" x-text="d.number"></td>
-                <td class="p-4 font-semibold" x-text="d.client_name"></td>
-                <td class="p-4">
-                  <select class="border rounded-lg p-2 text-sm" x-model="d.status" @change="updateDocStatus(d)">
-                    <option>Offen</option><option>Bezahlt</option><option>Storniert</option>
-                  </select>
-                </td>
-                <td class="p-4 text-right font-black" x-text="formatMoney(d.total)"></td>
-                <td class="p-4 text-right">
-                  <button class="text-red-600 font-black" @click="deleteDoc(d)">Löschen</button>
-                </td>
-              </tr>
-            </template>
-            <tr x-show="docs.length===0"><td colspan="6" class="p-6 text-slate-500">Keine Docs.</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- DRIVE (Storage) -->
-    <section x-show="view==='drive'" class="space-y-4">
-      <div class="flex items-center justify-between">
-        <div class="font-black text-xl">Drive</div>
-        <div class="flex gap-2">
-          <input type="file" id="driveFile" class="hidden" @change="uploadDrive($event)" />
-          <button class="btnP" @click="document.getElementById('driveFile').click()">Upload</button>
-          <button class="btn" @click="loadDrive()">Reload</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="text-sm text-slate-600">
-          Pfad: <span class="font-mono font-black" x-text="activeWorkspaceId + '/'"></span>
-        </div>
-        <div class="mt-3 space-y-2">
-          <template x-for="f in driveFiles" :key="f.name">
-            <div class="p-3 border rounded-xl flex items-center justify-between hover:bg-slate-50">
-              <div class="min-w-0">
-                <div class="font-black truncate" x-text="f.name.split('/').slice(1).join('/')"></div>
-                <div class="text-xs text-slate-500" x-text="(f.metadata?.size ? Math.round(f.metadata.size/1024)+' KB' : '')"></div>
-              </div>
-              <div class="flex gap-2">
-                <button class="btn" @click="downloadDrive(f.name)">Download</button>
-                <button class="btn" @click="removeDrive(f.name)">Löschen</button>
+          <div class="mt-5 grid md:grid-cols-3 gap-3">
+            <div class="md:col-span-2">
+              <input id="roomInput" class="w-full border rounded-2xl p-3 font-black mono" placeholder="Room-ID (z.B. room_ab12cd34)">
+              <div class="text-xs text-slate-500 mt-2">
+                Ablauf: 1) Raum erstellen oder joinen → 2) Einer drückt “Call starten” → 3) der andere akzeptiert automatisch.
               </div>
             </div>
-          </template>
-          <div x-show="driveFiles.length===0" class="text-slate-500">Keine Dateien.</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- MEETINGS (WebRTC) -->
-    <section x-show="view==='meetings'" class="space-y-4">
-      <div class="flex items-center justify-between">
-        <div class="font-black text-xl">Meetings / Videoanrufe</div>
-        <div class="flex gap-2">
-          <input class="border rounded-xl p-2 font-mono text-sm" placeholder="Room z.B. team" x-model="meeting.room" />
-          <button class="btnP" @click="joinRoom()">Join</button>
-          <button class="btn" @click="leaveRoom()">Leave</button>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div class="card">
-          <div class="font-black mb-2">Dein Video</div>
-          <video id="localVideo" class="w-full rounded-xl bg-black" autoplay playsinline muted></video>
-          <div class="flex gap-2 mt-3">
-            <button class="btnP" @click="startMedia()">Kamera/Mic starten</button>
-            <button class="btn" @click="toggleMute()" x-text="meeting.muted ? 'Unmute' : 'Mute'"></button>
-            <button class="btn" @click="toggleCam()" x-text="meeting.camOff ? 'Cam an' : 'Cam aus'"></button>
+            <div class="flex gap-2">
+              <button id="btnMic" class="btn bg-slate-900 text-white w-full" onclick="toggleMic()">Mic aus</button>
+              <button id="btnCam" class="btn bg-slate-900 text-white w-full" onclick="toggleCam()">Cam aus</button>
+            </div>
           </div>
-          <div class="text-xs text-slate-500 mt-2">
-            Hinweis: In manchen Netzwerken brauchst du später TURN. Für Start reicht STUN.
+
+          <div class="mt-6 grid md:grid-cols-2 gap-4">
+            <div class="rounded-2xl overflow-hidden border bg-slate-900">
+              <div class="px-3 py-2 text-white font-black text-sm">Du</div>
+              <video id="localVideo" autoplay playsinline muted class="w-full h-64 object-cover"></video>
+            </div>
+            <div class="rounded-2xl overflow-hidden border bg-slate-900">
+              <div class="px-3 py-2 text-white font-black text-sm">Gegenstelle</div>
+              <video id="remoteVideo" autoplay playsinline class="w-full h-64 object-cover"></video>
+            </div>
+          </div>
+
+          <div class="mt-4 text-xs text-slate-500">
+            Tipp: Wenn Remote-Video schwarz bleibt: Browser-Autoplay blockiert manchmal Audio/Video → einmal in das Video klicken.
+            Für “harte” Netzwerke brauchst du TURN (z.B. Twilio).
           </div>
         </div>
 
-        <div class="card">
-          <div class="font-black mb-2">Remote Video</div>
-          <video id="remoteVideo" class="w-full rounded-xl bg-black" autoplay playsinline></video>
-          <div class="mt-3">
-            <button class="btnP w-full" @click="callPeer()">Anruf starten (Offer)</button>
-          </div>
-          <div class="text-xs text-slate-500 mt-2">
-            Signaling läuft über Supabase Realtime Broadcast im Room.
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- FEED -->
-    <section x-show="view==='feed'" class="space-y-4">
-      <div class="flex items-center justify-between">
-        <div class="font-black text-xl">Feed</div>
-        <button class="btn" @click="loadFeed()">Reload</button>
-      </div>
-      <div class="card max-h-[70vh] overflow-y-auto space-y-2">
-        <template x-for="l in feed" :key="l.id">
-          <div class="border rounded-xl p-3 bg-slate-50">
-            <div class="text-[10px] uppercase font-black text-slate-400" x-text="new Date(l.created_at).toLocaleString('de-DE') + ' • ' + l.action + ' • ' + l.entity"></div>
-            <div class="text-sm font-black" x-text="l.entity + ' • ' + (l.entity_id || '—')"></div>
-            <div class="text-xs text-slate-700 break-all" x-text="JSON.stringify(l.details)"></div>
-          </div>
-        </template>
-        <div x-show="feed.length===0" class="text-slate-500">Keine Einträge.</div>
-      </div>
-    </section>
-
-    <!-- WEBMAIL (UI + Hook) -->
-    <section x-show="view==='webmail'" class="space-y-4">
-      <div class="card">
-        <div class="text-xl font-black">Webmail</div>
-        <div class="text-slate-600 mt-2">
-          Reines Frontend kann **kein IMAP/SMTP** sicher. Du brauchst dafür einen kleinen Backend-Service (Edge Function / Server),
-          der IMAP/SMTP/Gmail/Outlook anspricht.
-        </div>
-        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div class="border rounded-xl p-4">
-            <div class="font-black">Inbox (Demo)</div>
-            <div class="text-sm text-slate-500">Hier kommt später dein Mail-Listing rein.</div>
-            <button class="btn mt-3" @click="toast('Webmail','Wenn du willst, baue ich dir Supabase Edge Function für IMAP/Gmail API.')">
-              API Hook vorbereiten
-            </button>
-          </div>
-          <div class="border rounded-xl p-4">
-            <div class="font-black">Neue Mail (Demo)</div>
-            <input class="w-full border rounded-xl p-2 mt-2" placeholder="An" />
-            <input class="w-full border rounded-xl p-2 mt-2" placeholder="Betreff" />
-            <textarea class="w-full border rounded-xl p-2 mt-2" rows="4" placeholder="Text..."></textarea>
-            <button class="btnP w-full mt-3" @click="toast('Webmail','Senden geht erst mit Backend-Endpoint (SMTP/Provider).')">Senden</button>
+        <!-- Info -->
+        <div id="panel_info" data-panel class="card p-6 hidden">
+          <div class="text-2xl font-black">Warum hat dein altes HTML “nix angezeigt”?</div>
+          <div class="mt-3 text-slate-600 space-y-2">
+            <div>• Häufigster Grund: <b>Startfehler in JavaScript</b> → Seite bleibt hidden.</div>
+            <div>• In dieser Version ist Login <b>standardmäßig sichtbar</b> und die App wird erst danach eingeblendet.</div>
+            <div>• Wenn du willst, erweitere ich das wieder auf: CRM, Tickets, Chat, Kalender, Drive, Admin usw.</div>
           </div>
         </div>
       </div>
-    </section>
-
-    <!-- ADMIN (wie vorher, kompakt) -->
-    <section x-show="view==='admin_dashboard' && profile?.is_admin" class="space-y-4">
-      <div class="card">
-        <div class="font-black text-xl text-red-600">Admin Dashboard</div>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
-          <div class="border rounded-2xl p-4"><div class="text-xs uppercase font-black text-slate-400">Users</div><div class="text-3xl font-black" x-text="adminUsers.length"></div></div>
-          <div class="border rounded-2xl p-4"><div class="text-xs uppercase font-black text-slate-400">Workspaces</div><div class="text-3xl font-black" x-text="adminWorkspaces.length"></div></div>
-          <div class="border rounded-2xl p-4"><div class="text-xs uppercase font-black text-slate-400">Suspended</div><div class="text-3xl font-black text-red-600" x-text="adminWorkspaces.filter(w=>w.is_suspended).length"></div></div>
-          <div class="border rounded-2xl p-4"><div class="text-xs uppercase font-black text-slate-400">Past Due</div><div class="text-3xl font-black text-yellow-600" x-text="adminWorkspaces.filter(w=>w.billing_status==='past_due').length"></div></div>
-        </div>
-        <div class="mt-4"><button class="btnP" @click="adminRefreshAll()">Admin Daten aktualisieren</button></div>
-      </div>
-    </section>
-
-    <section x-show="view==='admin_users' && profile?.is_admin" class="space-y-4">
-      <div class="flex items-center justify-between">
-        <div class="font-black text-xl text-red-600">Admin: Users</div>
-        <button class="btn" @click="adminLoadUsers()">Reload</button>
-      </div>
-      <div class="bg-white border rounded-2xl overflow-hidden">
-        <table class="w-full">
-          <thead class="bg-slate-50 text-xs uppercase font-black text-slate-500">
-            <tr><th class="p-4 text-left">Email</th><th class="p-4 text-left">Username</th><th class="p-4">Admin</th><th class="p-4">Blocked</th><th class="p-4 text-right">Aktion</th></tr>
-          </thead>
-          <tbody class="divide-y">
-            <template x-for="u in adminUsers" :key="u.user_id">
-              <tr class="hover:bg-slate-50">
-                <td class="p-4 font-mono text-sm" x-text="u.email"></td>
-                <td class="p-4 font-black" x-text="u.username || '—'"></td>
-                <td class="p-4 text-center"><span class="chip" :class="u.is_admin?'bg-green-100 text-green-700':'bg-slate-100 text-slate-700'" x-text="u.is_admin?'JA':'NEIN'"></span></td>
-                <td class="p-4 text-center"><span class="chip" :class="u.is_blocked?'bg-red-100 text-red-700':'bg-slate-100 text-slate-700'" x-text="u.is_blocked?'JA':'NEIN'"></span></td>
-                <td class="p-4 text-right space-x-2">
-                  <button class="btn" @click="adminSetUser(u.user_id, !u.is_admin, u.is_blocked)">Admin Toggle</button>
-                  <button class="btn" @click="adminSetUser(u.user_id, u.is_admin, !u.is_blocked)">Block Toggle</button>
-                </td>
-              </tr>
-            </template>
-            <tr x-show="adminUsers.length===0"><td class="p-6 text-slate-500" colspan="5">Keine Daten.</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <section x-show="view==='admin_workspaces' && profile?.is_admin" class="space-y-4">
-      <div class="flex items-center justify-between">
-        <div class="font-black text-xl text-red-600">Admin: Workspaces</div>
-        <button class="btn" @click="adminLoadWorkspaces()">Reload</button>
-      </div>
-      <div class="bg-white border rounded-2xl overflow-hidden">
-        <table class="w-full">
-          <thead class="bg-slate-50 text-xs uppercase font-black text-slate-500">
-            <tr><th class="p-4 text-left">Name</th><th class="p-4">Plan</th><th class="p-4">Billing</th><th class="p-4">Suspended</th><th class="p-4 text-right">Aktion</th></tr>
-          </thead>
-          <tbody class="divide-y">
-            <template x-for="w in adminWorkspaces" :key="w.workspace_id">
-              <tr class="hover:bg-slate-50">
-                <td class="p-4 font-black" x-text="w.name"></td>
-                <td class="p-4">
-                  <select class="border rounded-lg p-2 text-sm" x-model="w.plan">
-                    <option value="free">free</option><option value="pro">pro</option><option value="enterprise">enterprise</option>
-                  </select>
-                </td>
-                <td class="p-4">
-                  <select class="border rounded-lg p-2 text-sm" x-model="w.billing_status">
-                    <option value="ok">ok</option><option value="past_due">past_due</option><option value="canceled">canceled</option>
-                  </select>
-                </td>
-                <td class="p-4 text-center"><input type="checkbox" class="scale-125" x-model="w.is_suspended" /></td>
-                <td class="p-4 text-right"><button class="btnP" @click="adminSaveWorkspace(w)">Speichern</button></td>
-              </tr>
-            </template>
-            <tr x-show="adminWorkspaces.length===0"><td class="p-6 text-slate-500" colspan="5">Keine Daten.</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-    <section x-show="view==='admin_logs' && profile?.is_admin" class="space-y-4">
-      <div class="flex items-center justify-between">
-        <div class="font-black text-xl text-red-600">Admin: Audit Logs</div>
-        <button class="btn" @click="adminLoadLogs()">Reload</button>
-      </div>
-      <div class="card max-h-[70vh] overflow-y-auto space-y-2">
-        <template x-for="l in adminLogs" :key="l.id">
-          <div class="border rounded-xl p-3 bg-slate-50">
-            <div class="text-[10px] uppercase font-black text-slate-400" x-text="new Date(l.created_at).toLocaleString('de-DE') + ' • ' + l.action + ' • ' + l.entity"></div>
-            <div class="text-sm font-black" x-text="'entity_id: ' + (l.entity_id || '—')"></div>
-            <div class="text-xs text-slate-700 break-all" x-text="JSON.stringify(l.details)"></div>
-          </div>
-        </template>
-        <div x-show="adminLogs.length===0" class="text-slate-500">Keine Logs.</div>
-      </div>
-    </section>
-
-  </main>
-</div>
-
-<!-- ===================== MODALS ===================== -->
-<div x-show="openWorkspaceModal" class="fixed inset-0 bg-black/60 flex items-center justify-center p-4" x-cloak>
-  <div class="bg-white rounded-2xl w-full max-w-md p-6" @click.away="openWorkspaceModal=false">
-    <div class="font-black text-xl mb-3">Neuen Workspace</div>
-    <input class="w-full border rounded-xl p-3" placeholder="Name" x-model="workspaceForm.name" />
-    <div class="flex justify-end gap-2 mt-4">
-      <button class="btn" @click="openWorkspaceModal=false">Abbrechen</button>
-      <button class="btnP" @click="createWorkspace()">Erstellen</button>
     </div>
   </div>
-</div>
-
-<div x-show="openTicketModal" class="fixed inset-0 bg-black/60 flex items-center justify-center p-4" x-cloak>
-  <div class="bg-white rounded-2xl w-full max-w-lg p-6" @click.away="openTicketModal=false">
-    <div class="font-black text-xl mb-3">Ticket erstellen</div>
-    <div class="space-y-3">
-      <input class="w-full border rounded-xl p-3" placeholder="Betreff" x-model="ticketForm.subject" />
-      <textarea class="w-full border rounded-xl p-3" rows="4" placeholder="Beschreibung" x-model="ticketForm.description"></textarea>
-      <div class="grid grid-cols-2 gap-2">
-        <select class="border rounded-xl p-3" x-model="ticketForm.priority"><option>Low</option><option>Normal</option><option>High</option></select>
-        <select class="border rounded-xl p-3" x-model="ticketForm.status"><option>Offen</option><option>In Arbeit</option><option>Erledigt</option></select>
-      </div>
-    </div>
-    <div class="flex justify-end gap-2 mt-4">
-      <button class="btn" @click="openTicketModal=false">Abbrechen</button>
-      <button class="btnP" @click="createTicket()">Speichern</button>
-    </div>
-  </div>
-</div>
-
-<div x-show="openGroupModal" class="fixed inset-0 bg-black/60 flex items-center justify-center p-4" x-cloak>
-  <div class="bg-white rounded-2xl w-full max-w-lg p-6" @click.away="openGroupModal=false">
-    <div class="font-black text-xl mb-3">Gruppe erstellen</div>
-    <div class="space-y-3">
-      <input class="w-full border rounded-xl p-3" placeholder="Name" x-model="groupForm.name" />
-      <input class="w-full border rounded-xl p-3" placeholder="Beschreibung" x-model="groupForm.description" />
-    </div>
-    <div class="flex justify-end gap-2 mt-4">
-      <button class="btn" @click="openGroupModal=false">Abbrechen</button>
-      <button class="btnP" @click="createGroup()">Erstellen</button>
-    </div>
-  </div>
-</div>
-
-<div x-show="openEventModal" class="fixed inset-0 bg-black/60 flex items-center justify-center p-4" x-cloak>
-  <div class="bg-white rounded-2xl w-full max-w-lg p-6" @click.away="openEventModal=false">
-    <div class="font-black text-xl mb-3">Event erstellen</div>
-    <div class="space-y-3">
-      <input class="w-full border rounded-xl p-3" placeholder="Titel" x-model="eventForm.title" />
-      <input class="w-full border rounded-xl p-3" placeholder="Datum (z.B. 2026-01-17 10:00)" x-model="eventForm.date" />
-    </div>
-    <div class="flex justify-end gap-2 mt-4">
-      <button class="btn" @click="openEventModal=false">Abbrechen</button>
-      <button class="btnP" @click="createEvent()">Erstellen</button>
-    </div>
-  </div>
-</div>
-
-<div x-show="openDocModal" class="fixed inset-0 bg-black/60 flex items-center justify-center p-4" x-cloak>
-  <div class="bg-white rounded-2xl w-full max-w-lg p-6" @click.away="openDocModal=false">
-    <div class="font-black text-xl mb-3">Doc erstellen</div>
-    <div class="space-y-3">
-      <select class="w-full border rounded-xl p-3" x-model="docForm.doc_type"><option>Rechnung</option><option>Angebot</option></select>
-      <input class="w-full border rounded-xl p-3" placeholder="Dokument Nr." x-model="docForm.number" />
-      <input class="w-full border rounded-xl p-3" placeholder="Kunde" x-model="docForm.client_name" />
-      <input class="w-full border rounded-xl p-3" placeholder="Datum" x-model="docForm.date" />
-      <input class="w-full border rounded-xl p-3" type="number" placeholder="Total" x-model.number="docForm.total" />
-      <select class="w-full border rounded-xl p-3" x-model="docForm.status"><option>Offen</option><option>Bezahlt</option><option>Storniert</option></select>
-    </div>
-    <div class="flex justify-end gap-2 mt-4">
-      <button class="btn" @click="openDocModal=false">Abbrechen</button>
-      <button class="btnP" @click="createDoc()">Erstellen</button>
-    </div>
-  </div>
-</div>
-
-<!-- Toast -->
-<div class="fixed bottom-4 right-4 space-y-2 z-50">
-  <template x-for="t in toasts" :key="t.id">
-    <div class="bg-white border shadow rounded-xl p-3 w-80">
-      <div class="font-black" x-text="t.title"></div>
-      <div class="text-sm text-slate-600" x-text="t.text"></div>
-    </div>
-  </template>
 </div>
 
 <script>
-function app(){
-  return {
-    // ====== SET THESE ======
-    SUPABASE_URL: "https://pgcjsyzoukyynkufupms.supabase.co",
-    SUPABASE_KEY: "sb_publishable_uyKhe83Crckp93AjCrIruw_NAuV16p2",
-
-    sb: null,
-
-    session: null,
-    profile: null,
-    authError: '',
-    login: { email:'', password:'' },
-
-    view: 'dashboard',
-
-    myWorkspaces: [],
-    activeWorkspaceId: null,
-    activeWorkspace: null,
-    openWorkspaceModal: false,
-    workspaceForm: { name:'' },
-
-    tickets: [],
-    groups: [],
-    activeGroupId: null,
-    activeGroup: null,
-    messages: [],
-    messageText: '',
-    events: [],
-    docs: [],
-
-    openTicketModal:false,
-    ticketForm:{ subject:'',description:'',priority:'Normal',status:'Offen' },
-    openGroupModal:false,
-    groupForm:{ name:'',description:'' },
-    openEventModal:false,
-    eventForm:{ title:'',date:'' },
-    openDocModal:false,
-    docForm:{ doc_type:'Rechnung',number:'',client_name:'',date:'',status:'Offen',total:0 },
-
-    // drive
-    driveBucket: 'drive',
-    driveFiles: [],
-
-    // feed
-    feed: [],
-
-    // admin
-    adminUsers: [],
-    adminWorkspaces: [],
-    adminLogs: [],
-
-    // presence
-    presenceChannel: null,
-    onlineUsers: [],
-
-    // realtime channels
-    chTickets: null,
-    chEvents: null,
-    chMessages: null,
-
-    // meetings (webrtc)
-    meeting: {
-      room: 'team',
-      channel: null,
-      pc: null,
-      localStream: null,
-      remoteStream: null,
-      muted: false,
-      camOff: false,
-      joined: false,
-    },
-
-    toasts: [],
-
-    async init(){
-      this.sb = window.supabase.createClient(this.SUPABASE_URL, this.SUPABASE_KEY);
-
-      const { data } = await this.sb.auth.getSession();
-      this.session = data.session;
-
-      this.sb.auth.onAuthStateChange(async (_event, _session) => {
-        this.session = _session;
-        if(this.session) await this.bootstrap();
-        else this.resetState();
-      });
-
-      if(this.session) await this.bootstrap();
-    },
-
-    resetState(){
-      this.profile=null; this.myWorkspaces=[]; this.activeWorkspaceId=null; this.activeWorkspace=null;
-      this.tickets=[]; this.groups=[]; this.activeGroupId=null; this.activeGroup=null; this.messages=[];
-      this.events=[]; this.docs=[]; this.driveFiles=[]; this.feed=[];
-      this.adminUsers=[]; this.adminWorkspaces=[]; this.adminLogs=[];
-      this.onlineUsers=[];
-      this.unsubscribeAll();
-      this.leaveRoom();
-      this.view='dashboard';
-    },
-
-    headline(){
-      const map = {
-        dashboard:'Dashboard',
-        tickets:'Tickets',
-        chat:'Chat',
-        calendar:'Kalender',
-        docs:'Docs',
-        drive:'Drive',
-        meetings:'Meetings',
-        feed:'Feed',
-        webmail:'Webmail',
-        admin_dashboard:'Admin Dashboard',
-        admin_users:'Admin Users',
-        admin_workspaces:'Admin Workspaces',
-        admin_logs:'Audit Logs',
-      };
-      return map[this.view] || 'Workspace';
-    },
-
-    toast(title,text){
-      const id = crypto.randomUUID();
-      this.toasts.push({ id, title, text });
-      setTimeout(()=> this.toasts = this.toasts.filter(x=>x.id!==id), 2600);
-    },
-
-    formatMoney(v){
-      return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(Number(v||0));
-    },
-
-    // ===== AUTH =====
-    async signIn(){
-      this.authError = '';
-      const { error } = await this.sb.auth.signInWithPassword({ email: this.login.email, password: this.login.password });
-      if(error) this.authError = error.message;
-    },
-    async signUp(){
-      this.authError = '';
-      const { error } = await this.sb.auth.signUp({ email: this.login.email, password: this.login.password });
-      if(error) this.authError = error.message;
-      else this.toast('Registrierung','Wenn Email-Confirm an ist: erst bestätigen.');
-    },
-    async signOut(){ await this.sb.auth.signOut(); },
-
-    // ===== BOOTSTRAP =====
-    async bootstrap(){
-      await this.ensureProfile();
-      await this.loadMyWorkspaces();
-
-      if(!this.activeWorkspaceId){
-        this.openWorkspaceModal = true;
-        this.view = 'dashboard';
-        return;
-      }
-
-      await this.loadWorkspaceData();
-      this.subscribeRealtime();
-      this.startPresence(); // presence per workspace
-
-      if(this.profile?.is_admin){
-        await this.adminRefreshAll();
-      }
-    },
-
-    async ensureProfile(){
-      const { data, error } = await this.sb.from('profiles').select('*').eq('user_id', this.session.user.id).maybeSingle();
-      if(error){ this.toast('Fehler', error.message); return; }
-      if(data){ this.profile=data; return; }
-
-      const username = (this.session.user.email || 'user').split('@')[0];
-      const { data: ins, error: e2 } = await this.sb.from('profiles')
-        .insert({ user_id:this.session.user.id, username, role:'user', is_admin:false, is_blocked:false })
-        .select().single();
-      if(e2){ this.toast('Profil', e2.message); return; }
-      this.profile=ins;
-      this.toast('Profil','Profil erstellt.');
-    },
-
-    // ===== WORKSPACES =====
-    async loadMyWorkspaces(){
-      const { data: mem, error } = await this.sb.from('workspace_members').select('workspace_id').eq('user_id', this.session.user.id);
-      if(error){ this.toast('Workspace', error.message); return; }
-      const ids = (mem||[]).map(x=>x.workspace_id);
-      if(ids.length===0){ this.myWorkspaces=[]; this.activeWorkspaceId=null; this.activeWorkspace=null; return; }
-
-      const { data: ws, error: e2 } = await this.sb.from('workspaces').select('*').in('id', ids).order('created_at',{ascending:false});
-      if(e2){ this.toast('Workspace', e2.message); return; }
-
-      this.myWorkspaces = ws || [];
-      if(!this.activeWorkspaceId || !this.myWorkspaces.find(w=>w.id===this.activeWorkspaceId)){
-        this.activeWorkspaceId = this.myWorkspaces[0]?.id || null;
-      }
-      this.activeWorkspace = this.myWorkspaces.find(w=>w.id===this.activeWorkspaceId) || null;
-    },
-
-    async onWorkspaceChange(){
-      this.unsubscribeAll();
-      await this.stopPresence();
-      this.activeWorkspace = this.myWorkspaces.find(w=>w.id===this.activeWorkspaceId) || null;
-      this.activeGroupId=null; this.activeGroup=null; this.messages=[];
-      await this.loadWorkspaceData();
-      this.subscribeRealtime();
-      this.startPresence();
-    },
-
-    async createWorkspace(){
-      const name = (this.workspaceForm.name||'').trim();
-      if(!name) return;
-
-      const { data: w, error } = await this.sb.from('workspaces').insert({ name }).select().single();
-      if(error){ this.toast('Workspace', error.message); return; }
-
-      const { error: e2 } = await this.sb.from('workspace_members')
-        .insert({ workspace_id:w.id, user_id:this.session.user.id, member_role:'admin' });
-      if(e2){ this.toast('Membership', e2.message); return; }
-
-      await this.safeAudit(w.id,'create','workspaces',w.id,{name});
-      this.workspaceForm.name=''; this.openWorkspaceModal=false;
-      await this.loadMyWorkspaces();
-      await this.loadWorkspaceData();
-      this.subscribeRealtime();
-      await this.stopPresence(); this.startPresence();
-      this.toast('Workspace','Erstellt & beigetreten.');
-    },
-
-    async reloadAll(){ await this.bootstrap(); this.toast('Reload','Aktualisiert.'); },
-
-    async loadWorkspaceData(){
-      if(!this.activeWorkspaceId) return;
-
-      const { data: w } = await this.sb.from('workspaces').select('*').eq('id', this.activeWorkspaceId).single();
-      if(w) this.activeWorkspace=w;
-
-      await Promise.all([ this.loadTickets(), this.loadGroups(), this.loadEvents(), this.loadDocs() ]);
-    },
-
-    // ===== TICKETS =====
-    async loadTickets(){
-      const { data, error } = await this.sb.from('tickets').select('*')
-        .eq('workspace_id', this.activeWorkspaceId).order('created_at',{ascending:false});
-      if(error){ this.toast('Tickets', error.message); return; }
-      this.tickets = data || [];
-    },
-    async createTicket(){
-      const payload = {
-        workspace_id:this.activeWorkspaceId,
-        subject:(this.ticketForm.subject||'').trim(),
-        description:(this.ticketForm.description||'').trim(),
-        priority:this.ticketForm.priority||'Normal',
-        status:this.ticketForm.status||'Offen',
-        created_by:this.session.user.id
-      };
-      if(!payload.subject) return;
-      const { error } = await this.sb.from('tickets').insert(payload);
-      if(error){ this.toast('Ticket', error.message); return; }
-      await this.safeAudit(this.activeWorkspaceId,'create','tickets',null,{subject:payload.subject});
-      this.openTicketModal=false;
-      await this.loadTickets();
-      this.toast('Ticket','Erstellt');
-    },
-    async updateTicketStatus(t){
-      const { error } = await this.sb.from('tickets').update({ status:t.status }).eq('id', t.id);
-      if(error){ this.toast('Ticket', error.message); return; }
-      await this.safeAudit(this.activeWorkspaceId,'update','tickets',t.id,{status:t.status});
-    },
-    async deleteTicket(t){
-      if(!confirm('Ticket wirklich löschen?')) return;
-      const { error } = await this.sb.from('tickets').delete().eq('id', t.id);
-      if(error){ this.toast('Ticket', error.message); return; }
-      await this.safeAudit(this.activeWorkspaceId,'delete','tickets',t.id,{});
-      await this.loadTickets();
-    },
-
-    // ===== GROUPS / CHAT =====
-    async loadGroups(){
-      const { data, error } = await this.sb.from('groups').select('*')
-        .eq('workspace_id', this.activeWorkspaceId).order('created_at',{ascending:false});
-      if(error){ this.toast('Groups', error.message); return; }
-      this.groups = data || [];
-      if(this.groups.length && (!this.activeGroupId || !this.groups.find(g=>g.id===this.activeGroupId))){
-        await this.selectGroup(this.groups[0]);
-      }
-    },
-    async createGroup(){
-      const name=(this.groupForm.name||'').trim();
-      if(!name) return;
-      const { data, error } = await this.sb.from('groups').insert({
-        workspace_id:this.activeWorkspaceId, name, description:(this.groupForm.description||'').trim()
-      }).select().single();
-      if(error){ this.toast('Group', error.message); return; }
-      await this.safeAudit(this.activeWorkspaceId,'create','groups',data.id,{name});
-      this.openGroupModal=false;
-      await this.loadGroups();
-      this.toast('Group','Erstellt');
-    },
-    async selectGroup(g){
-      this.activeGroupId=g.id; this.activeGroup=g;
-      await this.loadMessages();
-      this.subscribeMessagesRealtime();
-    },
-    async loadMessages(){
-      if(!this.activeGroupId) return;
-      const { data, error } = await this.sb.from('messages').select('*')
-        .eq('workspace_id', this.activeWorkspaceId)
-        .eq('group_id', this.activeGroupId)
-        .order('created_at',{ascending:true}).limit(200);
-      if(error){ this.toast('Chat', error.message); return; }
-      this.messages = data || [];
-      this.scrollMsgDown();
-    },
-    async sendMessage(){
-      const text=(this.messageText||'').trim();
-      if(!text || !this.activeGroupId) return;
-      const { error } = await this.sb.from('messages').insert({
-        workspace_id:this.activeWorkspaceId,
-        group_id:this.activeGroupId,
-        sender_id:this.session.user.id,
-        text
-      });
-      if(error){ this.toast('Chat', error.message); return; }
-      this.messageText='';
-    },
-    scrollMsgDown(){
-      this.$nextTick(()=>{ const box=document.getElementById('msgBox'); if(box) box.scrollTop=box.scrollHeight; });
-    },
-
-    // ===== EVENTS =====
-    async loadEvents(){
-      const { data, error } = await this.sb.from('events').select('*')
-        .eq('workspace_id', this.activeWorkspaceId).order('created_at',{ascending:false});
-      if(error){ this.toast('Events', error.message); return; }
-      this.events = data || [];
-    },
-    async createEvent(){
-      const title=(this.eventForm.title||'').trim();
-      if(!title) return;
-      const { data, error } = await this.sb.from('events').insert({
-        workspace_id:this.activeWorkspaceId,
-        title,
-        date:(this.eventForm.date||'').trim(),
-        group_id:this.activeGroupId||null
-      }).select().single();
-      if(error){ this.toast('Event', error.message); return; }
-      await this.safeAudit(this.activeWorkspaceId,'create','events',data.id,{title});
-      this.openEventModal=false;
-      await this.loadEvents();
-      this.toast('Event','Erstellt');
-    },
-    async deleteEvent(e){
-      if(!confirm('Event löschen?')) return;
-      const { error } = await this.sb.from('events').delete().eq('id', e.id);
-      if(error){ this.toast('Event', error.message); return; }
-      await this.safeAudit(this.activeWorkspaceId,'delete','events',e.id,{});
-      await this.loadEvents();
-    },
-
-    // ===== DOCS =====
-    async loadDocs(){
-      const { data, error } = await this.sb.from('docs').select('*')
-        .eq('workspace_id', this.activeWorkspaceId).order('created_at',{ascending:false});
-      if(error){ this.toast('Docs', error.message); return; }
-      this.docs = data || [];
-    },
-    async createDoc(){
-      const payload = {
-        workspace_id:this.activeWorkspaceId,
-        doc_type:this.docForm.doc_type||'Rechnung',
-        number:(this.docForm.number||'').trim() || ((this.docForm.doc_type==='Angebot'?'AN-':'RE-')+new Date().getFullYear()+'-'+(this.docs.length+1)),
-        client_name:(this.docForm.client_name||'').trim() || 'Kunde',
-        date:(this.docForm.date||'').trim(),
-        status:this.docForm.status||'Offen',
-        total:Number(this.docForm.total||0)
-      };
-      const { data, error } = await this.sb.from('docs').insert(payload).select().single();
-      if(error){ this.toast('Doc', error.message); return; }
-      await this.safeAudit(this.activeWorkspaceId,'create','docs',data.id,{number:payload.number});
-      this.openDocModal=false;
-      await this.loadDocs();
-      this.toast('Doc','Erstellt');
-    },
-    async updateDocStatus(d){
-      const { error } = await this.sb.from('docs').update({ status:d.status }).eq('id', d.id);
-      if(error){ this.toast('Doc', error.message); return; }
-      await this.safeAudit(this.activeWorkspaceId,'update','docs',d.id,{status:d.status});
-    },
-    async deleteDoc(d){
-      if(!confirm('Doc löschen?')) return;
-      const { error } = await this.sb.from('docs').delete().eq('id', d.id);
-      if(error){ this.toast('Doc', error.message); return; }
-      await this.safeAudit(this.activeWorkspaceId,'delete','docs',d.id,{});
-      await this.loadDocs();
-    },
-
-    // ===== DRIVE (Storage) =====
-    async loadDrive(){
-      if(!this.activeWorkspaceId) return;
-      const prefix = this.activeWorkspaceId + '/';
-      const { data, error } = await this.sb.storage.from(this.driveBucket).list(prefix, { limit: 200, sortBy: { column:'name', order:'asc' } });
-      if(error){ this.toast('Drive', error.message); return; }
-      // list returns file names without prefix sometimes; normalize
-      this.driveFiles = (data||[]).map(x => ({ ...x, name: prefix + x.name }));
-    },
-    async uploadDrive(ev){
-      const file = ev.target.files?.[0];
-      if(!file) return;
-      const path = `${this.activeWorkspaceId}/${Date.now()}-${file.name}`;
-      const { error } = await this.sb.storage.from(this.driveBucket).upload(path, file, { upsert: false });
-      if(error){ this.toast('Upload', error.message); return; }
-      await this.safeAudit(this.activeWorkspaceId,'create','drive',null,{path});
-      this.toast('Drive','Upload OK');
-      ev.target.value = '';
-      await this.loadDrive();
-    },
-    async downloadDrive(path){
-      const { data, error } = await this.sb.storage.from(this.driveBucket).createSignedUrl(path, 60);
-      if(error){ this.toast('Download', error.message); return; }
-      window.open(data.signedUrl, '_blank');
-    },
-    async removeDrive(path){
-      if(!confirm('Datei löschen?')) return;
-      const { error } = await this.sb.storage.from(this.driveBucket).remove([path]);
-      if(error){ this.toast('Delete', error.message); return; }
-      await this.safeAudit(this.activeWorkspaceId,'delete','drive',null,{path});
-      await this.loadDrive();
-      this.toast('Drive','Gelöscht');
-    },
-
-    // ===== FEED =====
-    async loadFeed(){
-      // feed = audit logs for workspace
-      const { data, error } = await this.sb.from('audit_logs').select('*')
-        .eq('workspace_id', this.activeWorkspaceId)
-        .order('created_at',{ascending:false}).limit(200);
-      if(error){ this.toast('Feed', error.message); return; }
-      this.feed = data || [];
-    },
-
-    // ===== AUDIT =====
-    async safeAudit(workspaceId, action, entity, entityId, details){
-      try{
-        await this.sb.rpc('log_audit', {
-          p_workspace_id: workspaceId,
-          p_action: action,
-          p_entity: entity,
-          p_entity_id: entityId,
-          p_details: details || {}
-        });
-      }catch(_e){}
-    },
-
-    // ===== REALTIME =====
-    subscribeRealtime(){
-      this.subscribeTicketsRealtime();
-      this.subscribeEventsRealtime();
-      this.subscribeMessagesRealtime();
-    },
-    unsubscribeAll(){
-      if(this.chTickets){ this.sb.removeChannel(this.chTickets); this.chTickets=null; }
-      if(this.chEvents){ this.sb.removeChannel(this.chEvents); this.chEvents=null; }
-      if(this.chMessages){ this.sb.removeChannel(this.chMessages); this.chMessages=null; }
-    },
-    subscribeTicketsRealtime(){
-      if(this.chTickets){ this.sb.removeChannel(this.chTickets); }
-      this.chTickets = this.sb.channel('rt-tickets-'+this.activeWorkspaceId)
-        .on('postgres_changes', { event:'*', schema:'public', table:'tickets', filter:`workspace_id=eq.${this.activeWorkspaceId}` },
-          async ()=>{ await this.loadTickets(); })
-        .subscribe();
-    },
-    subscribeEventsRealtime(){
-      if(this.chEvents){ this.sb.removeChannel(this.chEvents); }
-      this.chEvents = this.sb.channel('rt-events-'+this.activeWorkspaceId)
-        .on('postgres_changes', { event:'*', schema:'public', table:'events', filter:`workspace_id=eq.${this.activeWorkspaceId}` },
-          async ()=>{ await this.loadEvents(); })
-        .subscribe();
-    },
-    subscribeMessagesRealtime(){
-      if(this.chMessages){ this.sb.removeChannel(this.chMessages); }
-      if(!this.activeGroupId) return;
-      this.chMessages = this.sb.channel('rt-messages-'+this.activeGroupId)
-        .on('postgres_changes', { event:'INSERT', schema:'public', table:'messages', filter:`group_id=eq.${this.activeGroupId}` },
-          async (payload)=>{
-            if(payload.new.workspace_id !== this.activeWorkspaceId) return;
-            this.messages.push(payload.new);
-            this.scrollMsgDown();
-          })
-        .subscribe();
-    },
-
-    // ===== PRESENCE =====
-    async startPresence(){
-      if(this.presenceChannel){ await this.stopPresence(); }
-      const room = `presence-${this.activeWorkspaceId}`;
-      this.presenceChannel = this.sb.channel(room, { config: { presence: { key: this.session.user.id } } });
-
-      this.presenceChannel.on('presence', { event: 'sync' }, () => {
-        const state = this.presenceChannel.presenceState();
-        const list = [];
-        Object.keys(state).forEach(userId=>{
-          state[userId].forEach(meta=>{
-            list.push({
-              key: userId + ':' + (meta.at||''),
-              userId,
-              username: meta.username || 'user'
-            });
-          });
-        });
-        this.onlineUsers = list;
-      });
-
-      await this.presenceChannel.subscribe(async (status) => {
-        if(status === 'SUBSCRIBED'){
-          await this.presenceChannel.track({
-            username: this.profile?.username || (this.session.user.email||'user').split('@')[0],
-            at: new Date().toISOString()
-          });
-        }
-      });
-    },
-
-    async stopPresence(){
-      if(!this.presenceChannel) return;
-      try{ await this.presenceChannel.untrack(); }catch(_e){}
-      try{ this.sb.removeChannel(this.presenceChannel); }catch(_e){}
-      this.presenceChannel=null;
-      this.onlineUsers=[];
-    },
-
-    // ===== ADMIN RPC =====
-    async adminRefreshAll(){ if(!this.profile?.is_admin) return; await Promise.all([this.adminLoadUsers(), this.adminLoadWorkspaces(), this.adminLoadLogs()]); this.toast('Admin','Aktualisiert'); },
-    async adminLoadUsers(){
-      const { data, error } = await this.sb.rpc('admin_list_users');
-      if(error){ this.toast('Admin Users', error.message); return; }
-      this.adminUsers = data || [];
-    },
-    async adminSetUser(userId, isAdmin, isBlocked){
-      const { error } = await this.sb.rpc('admin_set_user_flags', { p_user_id:userId, p_is_admin:isAdmin, p_is_blocked:isBlocked });
-      if(error){ this.toast('Admin User', error.message); return; }
-      await this.adminLoadUsers();
-      await this.adminLoadLogs();
-      this.toast('Admin','User aktualisiert');
-    },
-    async adminLoadWorkspaces(){
-      const { data, error } = await this.sb.rpc('admin_list_workspaces');
-      if(error){ this.toast('Admin WS', error.message); return; }
-      this.adminWorkspaces = data || [];
-    },
-    async adminSaveWorkspace(w){
-      const { error } = await this.sb.rpc('admin_set_workspace_billing', {
-        p_workspace_id:w.workspace_id,
-        p_plan:w.plan,
-        p_billing_status:w.billing_status,
-        p_is_suspended:w.is_suspended
-      });
-      if(error){ this.toast('Admin WS', error.message); return; }
-      await this.adminLoadWorkspaces();
-      await this.adminLoadLogs();
-      await this.loadMyWorkspaces();
-      this.toast('Admin','Workspace gespeichert');
-    },
-    async adminLoadLogs(){
-      const { data, error } = await this.sb.from('audit_logs').select('*').order('created_at',{ascending:false}).limit(200);
-      if(error){ this.toast('Logs', error.message); return; }
-      this.adminLogs = data || [];
-    },
-
-    // ===== MEETINGS (WebRTC + Broadcast signaling) =====
-    async startMedia(){
-      try{
-        this.meeting.localStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:true });
-        document.getElementById('localVideo').srcObject = this.meeting.localStream;
-        this.toast('Media','Kamera/Mic aktiv');
-      }catch(e){
-        this.toast('Media', e.message || 'Kein Zugriff');
-      }
-    },
-
-    async joinRoom(){
-      if(!this.activeWorkspaceId) return;
-      if(!this.meeting.room) this.meeting.room = 'team';
-
-      // close existing
-      await this.leaveRoom();
-
-      // create signaling channel (broadcast)
-      const roomName = `webrtc-${this.activeWorkspaceId}-${this.meeting.room}`;
-      this.meeting.channel = this.sb.channel(roomName);
-
-      // handle incoming signaling
-      this.meeting.channel.on('broadcast', { event:'signal' }, async ({ payload }) => {
-        await this.onSignal(payload);
-      });
-
-      await this.meeting.channel.subscribe();
-      this.meeting.joined = true;
-      this.toast('Meeting','Room beigetreten: '+this.meeting.room);
-
-      // prepare peerconnection
-      await this.ensurePC();
-    },
-
-    async leaveRoom(){
-      if(this.meeting.channel){
-        try{ this.sb.removeChannel(this.meeting.channel); }catch(_e){}
-      }
-      this.meeting.channel=null;
-      this.meeting.joined=false;
-
-      if(this.meeting.pc){
-        try{ this.meeting.pc.close(); }catch(_e){}
-      }
-      this.meeting.pc=null;
-
-      if(this.meeting.remoteStream){
-        document.getElementById('remoteVideo').srcObject = null;
-      }
-      this.meeting.remoteStream=null;
-    },
-
-    async ensurePC(){
-      if(this.meeting.pc) return;
-
-      const pc = new RTCPeerConnection({
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:global.stun.twilio.com:3478?transport=udp' },
-        ]
-      });
-
-      pc.onicecandidate = async (ev) => {
-        if(ev.candidate){
-          await this.sendSignal({ type:'ice', candidate: ev.candidate });
-        }
-      };
-
-      pc.ontrack = (ev) => {
-        if(!this.meeting.remoteStream){
-          this.meeting.remoteStream = new MediaStream();
-          document.getElementById('remoteVideo').srcObject = this.meeting.remoteStream;
-        }
-        this.meeting.remoteStream.addTrack(ev.track);
-      };
-
-      // attach local tracks
-      if(this.meeting.localStream){
-        this.meeting.localStream.getTracks().forEach(t => pc.addTrack(t, this.meeting.localStream));
-      }
-
-      this.meeting.pc = pc;
-    },
-
-    async callPeer(){
-      if(!this.meeting.joined) return this.toast('Meeting','Erst Join drücken');
-      if(!this.meeting.localStream) return this.toast('Meeting','Erst Kamera/Mic starten');
-      await this.ensurePC();
-
-      const offer = await this.meeting.pc.createOffer();
-      await this.meeting.pc.setLocalDescription(offer);
-      await this.sendSignal({ type:'offer', sdp: offer });
-      this.toast('Meeting','Offer gesendet');
-    },
-
-    async onSignal(msg){
-      // ignore own messages
-      if(msg.from === this.session.user.id) return;
-      await this.ensurePC();
-
-      if(msg.type==='offer'){
-        await this.meeting.pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
-        const answer = await this.meeting.pc.createAnswer();
-        await this.meeting.pc.setLocalDescription(answer);
-        await this.sendSignal({ type:'answer', sdp: answer, to: msg.from });
-        this.toast('Meeting','Offer erhalten → Answer gesendet');
-      }
-
-      if(msg.type==='answer'){
-        await this.meeting.pc.setRemoteDescription(new RTCSessionDescription(msg.sdp));
-        this.toast('Meeting','Answer erhalten');
-      }
-
-      if(msg.type==='ice' && msg.candidate){
-        try{ await this.meeting.pc.addIceCandidate(msg.candidate); }catch(_e){}
-      }
-    },
-
-    async sendSignal(payload){
-      if(!this.meeting.channel) return;
-      await this.meeting.channel.send({
-        type: 'broadcast',
-        event: 'signal',
-        payload: { ...payload, from: this.session.user.id, at: Date.now() }
-      });
-    },
-
-    toggleMute(){
-      if(!this.meeting.localStream) return;
-      this.meeting.muted = !this.meeting.muted;
-      this.meeting.localStream.getAudioTracks().forEach(t => t.enabled = !this.meeting.muted);
-    },
-    toggleCam(){
-      if(!this.meeting.localStream) return;
-      this.meeting.camOff = !this.meeting.camOff;
-      this.meeting.localStream.getVideoTracks().forEach(t => t.enabled = !this.meeting.camOff);
-    },
-
-    // ===== DEMO =====
-    async quickSeed(){
-      if(!this.activeWorkspaceId) return;
-      if(this.groups.length===0){
-        await this.sb.from('groups').insert({ workspace_id:this.activeWorkspaceId, name:'Team', description:'Allgemein' });
-        await this.loadGroups();
-      }
-      await this.sb.from('tickets').insert({
-        workspace_id:this.activeWorkspaceId, subject:'Beispiel: Objekt prüfen',
-        description:'Musterstraße 1, Berlin', priority:'Normal', status:'Offen', created_by:this.session.user.id
-      });
-      await this.sb.from('events').insert({
-        workspace_id:this.activeWorkspaceId, title:'Meeting – Einsatzplanung',
-        date:new Date().toLocaleString('de-DE'), group_id:this.activeGroupId||this.groups[0]?.id||null
-      });
-      await this.sb.from('docs').insert({
-        workspace_id:this.activeWorkspaceId, doc_type:'Angebot',
-        number:'AN-'+new Date().getFullYear()+'-1', client_name:'Kunde Muster',
-        date:new Date().toLocaleDateString('de-DE'), status:'Offen', total:250
-      });
-      this.toast('Demo','Daten erstellt');
-      await this.loadWorkspaceData();
-      await this.loadFeed();
-    },
-  }
-}
+  // initial button states
+  (function(){
+    const disable = (id)=>{ const b=$(id); if(b) b.disabled=true; };
+    disable("btnStartCall"); disable("btnHangup");
+  })();
 </script>
 
 </body>
