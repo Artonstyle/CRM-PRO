@@ -3,638 +3,465 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CRM PRO – All-in-One + Video (Supabase)</title>
+  <title>Admin – CRM Mitarbeiter + Chat + Video</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <style>
     .card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
     .btn{padding:.65rem 1rem;border-radius:14px;font-weight:900}
-    .navbtn{padding:.7rem 1rem;border-radius:14px;font-weight:900;background:#f1f5f9}
-    .navbtn.active{background:#0f172a;color:#fff}
-    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
-    video{background:#0b1220}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;}
   </style>
 </head>
 
 <body class="bg-slate-100 text-slate-900">
-<div id="toast" class="hidden fixed bottom-4 left-1/2 -translate-x-1/2 px-4 py-3 rounded-xl shadow-lg text-sm font-bold z-50 bg-slate-900 text-white"></div>
-
-<script>
-  // =========================
-  // FIX: Keys sind gesetzt (wie du wolltest)
-  // =========================
-  const SUPABASE_URL = "https://pgcjsyzoukyynkufupms.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_uyKhe83Crckp93AjCrIruw_NAuV16p2";
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-  const $ = (id)=>document.getElementById(id);
-  const toast = (msg, type="info")=>{
-    const el = $("toast");
-    el.textContent = msg;
-    el.className = "fixed bottom-4 left-1/2 -translate-x-1/2 px-4 py-3 rounded-xl shadow-lg text-sm font-bold z-50 " +
-      (type==="err" ? "bg-red-600 text-white" : type==="ok" ? "bg-green-600 text-white" : "bg-slate-900 text-white");
-    el.classList.remove("hidden");
-    clearTimeout(window.__t);
-    window.__t = setTimeout(()=>el.classList.add("hidden"), 2500);
-  };
-  const escapeHtml = (str)=> String(str ?? "").replace(/[&<>"']/g, s=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[s]));
-  const fmt = (d)=> new Date(d).toLocaleString("de-DE");
-
-  // =========================
-  // App State
-  // =========================
-  const state = {
-    user:null,
-    profile:null,
-    workspaces:[],
-    activeWorkspace:null,
-
-    // Realtime channels
-    rt:null,
-
-    // Video/WebRTC
-    call: {
-      roomId:"",
-      inRoom:false,
-      role:null, // "caller" | "answerer"
-      pc:null,
-      localStream:null,
-      remoteStream:null,
-      channel:null,
-      micOn:true,
-      camOn:true,
-      ready:false,
-    }
-  };
-
-  // =========================
-  // UI helpers
-  // =========================
-  function show(view){
-    ["view_login","view_app"].forEach(v=>$(v).classList.add("hidden"));
-    $(view).classList.remove("hidden");
-  }
-  function nav(id){
-    document.querySelectorAll("[data-panel]").forEach(p=>p.classList.add("hidden"));
-    $(id).classList.remove("hidden");
-    document.querySelectorAll(".navbtn").forEach(b=>b.classList.remove("active"));
-    $("nav_"+id).classList.add("active");
-  }
-
-  // =========================
-  // AUTH
-  // =========================
-  async function signIn(){
-    const email = $("li_email").value.trim();
-    const password = $("li_pass").value.trim();
-    if(!email || !password) return toast("Bitte Email & Passwort.", "err");
-
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if(error) return toast(error.message, "err");
-
-    await boot();
-    toast("Eingeloggt.", "ok");
-  }
-
-  async function signUp(){
-    const email = $("su_email").value.trim();
-    const password = $("su_pass").value.trim();
-    const username = $("su_user").value.trim() || email.split("@")[0];
-    if(!email || !password) return toast("Bitte Email & Passwort.", "err");
-
-    const { error } = await supabase.auth.signUp({ email, password });
-    if(error) return toast(error.message, "err");
-
-    toast("Account erstellt. Falls Email-Confirm aktiv: bestätigen.", "ok");
-    // Wenn Session direkt da ist, booten:
-    await boot();
-    if(state.user) await ensureProfile(username);
-  }
-
-  async function signOut(){
-    await supabase.auth.signOut();
-    location.reload();
-  }
-
-  async function loadSession(){
-    const { data, error } = await supabase.auth.getUser();
-    if(error) console.warn(error);
-    state.user = data?.user || null;
-  }
-
-  // =========================
-  // PROFILE / WORKSPACE
-  // =========================
-  async function ensureProfile(usernameFallback="User"){
-    if(!state.user) return;
-    const { data: prof, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", state.user.id)
-      .maybeSingle();
-
-    if(error) console.warn(error);
-
-    if(!prof){
-      // Versuch insert (wenn RLS das erlaubt)
-      const ins = await supabase.from("profiles").insert({
-        user_id: state.user.id,
-        username: usernameFallback,
-        role: "user"
-      });
-      if(ins.error) console.warn(ins.error);
-      const res = await supabase.from("profiles").select("*").eq("user_id", state.user.id).maybeSingle();
-      state.profile = res.data || null;
-    } else {
-      state.profile = prof;
-    }
-    renderHeader();
-  }
-
-  async function loadWorkspaces(){
-    const { data, error } = await supabase.from("workspaces").select("*").order("created_at",{ascending:false});
-    if(error){ console.warn(error); state.workspaces=[]; return; }
-    state.workspaces = data || [];
-  }
-
-  async function ensureWorkspace(){
-    await loadWorkspaces();
-    if(state.workspaces.length === 0){
-      const name = (state.profile?.username || "Mein") + " Workspace";
-      const { data: ws, error } = await supabase.from("workspaces").insert({ name }).select("*").single();
-      if(error) { console.warn(error); return; }
-
-      const m = await supabase.from("workspace_members").insert({
-        workspace_id: ws.id,
-        user_id: state.user.id,
-        member_role: "admin"
-      });
-      if(m.error) console.warn(m.error);
-
-      await loadWorkspaces();
-    }
-    state.activeWorkspace = state.workspaces[0] || null;
-    renderWorkspacePicker();
-  }
-
-  async function createWorkspace(){
-    const name = prompt("Workspace Name:");
-    if(!name) return;
-    const { data: ws, error } = await supabase.from("workspaces").insert({ name }).select("*").single();
-    if(error) return toast(error.message,"err");
-
-    const m = await supabase.from("workspace_members").insert({
-      workspace_id: ws.id,
-      user_id: state.user.id,
-      member_role: "admin"
-    });
-    if(m.error) console.warn(m.error);
-
-    await loadWorkspaces();
-    state.activeWorkspace = state.workspaces.find(w=>w.id===ws.id) || state.workspaces[0];
-    renderWorkspacePicker();
-    toast("Workspace erstellt.","ok");
-  }
-
-  async function switchWorkspace(id){
-    state.activeWorkspace = state.workspaces.find(w=>w.id===id) || null;
-    renderWorkspacePicker();
-    toast("Workspace gewechselt.","ok");
-    // Video room trennt sich automatisch, damit es sauber bleibt
-    await leaveRoom(true);
-  }
-
-  function renderHeader(){
-    $("hdr_email").textContent = state.user?.email || "—";
-    $("hdr_uid").textContent = state.user?.id ? state.user.id.slice(0,8) : "—";
-    $("hdr_name").textContent = state.profile?.username || "User";
-    $("hdr_admin").classList.toggle("hidden", !state.profile?.is_admin);
-  }
-
-  function renderWorkspacePicker(){
-    const sel = $("ws_select");
-    sel.innerHTML = state.workspaces.map(w=>`
-      <option value="${w.id}" ${state.activeWorkspace?.id===w.id ? "selected":""}>
-        ${escapeHtml(w.name)} (${w.id.slice(0,6)})
-      </option>
-    `).join("");
-    $("ws_name").textContent = state.activeWorkspace?.name || "—";
-  }
-
-  // =========================
-  // VIDEO / WEBRTC (Meetings)
-  // Signaling über Supabase Realtime Broadcast
-  // =========================
-  const ICE_SERVERS = [
-    { urls: "stun:stun.l.google.com:19302" },
-    { urls: "stun:stun1.l.google.com:19302" },
-  ];
-
-  function randomRoom(){
-    return "room_" + Math.random().toString(36).slice(2,10);
-  }
-
-  async function initLocalMedia(){
-    if(state.call.localStream) return;
-    try{
-      state.call.localStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:true });
-      $("localVideo").srcObject = state.call.localStream;
-      state.call.micOn = true;
-      state.call.camOn = true;
-      renderCallState();
-    } catch(e){
-      console.error(e);
-      toast("Kamera/Mikro blockiert. Browser erlauben.", "err");
-      throw e;
-    }
-  }
-
-  function makePC(){
-    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
-    state.call.remoteStream = new MediaStream();
-    $("remoteVideo").srcObject = state.call.remoteStream;
-
-    pc.ontrack = (ev)=>{
-      ev.streams[0].getTracks().forEach(t=> state.call.remoteStream.addTrack(t));
-    };
-
-    pc.onicecandidate = (ev)=>{
-      if(ev.candidate){
-        sendSignal({ type:"ice", candidate: ev.candidate });
-      }
-    };
-
-    pc.onconnectionstatechange = ()=>{
-      $("connState").textContent = pc.connectionState;
-      if(pc.connectionState === "connected") toast("Verbunden ✅", "ok");
-    };
-
-    // Local tracks
-    state.call.localStream.getTracks().forEach(track=>{
-      pc.addTrack(track, state.call.localStream);
-    });
-
-    return pc;
-  }
-
-  async function joinRoom(asNew=false){
-    if(!state.activeWorkspace) return toast("Kein Workspace.", "err");
-
-    const room = (asNew ? randomRoom() : $("roomInput").value.trim());
-    if(!room) return toast("Room-ID fehlt.", "err");
-
-    state.call.roomId = room;
-    $("roomInput").value = room;
-
-    await initLocalMedia();
-
-    // Channel unique pro workspace + room
-    const chanName = `call:${state.activeWorkspace.id}:${room}`;
-
-    // cleanup
-    if(state.call.channel) supabase.removeChannel(state.call.channel);
-
-    state.call.channel = supabase.channel(chanName);
-
-    // Broadcast listener
-    state.call.channel.on("broadcast", { event:"signal" }, async (payload)=>{
-      const msg = payload.payload;
-      if(!msg || msg.from === state.user.id) return;
-
-      // Only accept same room
-      if(msg.room !== state.call.roomId) return;
-
-      try{
-        if(msg.type === "offer"){
-          // I'm answerer
-          if(!state.call.pc){
-            state.call.role = "answerer";
-            state.call.pc = makePC();
-          }
-          await state.call.pc.setRemoteDescription(msg.offer);
-          const answer = await state.call.pc.createAnswer();
-          await state.call.pc.setLocalDescription(answer);
-          sendSignal({ type:"answer", answer });
-          state.call.inRoom = true;
-          renderCallState();
-        } else if(msg.type === "answer"){
-          if(state.call.pc){
-            await state.call.pc.setRemoteDescription(msg.answer);
-            state.call.inRoom = true;
-            renderCallState();
-          }
-        } else if(msg.type === "ice"){
-          if(state.call.pc && msg.candidate){
-            await state.call.pc.addIceCandidate(msg.candidate);
-          }
-        } else if(msg.type === "hangup"){
-          toast("Gegenstelle hat aufgelegt.", "info");
-          await leaveRoom(true);
-        }
-      } catch(e){
-        console.error(e);
-        toast("Signaling Fehler: "+ (e?.message||e), "err");
-      }
-    });
-
-    const { error } = await state.call.channel.subscribe();
-    if(error){
-      console.error(error);
-      return toast("Realtime subscribe failed: "+error.message, "err");
-    }
-
-    state.call.inRoom = true;
-    state.call.role = null;
-    state.call.pc = null;
-    renderCallState();
-    toast("Im Raum: "+room, "ok");
-  }
-
-  function sendSignal(payload){
-    if(!state.call.channel) return;
-    state.call.channel.send({
-      type:"broadcast",
-      event:"signal",
-      payload: {
-        ...payload,
-        room: state.call.roomId,
-        from: state.user.id,
-        ts: Date.now()
-      }
-    });
-  }
-
-  async function startCall(){
-    if(!state.call.inRoom) return toast("Erst Raum joinen.", "err");
-    await initLocalMedia();
-
-    // Caller creates offer
-    state.call.role = "caller";
-    state.call.pc = makePC();
-
-    const offer = await state.call.pc.createOffer({ offerToReceiveAudio:true, offerToReceiveVideo:true });
-    await state.call.pc.setLocalDescription(offer);
-    sendSignal({ type:"offer", offer });
-    renderCallState();
-    toast("Anruf gestartet…", "info");
-  }
-
-  async function leaveRoom(silent=false){
-    try{
-      if(state.call.pc){
-        state.call.pc.ontrack = null;
-        state.call.pc.onicecandidate = null;
-        state.call.pc.close();
-      }
-    } catch(e){}
-
-    if(state.call.channel){
-      try { supabase.removeChannel(state.call.channel); } catch(e){}
-    }
-
-    state.call.channel = null;
-    state.call.pc = null;
-    state.call.role = null;
-    state.call.inRoom = false;
-    $("connState").textContent = "idle";
-
-    if(!silent) toast("Raum verlassen.", "info");
-    renderCallState();
-  }
-
-  async function hangup(){
-    sendSignal({ type:"hangup" });
-    await leaveRoom(true);
-    toast("Aufgelegt.", "info");
-  }
-
-  function toggleMic(){
-    if(!state.call.localStream) return;
-    state.call.micOn = !state.call.micOn;
-    state.call.localStream.getAudioTracks().forEach(t=> t.enabled = state.call.micOn);
-    renderCallState();
-  }
-
-  function toggleCam(){
-    if(!state.call.localStream) return;
-    state.call.camOn = !state.call.camOn;
-    state.call.localStream.getVideoTracks().forEach(t=> t.enabled = state.call.camOn);
-    renderCallState();
-  }
-
-  function renderCallState(){
-    $("roomBadge").textContent = state.call.roomId || "—";
-    $("roleBadge").textContent = state.call.role || "—";
-    $("micBadge").textContent = state.call.micOn ? "Mic ON" : "Mic OFF";
-    $("camBadge").textContent = state.call.camOn ? "Cam ON" : "Cam OFF";
-
-    $("btnStartCall").disabled = !state.call.inRoom;
-    $("btnHangup").disabled = !state.call.inRoom;
-
-    $("btnMic").textContent = state.call.micOn ? "Mic aus" : "Mic an";
-    $("btnCam").textContent = state.call.camOn ? "Cam aus" : "Cam an";
-  }
-
-  // =========================
-  // Boot
-  // =========================
-  async function boot(){
-    await loadSession();
-    if(!state.user){
-      show("view_login");
-      return;
-    }
-    show("view_app");
-    await ensureProfile();
-    await ensureWorkspace();
-    renderHeader();
-    nav("panel_meetings");
-  }
-
-  // expose
-  window.signIn = signIn;
-  window.signUp = signUp;
-  window.signOut = signOut;
-  window.createWorkspace = createWorkspace;
-  window.switchWorkspace = switchWorkspace;
-  window.nav = nav;
-
-  window.joinRoomNew = ()=> joinRoom(true);
-  window.joinRoom = ()=> joinRoom(false);
-  window.startCall = startCall;
-  window.leaveRoom = leaveRoom;
-  window.hangup = hangup;
-  window.toggleMic = toggleMic;
-  window.toggleCam = toggleCam;
-
-  window.addEventListener("load", ()=>{
-    // Wichtig: sofort boot – wenn Supabase mal kurz nicht antwortet, bleibt Login sichtbar
-    boot().catch(e=>{
-      console.error(e);
-      show("view_login");
-      toast("Startfehler: "+(e?.message||e), "err");
-    });
-  });
-</script>
-
-<!-- LOGIN -->
-<div id="view_login" class="min-h-screen flex items-center justify-center p-6">
-  <div class="card w-full max-w-3xl p-8">
-    <div class="flex items-center justify-between gap-4">
-      <div>
-        <div class="text-3xl font-black">CRM PRO</div>
-        <div class="text-slate-500 font-semibold">Supabase Login • Admin • Meetings (WebRTC)</div>
-      </div>
-      <div class="px-3 py-2 rounded-xl bg-slate-900 text-white font-black">LIVE</div>
-    </div>
-
-    <div class="grid md:grid-cols-2 gap-6 mt-8">
-      <div class="p-5 rounded-2xl bg-slate-50 border">
-        <div class="font-black text-lg mb-3">Login</div>
-        <input id="li_email" class="w-full border p-3 rounded-xl mb-2" placeholder="Email">
-        <input id="li_pass" type="password" class="w-full border p-3 rounded-xl mb-3" placeholder="Passwort">
-        <button class="btn bg-blue-600 text-white w-full" onclick="signIn()">Login</button>
-      </div>
-
-      <div class="p-5 rounded-2xl bg-slate-50 border">
-        <div class="font-black text-lg mb-3">Signup</div>
-        <input id="su_user" class="w-full border p-3 rounded-xl mb-2" placeholder="Username (optional)">
-        <input id="su_email" class="w-full border p-3 rounded-xl mb-2" placeholder="Email">
-        <input id="su_pass" type="password" class="w-full border p-3 rounded-xl mb-3" placeholder="Passwort">
-        <button class="btn bg-slate-900 text-white w-full" onclick="signUp()">Account erstellen</button>
-      </div>
-    </div>
-
-    <div class="mt-6 text-xs text-slate-500">
-      Hinweis: <span class="mono">sb_publishable</span> ist ok im Browser. <span class="mono">sb_secret</span> niemals.
+<div class="max-w-7xl mx-auto p-6">
+
+  <div id="loginBox" class="card p-6 max-w-xl mx-auto">
+    <div class="text-2xl font-black">Admin Login</div>
+    <div class="text-slate-500 font-semibold">Mitarbeiter verwalten, anschreiben, anrufen</div>
+
+    <div class="mt-5 space-y-2">
+      <input id="email" class="w-full border rounded-xl p-3" placeholder="Admin Email">
+      <input id="pass" type="password" class="w-full border rounded-xl p-3" placeholder="Passwort">
+      <button class="btn bg-slate-900 text-white w-full" onclick="login()">Login</button>
+      <div id="loginErr" class="text-red-600 font-black text-sm"></div>
     </div>
   </div>
-</div>
 
-<!-- APP -->
-<div id="view_app" class="hidden">
-  <div class="max-w-7xl mx-auto p-6">
+  <div id="app" class="hidden">
     <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-      <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-black">CP</div>
-        <div>
-          <div class="text-2xl font-black">CRM PRO</div>
-          <div class="text-slate-500 font-semibold">
-            Workspace: <span id="ws_name" class="font-black text-slate-900">—</span>
-          </div>
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+      <div>
+        <div class="text-3xl font-black">Admin CRM</div>
+        <div class="text-slate-500 font-semibold">
+          Workspace: <span id="wsName" class="font-black text-slate-900">—</span>
+          <span id="adminBadge" class="ml-2 inline-block px-2 py-1 rounded-full bg-red-100 text-red-700 font-black text-xs">ADMIN</span>
         </div>
       </div>
 
-      <div class="flex flex-wrap items-center gap-3">
-        <div class="card px-4 py-3">
-          <div class="font-black" id="hdr_name">—</div>
-          <div class="text-xs text-slate-500">
-            <span id="hdr_email">—</span> • <span id="hdr_uid" class="mono">—</span>
-            <span id="hdr_admin" class="ml-2 inline-block px-2 py-1 rounded-full bg-red-100 text-red-700 font-black text-xs hidden">ADMIN</span>
-          </div>
-        </div>
-
-        <div class="card px-3 py-2 flex items-center gap-2">
-          <select id="ws_select" class="border rounded-xl p-2 font-black" onchange="switchWorkspace(this.value)"></select>
-          <button class="btn bg-slate-900 text-white" onclick="createWorkspace()">+ Workspace</button>
-        </div>
-
-        <button class="btn bg-red-600 text-white" onclick="signOut()">Logout</button>
+      <div class="flex flex-wrap items-center gap-2">
+        <select id="wsSelect" class="border rounded-xl p-2 font-black" onchange="switchWs(this.value)"></select>
+        <button class="btn bg-slate-900 text-white" onclick="createWs()">+ Workspace</button>
+        <button class="btn bg-red-600 text-white" onclick="logout()">Logout</button>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <div class="grid lg:grid-cols-12 gap-6">
       <!-- Sidebar -->
       <div class="lg:col-span-3">
-        <div class="card p-3 grid gap-2">
-          <button id="nav_panel_meetings" class="navbtn active" onclick="nav('panel_meetings')">📹 Meetings</button>
-          <button id="nav_panel_info" class="navbtn" onclick="nav('panel_info')">ℹ️ Info</button>
+        <div class="card p-3 space-y-2">
+          <button class="btn w-full bg-slate-900 text-white" onclick="showPanel('employees')">Mitarbeiter</button>
+          <button class="btn w-full bg-slate-200" onclick="showPanel('meetings')">Video/Meetings</button>
+          <button class="btn w-full bg-slate-200" onclick="showPanel('logs')">Feed/Logs</button>
         </div>
 
         <div class="card p-4 mt-6">
-          <div class="font-black mb-2">Meeting Status</div>
-          <div class="text-sm text-slate-600 space-y-1">
-            <div>Room: <span id="roomBadge" class="mono font-black">—</span></div>
-            <div>Role: <span id="roleBadge" class="mono font-black">—</span></div>
-            <div>Conn: <span id="connState" class="mono font-black">idle</span></div>
-            <div class="flex gap-2 mt-2">
-              <span id="micBadge" class="px-2 py-1 rounded-full bg-slate-200 font-black text-xs">—</span>
-              <span id="camBadge" class="px-2 py-1 rounded-full bg-slate-200 font-black text-xs">—</span>
-            </div>
+          <div class="font-black">Debug</div>
+          <div class="text-xs text-slate-600 mt-2">
+            User: <span id="dbgUser" class="mono font-black">—</span><br>
+            Active WS: <span id="dbgWs" class="mono font-black">—</span>
           </div>
         </div>
       </div>
 
-      <!-- Content -->
-      <div class="lg:col-span-9">
-        <!-- Meetings -->
-        <div id="panel_meetings" data-panel class="card p-6">
-          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <!-- Main -->
+      <div class="lg:col-span-9 space-y-6">
+        <!-- EMPLOYEES -->
+        <div id="panel_employees" class="card p-6">
+          <div class="flex items-center justify-between gap-3">
             <div>
-              <div class="text-2xl font-black">Online-Meetings & Videoanrufe</div>
-              <div class="text-slate-500 font-semibold">WebRTC + Supabase Realtime Signaling</div>
+              <div class="text-2xl font-black">Mitarbeiter</div>
+              <div class="text-slate-500 font-semibold">Foto, Adresse, Personalnummer, Aktionen</div>
             </div>
-            <div class="flex flex-wrap gap-2">
-              <button class="btn bg-slate-900 text-white" onclick="joinRoomNew()">Neuen Raum</button>
-              <button class="btn bg-slate-200" onclick="joinRoom()">Join</button>
-              <button id="btnStartCall" class="btn bg-blue-600 text-white" onclick="startCall()">Call starten</button>
-              <button id="btnHangup" class="btn bg-red-600 text-white" onclick="hangup()">Auflegen</button>
-              <button class="btn bg-slate-200" onclick="leaveRoom()">Leave</button>
-            </div>
+            <button class="btn bg-blue-600 text-white" onclick="openEmpModal()">+ Mitarbeiter</button>
           </div>
 
-          <div class="mt-5 grid md:grid-cols-3 gap-3">
-            <div class="md:col-span-2">
-              <input id="roomInput" class="w-full border rounded-2xl p-3 font-black mono" placeholder="Room-ID (z.B. room_ab12cd34)">
-              <div class="text-xs text-slate-500 mt-2">
-                Ablauf: 1) Raum erstellen oder joinen → 2) Einer drückt “Call starten” → 3) der andere akzeptiert automatisch.
-              </div>
-            </div>
-            <div class="flex gap-2">
-              <button id="btnMic" class="btn bg-slate-900 text-white w-full" onclick="toggleMic()">Mic aus</button>
-              <button id="btnCam" class="btn bg-slate-900 text-white w-full" onclick="toggleCam()">Cam aus</button>
-            </div>
+          <div class="mt-4">
+            <input id="empSearch" class="w-full border rounded-xl p-3" placeholder="Suche (Name, Nr, Ort…)" oninput="renderEmployees()">
           </div>
 
-          <div class="mt-6 grid md:grid-cols-2 gap-4">
-            <div class="rounded-2xl overflow-hidden border bg-slate-900">
-              <div class="px-3 py-2 text-white font-black text-sm">Du</div>
-              <video id="localVideo" autoplay playsinline muted class="w-full h-64 object-cover"></video>
-            </div>
-            <div class="rounded-2xl overflow-hidden border bg-slate-900">
-              <div class="px-3 py-2 text-white font-black text-sm">Gegenstelle</div>
-              <video id="remoteVideo" autoplay playsinline class="w-full h-64 object-cover"></video>
-            </div>
-          </div>
-
-          <div class="mt-4 text-xs text-slate-500">
-            Tipp: Wenn Remote-Video schwarz bleibt: Browser-Autoplay blockiert manchmal Audio/Video → einmal in das Video klicken.
-            Für “harte” Netzwerke brauchst du TURN (z.B. Twilio).
+          <div class="mt-4 overflow-auto">
+            <table class="w-full text-left">
+              <thead class="text-xs uppercase text-slate-500 font-black">
+                <tr>
+                  <th class="p-3">Nr</th>
+                  <th class="p-3">Name</th>
+                  <th class="p-3">Ort</th>
+                  <th class="p-3">Kontakt</th>
+                  <th class="p-3 text-right">Aktion</th>
+                </tr>
+              </thead>
+              <tbody id="empTbody" class="divide-y"></tbody>
+            </table>
           </div>
         </div>
 
-        <!-- Info -->
-        <div id="panel_info" data-panel class="card p-6 hidden">
-          <div class="text-2xl font-black">Warum hat dein altes HTML “nix angezeigt”?</div>
-          <div class="mt-3 text-slate-600 space-y-2">
-            <div>• Häufigster Grund: <b>Startfehler in JavaScript</b> → Seite bleibt hidden.</div>
-            <div>• In dieser Version ist Login <b>standardmäßig sichtbar</b> und die App wird erst danach eingeblendet.</div>
-            <div>• Wenn du willst, erweitere ich das wieder auf: CRM, Tickets, Chat, Kalender, Drive, Admin usw.</div>
+        <!-- MEETINGS -->
+        <div id="panel_meetings" class="card p-6 hidden">
+          <div class="text-2xl font-black">Video/Meetings</div>
+          <div class="text-slate-600 mt-2">
+            Video läuft in der Mitarbeiter-Ansicht. Von hier aus startest du Calls über das Mitarbeiter-Profil (Button „Anrufen“).
           </div>
+        </div>
+
+        <!-- LOGS -->
+        <div id="panel_logs" class="card p-6 hidden">
+          <div class="text-2xl font-black">Feed / Logs (minimal)</div>
+          <div id="logBox" class="mt-3 text-sm font-mono whitespace-pre-wrap text-slate-700"></div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<script>
-  // initial button states
-  (function(){
-    const disable = (id)=>{ const b=$(id); if(b) b.disabled=true; };
-    disable("btnStartCall"); disable("btnHangup");
-  })();
-</script>
+<!-- Employee Modal -->
+<div id="empModal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+  <div class="bg-white w-full max-w-2xl rounded-2xl p-6 shadow-2xl">
+    <div class="flex items-center justify-between">
+      <div class="text-xl font-black" id="empModalTitle">Mitarbeiter</div>
+      <button class="btn bg-slate-200" onclick="closeEmpModal()">X</button>
+    </div>
 
+    <div class="grid md:grid-cols-2 gap-3 mt-4">
+      <input id="e_first" class="border rounded-xl p-3" placeholder="Vorname">
+      <input id="e_last" class="border rounded-xl p-3" placeholder="Nachname">
+      <input id="e_email" class="border rounded-xl p-3" placeholder="Email">
+      <input id="e_phone" class="border rounded-xl p-3" placeholder="Telefon">
+      <input id="e_street" class="border rounded-xl p-3" placeholder="Adresse / Straße">
+      <input id="e_plz" class="border rounded-xl p-3" placeholder="PLZ">
+      <input id="e_city" class="border rounded-xl p-3" placeholder="Ort">
+      <input id="e_country" class="border rounded-xl p-3" placeholder="Land (DE)">
+      <input id="e_photo" class="border rounded-xl p-3 md:col-span-2" placeholder="Foto URL (optional)">
+      <textarea id="e_notes" class="border rounded-xl p-3 md:col-span-2" placeholder="Notizen"></textarea>
+      <input id="e_userid" class="border rounded-xl p-3 md:col-span-2 mono" placeholder="Login-User UUID (auth.users.id) für Chat/Video">
+    </div>
+
+    <div class="mt-5 flex justify-end gap-2">
+      <button class="btn bg-slate-200" onclick="closeEmpModal()">Abbrechen</button>
+      <button class="btn bg-blue-600 text-white" onclick="saveEmployee()">Speichern</button>
+    </div>
+
+    <div class="text-xs text-slate-500 mt-3">
+      Für Chat/Video muss der Mitarbeiter einen Login haben → dann hier seine User UUID eintragen.
+    </div>
+  </div>
+</div>
+
+<!-- Employee Detail Drawer -->
+<div id="empDrawer" class="hidden fixed inset-0 z-40">
+  <div class="absolute inset-0 bg-black/40" onclick="closeDrawer()"></div>
+  <div class="absolute right-0 top-0 h-full w-full max-w-xl bg-white shadow-2xl p-6 overflow-y-auto">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <div class="text-2xl font-black" id="d_name">—</div>
+        <div class="text-slate-500 font-semibold">
+          Nr: <span id="d_no" class="mono font-black">—</span>
+        </div>
+      </div>
+      <button class="btn bg-slate-200" onclick="closeDrawer()">X</button>
+    </div>
+
+    <div class="mt-4 flex gap-2">
+      <button class="btn bg-slate-900 text-white w-full" onclick="messageEmployee()">Nachricht</button>
+      <button class="btn bg-blue-600 text-white w-full" onclick="callEmployee()">Videoanruf</button>
+    </div>
+
+    <div class="mt-5 grid grid-cols-2 gap-3 text-sm">
+      <div class="card p-3">
+        <div class="text-xs text-slate-500 font-black uppercase">Kontakt</div>
+        <div class="mt-2" id="d_contact">—</div>
+      </div>
+      <div class="card p-3">
+        <div class="text-xs text-slate-500 font-black uppercase">Adresse</div>
+        <div class="mt-2" id="d_addr">—</div>
+      </div>
+      <div class="card p-3 col-span-2">
+        <div class="text-xs text-slate-500 font-black uppercase">User UUID (für Chat/Video)</div>
+        <div class="mt-2 mono font-black" id="d_userid">—</div>
+      </div>
+      <div class="card p-3 col-span-2">
+        <div class="text-xs text-slate-500 font-black uppercase">Notizen</div>
+        <div class="mt-2" id="d_notes">—</div>
+      </div>
+    </div>
+
+    <div class="mt-5 flex gap-2">
+      <button class="btn bg-slate-200 w-full" onclick="editSelected()">Bearbeiten</button>
+      <button class="btn bg-red-600 text-white w-full" onclick="deleteSelected()">Löschen</button>
+    </div>
+
+    <div class="mt-5">
+      <div class="text-xs text-slate-500 font-black uppercase mb-2">Chat Schnelltext</div>
+      <input id="d_msg" class="w-full border rounded-xl p-3" placeholder="Nachricht…" onkeydown="if(event.key==='Enter') messageEmployee()">
+      <div class="text-xs text-slate-500 mt-2">Intern per Supabase Realtime Broadcast (Mitarbeiter sieht es in mitarbeiter.html).</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Supabase fixed keys (wie du wolltest)
+  const SUPABASE_URL = "https://pgcjsyzoukyynkufupms.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_uyKhe83Crckp93AjCrIruw_NAuV16p2";
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const state = {
+    user: null,
+    profile: null,
+    workspaces: [],
+    ws: null,
+    employees: [],
+    selected: null
+  };
+
+  function log(msg){
+    const box = document.getElementById("logBox");
+    box.textContent = `[${new Date().toLocaleTimeString()}] ${msg}\n` + box.textContent;
+  }
+
+  function showPanel(key){
+    ["employees","meetings","logs"].forEach(k=>{
+      document.getElementById("panel_"+k).classList.toggle("hidden", k!==key);
+    });
+  }
+
+  async function login(){
+    document.getElementById("loginErr").textContent = "";
+    const email = document.getElementById("email").value.trim();
+    const pass = document.getElementById("pass").value.trim();
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if(error) return document.getElementById("loginErr").textContent = error.message;
+
+    state.user = data.user;
+
+    // profile
+    const p = await sb.from("profiles").select("*").eq("user_id", state.user.id).maybeSingle();
+    state.profile = p.data || null;
+    if(!state.profile?.is_admin){
+      alert("Du bist nicht als Admin markiert (profiles.is_admin).");
+    }
+
+    document.getElementById("dbgUser").textContent = state.user.id.slice(0,8);
+
+    document.getElementById("loginBox").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
+
+    await loadWorkspaces();
+    if(state.workspaces.length===0) await createWs(true);
+    else await switchWs(state.workspaces[0].id);
+
+    showPanel("employees");
+  }
+
+  async function logout(){
+    await sb.auth.signOut();
+    location.reload();
+  }
+
+  async function loadWorkspaces(){
+    const { data, error } = await sb.from("workspaces").select("*").order("created_at",{ascending:false});
+    if(error){ alert(error.message); return; }
+    state.workspaces = data || [];
+    const sel = document.getElementById("wsSelect");
+    sel.innerHTML = state.workspaces.map(w=>`<option value="${w.id}">${w.name} (${w.id.slice(0,6)})</option>`).join("");
+  }
+
+  async function createWs(silent){
+    const name = silent ? ((state.profile?.username||"Admin")+" Workspace") : prompt("Workspace Name:");
+    if(!name) return;
+    const { data: ws, error } = await sb.from("workspaces").insert({ name }).select("*").single();
+    if(error) return alert(error.message);
+
+    await sb.from("workspace_members").insert({ workspace_id: ws.id, user_id: state.user.id, member_role:"admin" });
+
+    await loadWorkspaces();
+    await switchWs(ws.id);
+    if(!silent) alert("Workspace erstellt");
+  }
+
+  async function switchWs(id){
+    state.ws = state.workspaces.find(w=>w.id===id) || null;
+    document.getElementById("wsName").textContent = state.ws?.name || "—";
+    document.getElementById("dbgWs").textContent = state.ws?.id?.slice(0,8) || "—";
+    await loadEmployees();
+  }
+
+  // Employees
+  async function loadEmployees(){
+    if(!state.ws) return;
+    const { data, error } = await sb
+      .from("employees")
+      .select("*")
+      .eq("workspace_id", state.ws.id)
+      .order("created_at",{ascending:false});
+    if(error){ alert(error.message); return; }
+    state.employees = data || [];
+    renderEmployees();
+  }
+
+  function renderEmployees(){
+    const q = document.getElementById("empSearch").value.trim().toLowerCase();
+    const rows = state.employees
+      .filter(e=>{
+        const s = `${e.employee_no||""} ${e.first_name||""} ${e.last_name||""} ${e.city||""} ${e.plz||""}`.toLowerCase();
+        return !q || s.includes(q);
+      })
+      .map(e=>`
+        <tr class="hover:bg-slate-50 cursor-pointer" onclick="openDrawer('${e.id}')">
+          <td class="p-3 mono font-black text-blue-600">${e.employee_no ?? "-"}</td>
+          <td class="p-3 font-black">${escapeHtml(e.first_name)} ${escapeHtml(e.last_name)}</td>
+          <td class="p-3 text-slate-600">${escapeHtml(e.plz||"")} ${escapeHtml(e.city||"")}</td>
+          <td class="p-3 text-slate-600">${escapeHtml(e.email||"")}<br>${escapeHtml(e.phone||"")}</td>
+          <td class="p-3 text-right">
+            <button class="px-3 py-2 rounded-xl bg-slate-900 text-white font-black" onclick="event.stopPropagation(); quickCall('${e.id}')">Anrufen</button>
+          </td>
+        </tr>
+      `).join("");
+
+    document.getElementById("empTbody").innerHTML = rows || `<tr><td class="p-4 text-slate-500" colspan="5">Keine Mitarbeiter</td></tr>`;
+  }
+
+  function escapeHtml(str){
+    return String(str??"").replace(/[&<>"']/g, s=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[s]));
+  }
+
+  function openEmpModal(emp){
+    state.editing = emp || null;
+    document.getElementById("empModalTitle").textContent = emp ? "Mitarbeiter bearbeiten" : "Neuer Mitarbeiter";
+    ["e_first","e_last","e_email","e_phone","e_photo","e_street","e_plz","e_city","e_country","e_notes","e_userid"].forEach(id=>{
+      document.getElementById(id).value = emp ? (emp[fieldMap(id)] ?? "") : "";
+    });
+    if(!document.getElementById("e_country").value) document.getElementById("e_country").value = "DE";
+    document.getElementById("empModal").classList.remove("hidden");
+  }
+
+  function fieldMap(id){
+    return ({
+      e_first:"first_name", e_last:"last_name", e_email:"email", e_phone:"phone", e_photo:"photo_url",
+      e_street:"street", e_plz:"plz", e_city:"city", e_country:"country", e_notes:"notes", e_userid:"user_id"
+    })[id];
+  }
+
+  function closeEmpModal(){
+    document.getElementById("empModal").classList.add("hidden");
+  }
+
+  async function saveEmployee(){
+    if(!state.ws) return;
+    const payload = {
+      workspace_id: state.ws.id,
+      first_name: document.getElementById("e_first").value.trim(),
+      last_name: document.getElementById("e_last").value.trim(),
+      email: document.getElementById("e_email").value.trim(),
+      phone: document.getElementById("e_phone").value.trim(),
+      photo_url: document.getElementById("e_photo").value.trim(),
+      street: document.getElementById("e_street").value.trim(),
+      plz: document.getElementById("e_plz").value.trim(),
+      city: document.getElementById("e_city").value.trim(),
+      country: document.getElementById("e_country").value.trim() || "DE",
+      notes: document.getElementById("e_notes").value.trim(),
+      user_id: (document.getElementById("e_userid").value.trim() || null)
+    };
+
+    if(!payload.first_name || !payload.last_name) return alert("Vorname/Nachname fehlt");
+
+    if(state.editing){
+      const { error } = await sb.from("employees").update(payload).eq("id", state.editing.id);
+      if(error) return alert(error.message);
+      log("Employee updated: "+state.editing.id);
+    } else {
+      const { error } = await sb.from("employees").insert(payload);
+      if(error) return alert(error.message);
+      log("Employee created");
+    }
+
+    closeEmpModal();
+    await loadEmployees();
+  }
+
+  function openDrawer(id){
+    const emp = state.employees.find(e=>e.id===id);
+    if(!emp) return;
+    state.selected = emp;
+
+    document.getElementById("d_name").textContent = `${emp.first_name} ${emp.last_name}`;
+    document.getElementById("d_no").textContent = emp.employee_no ?? "-";
+    document.getElementById("d_contact").innerHTML = `${escapeHtml(emp.email||"-")}<br>${escapeHtml(emp.phone||"-")}`;
+    document.getElementById("d_addr").innerHTML = `${escapeHtml(emp.street||"-")}<br>${escapeHtml(emp.plz||"")} ${escapeHtml(emp.city||"")}<br>${escapeHtml(emp.country||"")}`;
+    document.getElementById("d_userid").textContent = emp.user_id || "—";
+    document.getElementById("d_notes").textContent = emp.notes || "—";
+
+    document.getElementById("empDrawer").classList.remove("hidden");
+  }
+
+  function closeDrawer(){
+    document.getElementById("empDrawer").classList.add("hidden");
+  }
+
+  function editSelected(){
+    if(!state.selected) return;
+    openEmpModal(state.selected);
+  }
+
+  async function deleteSelected(){
+    if(!state.selected) return;
+    if(!confirm("Mitarbeiter löschen?")) return;
+    const { error } = await sb.from("employees").delete().eq("id", state.selected.id);
+    if(error) return alert(error.message);
+    log("Employee deleted: "+state.selected.id);
+    closeDrawer();
+    await loadEmployees();
+  }
+
+  async function quickCall(id){
+    openDrawer(id);
+    callEmployee();
+  }
+
+  // ===== Chat (Broadcast Message) =====
+  async function messageEmployee(){
+    if(!state.selected?.user_id) return alert("Kein user_id verknüpft. Trage die Login-UUID ein.");
+    const text = (document.getElementById("d_msg").value.trim() || "Hallo!");
+    document.getElementById("d_msg").value = "";
+
+    const ch = sb.channel("user:" + state.selected.user_id);
+    await ch.subscribe();
+    await ch.send({
+      type:"broadcast",
+      event:"dm",
+      payload:{
+        fromId: state.user.id,
+        fromName: state.profile?.username || "Admin",
+        text,
+        ts: Date.now()
+      }
+    });
+    setTimeout(()=>{ try{ sb.removeChannel(ch); }catch(e){} }, 1200);
+    log("DM gesendet an "+state.selected.user_id.slice(0,8)+": "+text);
+    showPanel("logs");
+  }
+
+  // ===== Video Invite =====
+  async function callEmployee(){
+    if(!state.selected?.user_id) return alert("Kein user_id verknüpft. Trage die Login-UUID ein.");
+
+    const roomId = `call_${state.ws.id}_${state.user.id.slice(0,8)}_${state.selected.user_id.slice(0,8)}`;
+
+    const ch = sb.channel("user:" + state.selected.user_id);
+    await ch.subscribe();
+    await ch.send({
+      type:"broadcast",
+      event:"invite",
+      payload:{
+        roomId,
+        fromId: state.user.id,
+        fromName: state.profile?.username || "Admin"
+      }
+    });
+    setTimeout(()=>{ try{ sb.removeChannel(ch); }catch(e){} }, 1200);
+
+    log("CALL invite → room: "+roomId);
+    alert("Anruf gesendet. Mitarbeiter öffnet mitarbeiter.html und nimmt an.\nRoom: "+roomId);
+  }
+</script>
 </body>
 </html>
