@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <title>CORE MASTER 2026 | KUNDEN-VERWALTUNG</title>
+  <title>CORE MASTER 2026 | KUNDEN</title>
   <link rel="stylesheet" href="../style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -13,64 +13,59 @@
     .sidebar { width: 260px; border-right: 1px solid var(--border); padding: 25px; display: flex; flex-direction: column; background: #000; }
     .main-content { flex: 1; overflow-y: auto; padding: 40px; }
 
-    /* Kunden-Table */
-    .table-container { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-top: 20px; }
+    /* Header & Action */
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    .btn-main { background: var(--accent); color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+
+    /* Tabelle */
+    .table-container { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
     table { width: 100%; border-collapse: collapse; }
     th { background: rgba(255,255,255,0.02); padding: 15px 20px; text-align: left; font-size: 11px; color: #444; text-transform: uppercase; }
     td { padding: 18px 20px; border-top: 1px solid var(--border); font-size: 14px; }
+    .tr-hover:hover { background: rgba(255,255,255,0.01); }
 
-    /* Management Modal (Das Fenster das aufploppt) */
-    .modal { 
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-        background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 2000;
-    }
-    .modal-content { 
-        background: #0d0d0d; width: 90%; max-width: 1000px; height: 80vh; 
-        border-radius: 20px; border: 1px solid var(--border); padding: 40px; overflow-y: auto;
-    }
+    /* Modal / Fenster */
+    .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(5px); }
+    .modal-content { background: #0d0d0d; width: 90%; max-width: 1100px; height: 85vh; border-radius: 24px; border: 1px solid var(--border); padding: 40px; overflow-y: auto; }
 
-    /* Form Styles */
-    .form-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+    .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
     .field { display: flex; flex-direction: column; gap: 6px; }
     label { font-size: 10px; font-weight: 800; color: #555; text-transform: uppercase; }
-    input, select { background: #000; border: 1px solid var(--border); padding: 12px; border-radius: 8px; color: #fff; font-size: 14px; }
+    input, select { background: #000; border: 1px solid var(--border); padding: 12px; border-radius: 8px; color: #fff; }
     
-    .btn-action { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-    .badge-count { background: var(--accent); color: white; padding: 2px 8px; border-radius: 10px; font-size: 10px; margin-left: 10px; }
+    .badge-count { background: rgba(37, 99, 235, 0.1); color: var(--accent); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; border: 1px solid rgba(37, 99, 235, 0.2); }
   </style>
 </head>
 <body>
 
   <aside class="sidebar">
-    <div style="font-weight: 900; font-size: 22px; color: var(--accent); margin-bottom: 40px;">CORE MASTER</div>
+    <div style="font-weight: 900; font-size: 22px; color: var(--accent); margin-bottom: 40px; letter-spacing: -1px;">CORE MASTER</div>
     <nav style="display: flex; flex-direction: column; gap: 8px;">
+      <a href="../admin.html" class="nav-link" style="color:#555; text-decoration:none; padding:12px;"><i data-lucide="layout-dashboard"></i> Dashboard</a>
       <a href="kunden.html" class="nav-link active" style="color:white; text-decoration:none; padding:12px; background:rgba(255,255,255,0.05); border-radius:10px;"><i data-lucide="users"></i> Kunden</a>
       <a href="objekte.html" class="nav-link" style="color:#555; text-decoration:none; padding:12px;"><i data-lucide="building-2"></i> Objekte</a>
+      <a href="mitarbeiter.html" class="nav-link" style="color:#555; text-decoration:none; padding:12px;"><i data-lucide="hard-hat"></i> Mitarbeiter</a>
+      <a href="schichtplan.html" class="nav-link" style="color:#555; text-decoration:none; padding:12px;"><i data-lucide="calendar"></i> Schichtplan</a>
     </nav>
   </aside>
 
   <main class="main-content">
-    <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 30px;">
-        <h1 style="font-size: 32px; margin: 0;">Mandanten-Stamm</h1>
-        <button class="btn-action" onclick="document.getElementById('addKundeForm').style.display='block'">+ NEUER KUNDE</button>
+    <header class="page-header">
+      <div>
+        <h1 style="font-size: 32px; margin: 0; letter-spacing: -1.5px;">Kunden-Zentrale</h1>
+        <p style="color: #555; margin-top:5px;">Mandantenverwaltung & Objekt-Zuweisung 2026</p>
+      </div>
+      <button class="btn-main" onclick="openCreateKunde()">+ NEUER KUNDE</button>
     </header>
-
-    <div id="addKundeForm" style="display:none; background: var(--card); padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid var(--border);">
-        <div class="form-row">
-            <div class="field"><label>Firmenname</label><input type="text" id="k_name"></div>
-            <div class="field"><label>Ansprechpartner</label><input type="text" id="k_contact"></div>
-            <div class="field" style="justify-content: flex-end;"><button class="btn-action" onclick="saveKunde()">KUNDE ANLEGEN</button></div>
-        </div>
-    </div>
 
     <div class="table-container">
       <table>
         <thead>
           <tr>
-            <th>Firma</th>
+            <th>Unternehmen</th>
             <th>Ansprechpartner</th>
             <th>Objekte</th>
-            <th style="text-align: right;">Management</th>
+            <th style="text-align: right; padding-right:20px;">Optionen</th>
           </tr>
         </thead>
         <tbody id="kunden-liste"></tbody>
@@ -79,102 +74,97 @@
   </main>
 
   <div class="modal" id="mgmtModal">
-      <div class="modal-content">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
-              <h2 id="modalKundeTitle" style="font-size:24px; color:var(--accent);">Kunde verwalten</h2>
-              <button onclick="closeModal()" style="background:none; border:none; color:#555; cursor:pointer;"><i data-lucide="x" size="30"></i></button>
-          </div>
-
-          <div style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 15px; border: 1px solid var(--border);">
-              <h3 style="font-size:14px; margin-bottom:20px; color:#aaa;">NEUES OBJEKT HINZUFÜGEN</h3>
-              <div class="form-row">
-                  <div class="field"><label>Objekt Name</label><input type="text" id="mo_name" placeholder="z.B. Filiale 102"></div>
-                  <div class="field"><label>Straße / Nr.</label><input type="text" id="mo_street"></div>
-                  <div class="field"><label>Stadt</label><input type="text" id="mo_city"></div>
-              </div>
-              <button class="btn-action" style="width:100%;" onclick="saveObjectForKunde()">OBJEKT HINZUFÜGEN & GEOFENCING AKTIVIEREN</button>
-          </div>
-
-          <h3 style="font-size:14px; margin-top:40px; margin-bottom:20px; color:#aaa;">BESTEHENDE OBJEKTE & MITARBEITER-ZUORDNUNG</h3>
-          <div class="table-container">
-              <table>
-                  <thead>
-                      <tr>
-                          <th>Objekt</th>
-                          <th>Adresse</th>
-                          <th>Zugeordneter Mitarbeiter</th>
-                          <th>Status</th>
-                      </tr>
-                  </thead>
-                  <tbody id="modal-objekt-liste"></tbody>
-              </table>
-          </div>
+    <div class="modal-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+        <h2 id="modalTitle" style="font-size:26px; letter-spacing:-1px;">Kunde bearbeiten</h2>
+        <button onclick="closeModal()" style="background:none; border:none; color:#555; cursor:pointer;"><i data-lucide="x" size="32"></i></button>
       </div>
+
+      <div style="background: rgba(255,255,255,0.02); padding: 25px; border-radius: 16px; border: 1px solid var(--border);">
+        <label style="color:var(--accent); margin-bottom:15px; display:block;">Objekt für diesen Kunden hinzufügen</label>
+        <div class="form-grid">
+          <div class="field"><label>Name des Objekts</label><input type="text" id="mo_name" placeholder="z.B. Werksschutz Tor 1"></div>
+          <div class="field"><label>Straße / Nr.</label><input type="text" id="mo_address"></div>
+          <div class="field"><label>Stadt</label><input type="text" id="mo_city"></div>
+        </div>
+        <button class="btn-main" style="width:100%; justify-content:center;" onclick="saveObjectForKunde()">OBJEKT SPEICHERN</button>
+      </div>
+
+      <h3 style="margin-top:40px; font-size:14px; color:#444; text-transform:uppercase;">Zugeordnete Objekte & Personal</h3>
+      <div class="table-container" style="margin-top:15px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Objekt</th>
+              <th>Adresse</th>
+              <th>Mitarbeiter Zuweisung</th>
+            </tr>
+          </thead>
+          <tbody id="modal-objekt-liste"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <script src="../config.js"></script>
   <script>
     lucide.createIcons();
-    let currentKundeId = null;
+    let selectedKundeId = null;
     const WS_ID = '8648e581-297d-419b-9c71-292418e26895';
 
     async function loadKunden() {
       const { data } = await _supabase.from('customers').select('*, objects(count)');
       document.getElementById('kunden-liste').innerHTML = data.map(k => `
-        <tr>
-          <td><strong style="color:white">${k.company}</strong></td>
-          <td>${k.contact_person || '-'}</td>
-          <td><span class="badge-count">${k.objects?.[0]?.count || 0} Objekte</span></td>
-          <td style="text-align: right;">
-            <button class="btn-action" style="background:#222;" onclick="openMgmt('${k.id}', '${k.company}')">VERWALTEN</button>
+        <tr class="tr-hover">
+          <td><strong style="color:white; font-size:16px;">${k.company}</strong></td>
+          <td style="color:#777;">${k.contact_person || 'Nicht hinterlegt'}</td>
+          <td><span class="badge-count">${k.objects?.[0]?.count || 0} Standorte</span></td>
+          <td style="text-align: right; padding-right:20px;">
+            <button class="btn-main" style="background:#111; border:1px solid #222; font-size:12px;" onclick="openMgmt('${k.id}', '${k.company}')">VERWALTEN</button>
           </td>
         </tr>
       `).join('');
+      lucide.createIcons();
     }
 
-    async function saveKunde() {
-        await _supabase.from('customers').insert([{ company: document.getElementById('k_name').value, workspace_id: WS_ID }]);
-        location.reload();
-    }
-
-    async function openMgmt(id, name) {
-        currentKundeId = id;
-        document.getElementById('modalKundeTitle').innerText = name + " | Objekt-Management";
-        document.getElementById('mgmtModal').style.display = 'flex';
-        loadObjectsForModal();
+    function openMgmt(id, name) {
+      selectedKundeId = id;
+      document.getElementById('modalTitle').innerText = name;
+      document.getElementById('mgmtModal').style.display = 'flex';
+      loadObjectsForModal();
     }
 
     function closeModal() { document.getElementById('mgmtModal').style.display = 'none'; }
 
     async function loadObjectsForModal() {
-        const { data } = await _supabase.from('objects').select('*').eq('customer_id', currentKundeId);
-        document.getElementById('modal-objekt-liste').innerHTML = data.map(o => `
-            <tr>
-                <td><strong>${o.name}</strong></td>
-                <td><small>${o.address || ''}, ${o.city || ''}</small></td>
-                <td>
-                    <select onchange="assignStaff('${o.id}', this.value)" style="padding:5px; font-size:12px;">
-                        <option>Mitarbeiter wählen...</option>
-                        <option>Max Mustermann</option>
-                        <option>John Doe</option>
-                    </select>
-                </td>
-                <td><span style="color:#22c55e">● Online</span></td>
-            </tr>
-        `).join('');
+      const { data: objects } = await _supabase.from('objects').select('*').eq('customer_id', selectedKundeId);
+      const { data: staff } = await _supabase.from('employees').select('id, first_name, last_name');
+      
+      document.getElementById('modal-objekt-liste').innerHTML = objects.map(o => `
+        <tr>
+          <td><strong>${o.name}</strong></td>
+          <td><small style="color:#555">${o.address || ''}</small></td>
+          <td>
+            <select style="width:100%; padding:8px;" onchange="updateAssign('${o.id}', this.value)">
+              <option value="">Nicht zugewiesen</option>
+              ${staff?.map(s => `<option value="${s.id}" ${o.assigned_employee_id === s.id ? 'selected' : ''}>${s.first_name} ${s.last_name}</option>`).join('')}
+            </select>
+          </td>
+        </tr>
+      `).join('');
     }
 
     async function saveObjectForKunde() {
-        const payload = {
-            name: document.getElementById('mo_name').value,
-            address: document.getElementById('mo_street').value,
-            city: document.getElementById('mo_city').value,
-            customer_id: currentKundeId,
-            workspace_id: WS_ID
-        };
-        await _supabase.from('objects').insert([payload]);
-        loadObjectsForModal();
-        loadKunden();
+      const obj = {
+        name: document.getElementById('mo_name').value,
+        address: document.getElementById('mo_address').value,
+        city: document.getElementById('mo_city').value,
+        customer_id: selectedKundeId,
+        workspace_id: WS_ID
+      };
+      await _supabase.from('objects').insert([obj]);
+      loadObjectsForModal();
+      loadKunden();
     }
 
     document.addEventListener('DOMContentLoaded', loadKunden);
