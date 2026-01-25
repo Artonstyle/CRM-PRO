@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CORE MASTER 2026 | SAAS ONBOARDING</title>
+  
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div style="font-weight: 900; font-size: 18px; color: var(--accent);">CORE MASTER</div>
+      <div style="font-size: 10px; color: var(--muted); font-weight: 700;">PROVISIONING CENTER</div>
+    </div>
+    
+    <div class="sidebar-content">
+      <div class="nav-label">Main Console</div>
+      <a href="../admin.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+      <a href="kunden.html" class="nav-link"><i data-lucide="users"></i> Kunden</a>
+      <a href="objekte.html" class="nav-link"><i data-lucide="building-2"></i> Objekte</a>
+      <a href="mitarbeiter.html" class="nav-link"><i data-lucide="hard-hat"></i> Mitarbeiter</a>
+      
+      <div class="nav-label">Operations</div>
+      <a href="finanzen.html" class="nav-link"><i data-lucide="banknote"></i> Finanzen</a>
+      <a href="rechnungen.html" class="nav-link"><i data-lucide="file-text"></i> Rechnungen</a>
+      
+      <div class="nav-label">SaaS Administration</div>
+      <a href="saas_freischaltung.html" class="nav-link active"><i data-lucide="user-plus"></i> SaaS Freischaltung</a>
+      <a href="tarife.html" class="nav-link"><i data-lucide="tags"></i> Master Tarife</a>
+      <a href="einstellungen.html" class="nav-link"><i data-lucide="settings"></i> Einstellungen</a>
+      <a href="support.html" class="nav-link"><i data-lucide="help-circle"></i> Support</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <h2 style="margin:0;">SaaS Onboarding & Freischaltung</h2>
+          <div class="status-pill" style="background:var(--accent); color:white; border:none;">2026 GLOBAL ADMIN</div>
+      </div>
+
+      <div class="card-glass" style="margin-bottom:30px;">
+          <h3>Neue Kunden-Instanz anlegen</h3>
+          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:15px;">
+              <div>
+                  <label>Firmenname</label>
+                  <input type="text" id="new_company" placeholder="Muster Security GmbH">
+              </div>
+              <div>
+                  <label>Admin E-Mail</label>
+                  <input type="email" id="new_email" placeholder="admin@firma.de">
+              </div>
+              <div>
+                  <label>Wähle Tarif</label>
+                  <select id="new_package">
+                      <option value="Basic">Basic Plan (2026)</option>
+                      <option value="Pro">Pro Business</option>
+                      <option value="Enterprise">Enterprise Elite</option>
+                  </select>
+              </div>
+          </div>
+          <button class="btn-main" onclick="onboardClient()" style="margin-top:15px; width:200px;">INSTANZ FREISCHALTEN</button>
+      </div>
+
+      <div class="card-glass">
+        <h3>Aktive SaaS Instanzen</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>ID / Datum</th>
+              <th>Unternehmen</th>
+              <th>Paket</th>
+              <th>DB-Status</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="onboarding-liste">
+            </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="../config.js"></script>
+  <script>
+    lucide.createIcons();
+
+    async function loadInstances() {
+        const { data, error } = await _supabase.from('clients').select('*').order('created_at', { ascending: false });
+        const tbody = document.getElementById('onboarding-liste');
+
+        if(data) {
+            tbody.innerHTML = data.map(c => `
+                <tr>
+                    <td style="font-size:10px; color:var(--muted);">${c.id.substring(0,8)}...<br>${new Date(c.created_at).toLocaleDateString()}</td>
+                    <td><strong>${c.company}</strong><br><small>${c.email}</small></td>
+                    <td><span style="color:var(--accent); font-weight:700;">${c.package_name}</span></td>
+                    <td><span class="status-pill" style="border-color:#22c55e; color:#22c55e;">AKTIV</span></td>
+                    <td>
+                        <button onclick="toggleStatus('${c.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:11px; font-weight:800;">SPERREN</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+    }
+
+    async function onboardClient() {
+        const company = document.getElementById('new_company').value;
+        const email = document.getElementById('new_email').value;
+        const pack = document.getElementById('new_package').value;
+
+        if(!company || !email) return alert("Bitte alle Felder füllen");
+
+        const { error } = await _supabase.from('clients').insert([{
+            company: company,
+            email: email,
+            package_name: pack,
+            status: 'active'
+        }]);
+
+        if(!error) {
+            alert("Instanz wurde erfolgreich provisioniert!");
+            location.reload();
+        } else {
+            alert("Fehler: " + error.message);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadInstances);
+  </script>
+</body>
+</html>
