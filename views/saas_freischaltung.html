@@ -45,7 +45,6 @@
     <div class="sidebar-content">
       <div class="nav-label">Main Console</div>
       <a href="../admin.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a>
-      <a href="kunden.html" class="nav-link"><i data-lucide="users"></i> Kunden</a>
       <div class="nav-label">SaaS Admin</div>
       <a href="saas_freischaltung.html" class="nav-link active"><i data-lucide="user-plus"></i> SaaS</a>
     </div>
@@ -64,24 +63,20 @@
       <div class="grid-top">
         <div class="card-glass">
           <h3 style="margin-top:0; text-transform:uppercase; font-size:14px;">Firma Management</h3>
-          
           <div class="flex-row">
             <div class="field" style="flex:2;"><label>Firma</label><input type="text" id="c_name"></div>
             <div class="field" style="flex:1.5;"><label>Telefon</label><input type="text" id="c_phone"></div>
           </div>
-
           <div class="flex-row">
             <div class="field"><label>Vorname</label><input type="text" id="c_fname"></div>
             <div class="field"><label>Nachname</label><input type="text" id="c_lname"></div>
             <div class="field" style="flex:1.5;"><label>E-Mail Adresse</label><input type="email" id="c_mail"></div>
           </div>
-
           <div class="flex-row">
             <div class="field" style="flex:2;"><label>Strasse / Hausnr.</label><input type="text" id="c_address"></div>
             <div class="field" style="flex:0.6;"><label>PLZ</label><input type="text" id="c_plz"></div>
             <div class="field"><label>Ort</label><input type="text" id="c_city"></div>
           </div>
-
           <div class="flex-row">
             <div class="field" style="flex:2;"><label>Tarif-Paket</label>
               <select id="c_package">
@@ -94,7 +89,6 @@
               <select id="c_cycle"><option value="1">Monatlich</option><option value="12">Jährlich</option></select>
             </div>
           </div>
-
           <div class="field">
             <label>Login-Schlüssel</label>
             <div style="display:flex; gap:10px;">
@@ -102,23 +96,12 @@
               <button class="btn-auto" onclick="genToken()">AUTO</button>
             </div>
           </div>
-
           <button class="btn-main" style="margin-top:20px;" onclick="saveToSupabase()">LIZENZ SPEICHERN & FREISCHALTEN</button>
         </div>
 
         <div class="card-glass">
           <h3 style="margin-top:0; text-transform:uppercase; font-size:14px;">Master Tarife</h3>
-          <div class="flex-row">
-            <div class="field" style="flex:1.5;"><label>Tarif Name</label><input type="text" id="p_name"></div>
-            <div class="field" style="flex:0.8;"><label>Preis €</label><input type="number" id="p_price"></div>
-            <div class="field"><label>Mitarbeiter</label><input type="number" id="p_limit"></div>
-          </div>
-          <div style="display:flex; gap:10px; margin-bottom:15px; align-items:center;">
-            <button class="btn-test" onclick="setTest(7)">7 TAGE TEST</button>
-            <button class="btn-test" onclick="setTest(14)">14 TAGE TEST</button>
-          </div>
-          <button class="btn-main" onclick="addPackage()">TARIF SPEICHERN</button>
-          <div id="package-list" style="margin-top:20px;">
+          <div id="package-list">
              <div class="package-item"><span><strong>Starter</strong> (15 Mitarbeiter)</span><span>29 €</span></div>
              <div class="package-item"><span><strong>Pro</strong> (50 Mitarbeiter)</span><span>99 €</span></div>
              <div class="package-item"><span><strong>Premium</strong> (100 Mitarbeiter)</span><span>149 €</span></div>
@@ -133,14 +116,7 @@
         </div>
         <table>
           <thead>
-            <tr>
-              <th>Nr.</th>
-              <th>Firma / Inhaber</th>
-              <th>Paket / Mitarbeiter</th>
-              <th>Gültig bis</th>
-              <th>Status</th>
-              <th>Aktion</th>
-            </tr>
+            <tr><th>Nr.</th><th>Firma / Inhaber</th><th>Paket / Mitarbeiter</th><th>Gültig bis</th><th>Status</th><th>Aktion</th></tr>
           </thead>
           <tbody id="client-table"></tbody>
         </table>
@@ -153,9 +129,9 @@
     lucide.createIcons();
     let clients = [];
 
-    // LÄDT DIE DATEN AUS DEINER SUPABASE (Nutzt package_name etc. aus deiner CSV)
+    // Greift jetzt auf die Tabelle "clients" zu
     async function loadData() {
-        const { data, error } = await _supabase.from('saas_customers').select('*').order('created_at', { ascending: false });
+        const { data, error } = await _supabase.from('clients').select('*').order('created_at', { ascending: false });
         if (data) { 
             clients = data; 
             renderTable(); 
@@ -174,13 +150,13 @@
             city: document.getElementById('c_city').value,
             token: document.getElementById('c_token').value,
             package_name: document.getElementById('c_package').value,
-            billing_cycle: parseInt(document.getElementById('c_cycle').value),
+            billing_cycle: document.getElementById('c_cycle').value,
             status: "Aktiv",
             start_date: new Date().toISOString()
         };
 
-        const { error } = await _supabase.from('saas_customers').insert([newEntry]);
-        if (!error) { alert("Gespeichert!"); loadData(); }
+        const { error } = await _supabase.from('clients').insert([newEntry]);
+        if (!error) { alert("Klient erfolgreich gespeichert!"); loadData(); }
     }
 
     function renderTable() {
@@ -190,19 +166,17 @@
         document.getElementById('client-table').innerHTML = filtered.map((c, i) => `
             <tr>
                 <td>${i+1}</td>
-                <td><strong>${c.company || 'Keine Firma'}</strong><br><small>${c.fname || ''} ${c.lname || ''}</small></td>
-                <td>${c.package_name || 'Standard'}</td>
+                <td><strong>${c.company}</strong><br><small>${c.fname} ${c.lname}</small></td>
+                <td>${c.package_name}</td>
                 <td>${c.start_date ? new Date(c.start_date).toLocaleDateString() : '-'}</td>
-                <td><span style="color:#22c55e; font-weight:800;">● ${c.status || 'Aktiv'}</span></td>
+                <td><span style="color:#22c55e; font-weight:800;">● ${c.status}</span></td>
                 <td><button style="background:none; border:none; color:var(--accent); font-weight:700; cursor:pointer">EDIT</button></td>
             </tr>`).join('');
         document.getElementById('stat_active').innerText = clients.length;
     }
 
     function genToken() { document.getElementById('c_token').value = Math.random().toString(36).substring(2, 12).toUpperCase(); }
-    function setTest(d) { document.getElementById('p_name').value = "Test " + d + " Tage"; document.getElementById('p_price').value = 0; }
 
-    // Initial laden
     loadData();
   </script>
 </body>
