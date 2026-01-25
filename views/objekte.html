@@ -2,116 +2,96 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <title>CORE MASTER 2026 | OBJEKT MANAGEMENT</title>
+  <title>CORE MASTER 2026 | INTELLIGENT OBJECTS</title>
   <link rel="stylesheet" href="../style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    :root { --accent: #2563eb; --bg: #000; --card: #0a0a0a; --input-bg: #111; --border: rgba(255,255,255,0.08); }
+    :root { --accent: #2563eb; --bg: #050505; --card: #0d0d0d; --border: rgba(255,255,255,0.08); }
     body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; margin: 0; display: flex; height: 100vh; }
     
-    .sidebar { width: 260px; border-right: 1px solid var(--border); padding: 25px; }
     .main-content { flex: 1; overflow-y: auto; padding: 40px; }
 
-    /* Eingabe-Bereich oben (SaaS Style) */
-    .creation-header { 
-      background: var(--card); border: 1px solid var(--border); border-radius: 16px; 
-      padding: 30px; margin-bottom: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    /* Such-Zentrale oben */
+    .search-section { 
+      background: var(--card); border: 1px solid var(--border); border-radius: 20px; 
+      padding: 30px; margin-bottom: 30px; position: relative;
     }
-    .grid-form { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-    .grid-full { grid-column: span 4; display: flex; gap: 20px; align-items: flex-end; }
+
+    /* Autocomplete Vorschlagsliste */
+    #autocomplete-results {
+      position: absolute; top: 90px; left: 30px; width: calc(100% - 60px);
+      background: #1a1a1a; border: 1px solid #333; border-radius: 8px;
+      z-index: 1000; display: none; max-height: 250px; overflow-y: auto;
+    }
+    .result-item { padding: 12px 20px; cursor: pointer; border-bottom: 1px solid #222; }
+    .result-item:hover { background: #2563eb; }
+
+    /* Formular Grid */
+    .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 20px; }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    label { font-size: 10px; font-weight: 800; color: #555; text-transform: uppercase; }
+    input, select { background: #000; border: 1px solid var(--border); padding: 10px; border-radius: 6px; color: #fff; }
     
-    .field { display: flex; flex-direction: column; gap: 8px; }
-    label { font-size: 10px; font-weight: 900; color: #444; text-transform: uppercase; letter-spacing: 1px; }
-    input, select { 
-      background: var(--input-bg); border: 1px solid var(--border); padding: 12px; 
-      border-radius: 8px; color: #fff; font-size: 14px; transition: 0.3s;
-    }
-    input:focus { border-color: var(--accent); outline: none; }
-
-    /* Geofencing Anzeige */
-    .geo-pill { 
-      background: rgba(37, 99, 235, 0.1); border: 1px solid var(--accent); 
-      color: var(--accent); padding: 12px; border-radius: 8px; display: flex; 
-      align-items: center; gap: 10px; font-size: 12px; font-weight: 600;
+    /* GPS Badge */
+    .gps-badge { 
+        background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid #22c55e;
+        padding: 10px; border-radius: 8px; display: flex; align-items: center; gap: 8px; font-size: 12px;
     }
 
-    /* Tabelle unten */
-    .table-container { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
-    table { width: 100%; border-collapse: collapse; }
-    th { background: #0e0e0e; padding: 15px 20px; text-align: left; font-size: 11px; color: #555; text-transform: uppercase; }
-    td { padding: 20px; border-top: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
-    .tr-hover:hover { background: rgba(255,255,255,0.02); }
-
-    .btn-save { 
-      background: var(--accent); color: white; border: none; padding: 14px 25px; 
-      border-radius: 8px; font-weight: 700; cursor: pointer; height: 45px;
-    }
+    .btn-save { background: var(--accent); color: #fff; border: none; padding: 12px 25px; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 20px; }
   </style>
 </head>
 <body>
 
-  <aside class="sidebar">
-    <div style="font-weight: 900; font-size: 22px; color: var(--accent); margin-bottom: 40px;">CORE MASTER</div>
-    <nav>
-      <a href="objekte.html" style="display:flex; align-items:center; gap:12px; color:white; text-decoration:none; padding:12px; background:rgba(255,255,255,0.05); border-radius:10px;">
-        <i data-lucide="layout-grid"></i> Objekte
-      </a>
-    </nav>
-  </aside>
-
   <main class="main-content">
     <header style="margin-bottom: 30px;">
-      <h1 style="font-size: 28px; margin: 0;">Objekt-Registrierung</h1>
-      <p style="color: #666;">Neues Objekt anlegen und automatisches Geofencing aktivieren.</p>
+      <h1 style="font-size: 30px; margin: 0; letter-spacing: -1px;">Objekt-Intelligence 2026</h1>
+      <p style="color: #666;">Tippen Sie den Namen eines Standorts – den Rest erledigt das System.</p>
     </header>
 
-    <section class="creation-header">
-      <div class="grid-form">
-        <input type="hidden" id="o_id">
-        <div class="field">
-          <label>Objektname</label>
-          <input type="text" id="o_name" placeholder="z.B. Lidl Hemsbach">
-        </div>
-        <div class="field">
-          <label>Mandant</label>
-          <select id="o_kunde"></select>
-        </div>
-        <div class="field">
-          <label>Besuchs-Turnus</label>
-          <select id="o_turnus">
-            <option>Täglich</option>
-            <option>Wöchentlich</option>
-            <option>Monatlich</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Vollständige Adresse</label>
-          <input type="text" id="o_address" placeholder="Str. Nr, PLZ Stadt" onblur="fetchGPS()">
-        </div>
+    <section class="search-section">
+      <div class="field">
+        <label>Smart Search (Objekt-Name oder Adresse)</label>
+        <input type="text" id="smart-search" placeholder="z.B. Lidl Hemsbach..." oninput="searchLocation(this.value)" autocomplete="off" style="font-size: 18px; padding: 15px; border-color: #333;">
+        <div id="autocomplete-results"></div>
+      </div>
 
-        <div class="grid-full">
-          <div class="geo-pill">
-            <i data-lucide="map-pin"></i>
-            GPS: <span id="gps-status">Keine Daten</span>
-            <input type="hidden" id="o_lat">
-            <input type="hidden" id="o_lng">
-          </div>
-          <button class="btn-save" onclick="saveObjekt()">OBJEKT SPEICHERN</button>
-          <button onclick="location.reload()" style="background:none; border:none; color:#444; cursor:pointer;">Abbrechen</button>
+      <div class="form-grid">
+        <input type="hidden" id="o_id">
+        <div class="field"><label>Name</label><input type="text" id="o_name"></div>
+        <div class="field"><label>Straße / Nr.</label><input type="text" id="o_street"></div>
+        <div class="field"><label>PLZ</label><input type="text" id="o_zip"></div>
+        <div class="field"><label>Stadt</label><input type="text" id="o_city"></div>
+        
+        <div class="field"><label>Kunde</label><select id="o_kunde"></select></div>
+        <div class="field"><label>Turnus</label>
+            <select id="o_turnus">
+                <option>Täglich</option><option>Wöchentlich</option>
+            </select>
+        </div>
+        <div class="field" style="grid-column: span 2;">
+            <label>Geofencing Status</label>
+            <div class="gps-badge">
+                <i data-lucide="shield-check"></i>
+                GPS Fix: <span id="gps-display">Warte auf Eingabe...</span>
+                <input type="hidden" id="o_lat">
+                <input type="hidden" id="o_lng">
+            </div>
         </div>
       </div>
+      <button class="btn-save" onclick="saveObjekt()">OBJEKT IM SYSTEM SPEICHERN</button>
     </section>
 
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Objekt & Adresse</th>
-            <th>Kunde</th>
-            <th>Turnus</th>
-            <th>Geofence</th>
-            <th style="text-align:right;">Aktion</th>
+    <div style="background: var(--card); border: 1px solid var(--border); border-radius: 15px; overflow: hidden;">
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead style="background: #0a0a0a;">
+          <tr style="text-align: left; font-size: 11px; color: #444;">
+            <th style="padding: 15px;">OBJEKT</th>
+            <th>STADT</th>
+            <th>KUNDE</th>
+            <th>TURNUS</th>
+            <th style="text-align: right; padding-right: 15px;">AKTION</th>
           </tr>
         </thead>
         <tbody id="objekt-liste"></tbody>
@@ -122,37 +102,57 @@
   <script src="../config.js"></script>
   <script>
     lucide.createIcons();
-    const WORKSPACE = '8648e581-297d-419b-9c71-292418e26895';
+    const WS_ID = '8648e581-297d-419b-9c71-292418e26895';
 
-    // GPS AUTOMATIK
-    async function fetchGPS() {
-      const addr = document.getElementById('o_address').value;
-      if(addr.length < 8) return;
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr)}`);
-      const data = await res.json();
-      if(data[0]) {
-        document.getElementById('o_lat').value = data[0].lat;
-        document.getElementById('o_lng').value = data[0].lon;
-        document.getElementById('gps-status').innerText = `Lat: ${parseFloat(data[0].lat).toFixed(4)} / Lng: ${parseFloat(data[0].lon).toFixed(4)}`;
-      }
+    // GOOGLE-STYLE LOCATION SEARCH
+    async function searchLocation(query) {
+      const resultsDiv = document.getElementById('autocomplete-results');
+      if (query.length < 3) { resultsDiv.style.display = 'none'; return; }
+
+      try {
+        const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5&lang=de`);
+        const data = await res.json();
+        
+        resultsDiv.innerHTML = data.features.map(f => {
+          const p = f.properties;
+          const label = `${p.name || ''} ${p.street || ''} ${p.housenumber || ''}, ${p.postcode || ''} ${p.city || ''}`;
+          return `<div class="result-item" onclick='selectLocation(${JSON.stringify(f)})'>${label}</div>`;
+        }).join('');
+        resultsDiv.style.display = 'block';
+      } catch (e) { console.error(e); }
+    }
+
+    function selectLocation(feature) {
+      const p = feature.properties;
+      const coords = feature.geometry.coordinates;
+
+      document.getElementById('o_name').value = p.name || "";
+      document.getElementById('o_street').value = (p.street || "") + " " + (p.housenumber || "");
+      document.getElementById('o_zip').value = p.postcode || "";
+      document.getElementById('o_city').value = p.city || "";
+      document.getElementById('o_lat').value = coords[1];
+      document.getElementById('o_lng').value = coords[0];
+      
+      document.getElementById('gps-display').innerText = `${coords[1].toFixed(4)}, ${coords[0].toFixed(4)}`;
+      document.getElementById('autocomplete-results').style.display = 'none';
+      document.getElementById('smart-search').value = p.name || p.city;
     }
 
     async function loadKunden() {
       const { data } = await _supabase.from('customers').select('id, company');
-      if(data) document.getElementById('o_kunde').innerHTML = data.map(k => `<option value="${k.id}">${k.company}</option>`).join('');
+      document.getElementById('o_kunde').innerHTML = data.map(k => `<option value="${k.id}">${k.company}</option>`).join('');
     }
 
     async function loadObjekte() {
       const { data } = await _supabase.from('objects').select('*, customers(company)').order('created_at', {ascending: false});
-      const tbody = document.getElementById('objekt-liste');
-      tbody.innerHTML = data.map(o => `
-        <tr class="tr-hover">
-          <td><strong style="color:white">${o.name}</strong><br><small style="color:#555">${o.address || '-'}</small></td>
+      document.getElementById('objekt-liste').innerHTML = data.map(o => `
+        <tr style="border-top: 1px solid var(--border);">
+          <td style="padding: 15px;"><strong>${o.name}</strong><br><small style="color:#444">${o.address || ''}</small></td>
+          <td>${o.city || '-'}</td>
           <td>${o.customers?.company || 'Privat'}</td>
           <td>${o.turnus}</td>
-          <td>${o.lat ? '<span style="color:#22c55e">● Aktiv</span>' : '<span style="color:red">○ Inaktiv</span>'}</td>
-          <td style="text-align:right;">
-            <button onclick='editObjekt(${JSON.stringify(o)})' style="background:none; border:none; color:#2563eb; cursor:pointer;"><i data-lucide="edit-3"></i></button>
+          <td style="text-align: right; padding-right: 15px;">
+            <button onclick="deleteObjekt('${o.id}')" style="background:none; border:none; color:red; cursor:pointer;"><i data-lucide="trash-2" size="16"></i></button>
           </td>
         </tr>
       `).join('');
@@ -160,30 +160,20 @@
     }
 
     async function saveObjekt() {
-      const id = document.getElementById('o_id').value;
-      const obj = {
+      const payload = {
         name: document.getElementById('o_name').value,
+        address: document.getElementById('o_street').value,
+        zip: document.getElementById('o_zip').value,
+        city: document.getElementById('o_city').value,
         customer_id: document.getElementById('o_kunde').value,
-        address: document.getElementById('o_address').value,
-        lat: parseFloat(document.getElementById('o_lat').value) || null,
-        lng: parseFloat(document.getElementById('o_lng').value) || null,
         turnus: document.getElementById('o_turnus').value,
-        workspace_id: WORKSPACE
+        lat: parseFloat(document.getElementById('o_lat').value),
+        lng: parseFloat(document.getElementById('o_lng').value),
+        workspace_id: WS_ID
       };
 
-      const { error } = id ? await _supabase.from('objects').update(obj).eq('id', id) : await _supabase.from('objects').insert([obj]);
-      if(!error) location.reload(); else alert("Fehler: " + error.message);
-    }
-
-    window.editObjekt = (o) => {
-      document.getElementById('o_id').value = o.id;
-      document.getElementById('o_name').value = o.name;
-      document.getElementById('o_address').value = o.address;
-      document.getElementById('o_lat').value = o.lat;
-      document.getElementById('o_lng').value = o.lng;
-      document.getElementById('o_turnus').value = o.turnus;
-      document.getElementById('gps-status').innerText = o.lat ? "Daten geladen" : "Keine Daten";
-      window.scrollTo(0,0);
+      const { error } = await _supabase.from('objects').insert([payload]);
+      if(!error) location.reload(); else alert(error.message);
     }
 
     document.addEventListener('DOMContentLoaded', () => { loadKunden(); loadObjekte(); });
