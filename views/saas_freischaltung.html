@@ -204,6 +204,20 @@
       if (data) { clients = data; refreshUI(); }
     }
 
+    // --- NEUE EMAIL FUNKTION ---
+    async function sendWelcomeEmail(clientData) {
+      const scriptURL = "https://script.google.com/macros/s/AKfycbztMb_fNogMQBmmAJahVApNRxBpSlT8W6R7mRdqo0TVwNCApV3x8KHf-GmaJWHc9BEwmw/exec";
+      try {
+        await fetch(scriptURL, {
+          method: "POST",
+          mode: "no-cors",
+          cache: "no-cache",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(clientData)
+        });
+      } catch (e) { console.error("E-Mail Fehler:", e); }
+    }
+
     function showMenu(e, type, idOrIndex) {
       e.preventDefault();
       const menu = document.getElementById('context-menu');
@@ -225,7 +239,6 @@
     
     function hideMenu() { document.getElementById('context-menu').style.display = 'none'; }
 
-    // --- BACKUP LOGIK ---
     function backupSave() {
       const exportData = { clients, packages, version: "1.0", date: new Date().toISOString() };
       const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
@@ -239,7 +252,7 @@
     async function backupLoad(event) {
       const file = event.target.files[0];
       if (!file) return;
-      if (!confirm("Achtung: Das Laden eines Backups fügt die enthaltenen Kunden zur aktuellen Datenbank hinzu. Fortfahren?")) return;
+      if (!confirm("Backup laden?")) return;
       
       const reader = new FileReader();
       reader.onload = async (e) => {
@@ -247,18 +260,17 @@
           const imported = JSON.parse(e.target.result);
           if (imported.clients && Array.isArray(imported.clients)) {
             for (let c of imported.clients) {
-              const { id, created_at, ...cleanClient } = c; // Alte IDs entfernen
+              const { id, created_at, ...cleanClient } = c;
               await _supabase.from('clients').insert([cleanClient]);
             }
-            alert("Backup erfolgreich eingespielt.");
+            alert("Backup eingespielt.");
             loadData();
           }
-        } catch (err) { alert("Fehler: Ungültige Backup-Datei."); }
+        } catch (err) { alert("Fehler beim Laden."); }
       };
       reader.readAsText(file);
     }
 
-    // --- CRUD OPERATIONEN ---
     function editClient(id) {
       const c = clients.find(x => x.id === id);
       if(!c) return;
@@ -284,6 +296,7 @@
       loadData();
     }
 
+    // --- AKTUALISIERTE SAVE DATA FUNKTION ---
     async function saveData() {
       const entry = {
         company: document.getElementById('c_name').value,
@@ -304,9 +317,15 @@
         await _supabase.from('clients').update(entry).eq('id', editClientId);
         editClientId = null;
         document.getElementById('btn-save-client').innerText = "LIZENZ SPEICHERN & FREISCHALTEN";
+        alert("Änderungen gespeichert.");
       } else {
         entry.start_date = new Date().toISOString();
-        await _supabase.from('clients').insert([entry]);
+        const { error } = await _supabase.from('clients').insert([entry]);
+        // E-Mail nur bei Neuanlage senden
+        if(!error) {
+          sendWelcomeEmail(entry);
+          alert("Kunde angelegt und E-Mail versendet!");
+        }
       }
       
       loadData();
@@ -328,7 +347,6 @@
     }
 
     function refreshUI() {
-      // Tarife Dropdown & Liste
       document.getElementById('c_package').innerHTML = packages.map(p => `<option value="${p.name}">${p.name} (bis ${p.limit} MA) | ${p.price}€</option>`).join('');
       document.getElementById('package-preview').innerHTML = packages.map((p, i) => `
         <div class="package-item ${editPkgIndex === i ? 'editing' : ''}" onclick="editPackage(${i})" oncontextmenu="showMenu(event, 'package', ${i})">
@@ -338,7 +356,6 @@
       const searchTerm = document.getElementById('search').value.toLowerCase();
       let rev = 0, act = 0, off = 0;
 
-      // Kunden-Tabelle
       document.getElementById('client-list').innerHTML = clients
         .filter(c => (c.company || "").toLowerCase().includes(searchTerm) || (c.lname || "").toLowerCase().includes(searchTerm))
         .map((c, i) => {
@@ -365,50 +382,15 @@
       lucide.createIcons();
     }
 
-    // --- PDF EXPORT MIT ALLEN DATEN ---
     function exportPDF() {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-
       doc.setFontSize(22);
       doc.setTextColor(255, 122, 0);
       doc.text("CORE MASTER ADMIN 2026", 14, 20);
-      
-      doc.setFontSize(10);
-      doc.setTextColor(100);
-      doc.text("KOMPLETTE KUNDENDATENBANK | EXPORT DETAILS", 14, 28);
-      doc.text("Stand: " + new Date().toLocaleString('de-DE'), 14, 33);
-      
-      doc.setDrawColor(200);
-      doc.line(14, 36, 283, 36);
-
-      const tableData = clients.map((c, i) => [
-        i+1, 
-        c.company || '-', 
-        `${c.fname} ${c.lname}`, 
-        c.email || '-', 
-        c.phone || '-', 
-        `${c.address || ''}, ${c.plz || ''} ${c.city || ''}`, 
-        c.package_name || '-', 
-        c.billing_cycle == "12" ? "Jährlich" : "Monatlich",
-        c.token || '-',
-        c.status
-      ]);
-
-      doc.autoTable({
-        head: [['Nr.', 'Firma', 'Ansprechpartner', 'E-Mail', 'Telefon', 'Anschrift', 'Paket', 'Bezahlen', 'Login-Key', 'Status']],
-        body: tableData,
-        startY: 42,
-        styles: { fontSize: 7, cellPadding: 2, overflow: 'linebreak' },
-        headStyles: { fillColor: [30, 30, 30], textColor: [255, 255, 255], fontStyle: 'bold' },
-        columnStyles: {
-          5: { cellWidth: 45 }, // Anschrift breiter
-          8: { fontStyle: 'italic' } // Key kursiv
-        },
-        alternateRowStyles: { fillColor: [250, 250, 250] }
-      });
-
-      doc.save('CORE_MASTER_Full_Export_2026.pdf');
+      const tableData = clients.map((c, i) => [i+1, c.company, `${c.fname} ${c.lname}`, c.email, c.phone, `${c.address || ''}, ${c.plz || ''} ${c.city || ''}`, c.package_name, c.billing_cycle == "12" ? "Jahr" : "Monat", c.token, c.status]);
+      doc.autoTable({ head: [['Nr.', 'Firma', 'Name', 'E-Mail', 'Tel', 'Anschrift', 'Paket', 'Zyklus', 'Passwort', 'Status']], body: tableData, startY: 35, styles: { fontSize: 7 } });
+      doc.save('CORE_MASTER_Export_2026.pdf');
     }
 
     function genToken() { 
