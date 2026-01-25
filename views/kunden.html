@@ -2,42 +2,26 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <title>CORE MASTER 2026 | Kunden</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CORE MASTER 2026 | Kunden & Objekte</title>
+  
   <link rel="stylesheet" href="../style.css">
+  
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <style>
-    :root { --accent: #2563eb; --bg: #050505; --card: #0d0d0d; --border: rgba(255,255,255,0.08); }
-    body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
-    
-    /* Deine Sidebar Struktur */
-    .sidebar { width: 260px; border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; background: #000; height: 100vh; }
-    .sidebar-content { overflow-y: auto; flex: 1; padding-right: 5px; }
-    .nav-link { display: flex; align-items: center; gap: 10px; color: #aaa; text-decoration: none; padding: 10px; border-radius: 8px; font-size: 14px; }
-    .nav-link:hover { color: #fff; background: rgba(255,255,255,0.03); }
-    .nav-link.active { color: white; background: var(--accent); }
-    .nav-label { font-size: 10px; color: #444; font-weight: 800; padding: 15px 12px 5px; text-transform: uppercase; }
-
-    .main { flex: 1; overflow-y: auto; padding: 40px; }
-    .mgmt-panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 25px; margin-bottom: 20px; border-left: 4px solid var(--accent); display: none; }
-    .table-container { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-    table { width: 100%; border-collapse: collapse; }
-    th { background: rgba(255,255,255,0.02); padding: 15px; text-align: left; font-size: 11px; color: #444; }
-    td { padding: 15px; border-top: 1px solid var(--border); font-size: 14px; }
-    .btn-main { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; }
-  </style>
 </head>
 <body>
 
   <aside class="sidebar">
-    <div style="padding: 10px 12px 30px;">
+    <div class="sidebar-header">
       <div style="font-weight: 900; font-size: 20px; color: var(--accent);">CORE MASTER</div>
-      <div style="font-size: 10px; color: #444; font-weight: 700;">ENTERPRISE CRM 2026</div>
+      <div style="font-size: 10px; color: var(--muted); font-weight: 700;">ENTERPRISE CRM 2026</div>
     </div>
     
     <div class="sidebar-content">
       <div class="nav-label">Main Console</div>
       <a href="../admin.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+      
       <a href="kunden.html" class="nav-link active"><i data-lucide="users"></i> Kunden</a>
       <a href="objekte.html" class="nav-link"><i data-lucide="building-2"></i> Objekte</a>
       <a href="mitarbeiter.html" class="nav-link"><i data-lucide="hard-hat"></i> Mitarbeiter</a>
@@ -45,7 +29,7 @@
       <a href="zeiterfassung.html" class="nav-link"><i data-lucide="timer"></i> Zeiterfassung</a>
       <a href="aufgaben.html" class="nav-link"><i data-lucide="check-square"></i> Aufgaben</a>
       
-      <div class="nav-group">Operations</div>
+      <div class="nav-label">Operations</div>
       <a href="finanzen.html" class="nav-link"><i data-lucide="banknote"></i> Finanzen</a>
       <a href="rechnungen.html" class="nav-link"><i data-lucide="file-text"></i> Rechnungen</a>
       <a href="angebote.html" class="nav-link"><i data-lucide="file-spreadsheet"></i> Angebote</a>
@@ -63,53 +47,104 @@
   </aside>
 
   <main class="main">
-    <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
-      <h1 style="font-size:24px; font-weight:800;">KUNDENVERWALTUNG</h1>
-      <button class="btn-main" onclick="alert('Neuer Kunde')">+ MANDANT</button>
+    <header class="header">
+      <h1 style="font-size: 20px; font-weight: 800;">MANDANTEN & OBJEKTE</h1>
+      <button class="theme-btn" onclick="toggleAddForm()">+ NEUER MANDANT</button>
     </header>
 
-    <div id="mgmtArea" class="mgmt-panel">
-        <h3 id="targetName">Objekte für Mandant</h3>
-        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr auto; gap:10px; margin-top:15px;">
-            <input type="text" id="obj_n" placeholder="Objekt Name">
-            <input type="text" id="obj_a" placeholder="Adresse">
-            <input type="text" id="obj_c" placeholder="Stadt">
-            <button class="btn-main" onclick="saveObj()">HINZUFÜGEN</button>
+    <div class="content">
+      <div id="addKundeForm" class="card-glass" style="display: none; padding: 20px; margin-bottom: 20px;">
+        <h3 style="margin-bottom: 15px; font-size: 14px;">Neuen Mandanten registrieren</h3>
+        <div style="display: grid; grid-template-columns: 1fr auto; gap: 15px;">
+          <input type="text" id="k_company" placeholder="Firmenname / Mandant" style="background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); color: white; padding: 10px; border-radius: 8px;">
+          <button class="theme-btn" onclick="saveKunde()">SPEICHERN</button>
         </div>
-    </div>
+      </div>
 
-    <div class="table-container">
-      <table>
-        <thead><tr><th>Unternehmen</th><th>Status</th><th>Optionen</th></tr></thead>
-        <tbody id="kunden-liste"></tbody>
-      </table>
+      <div id="mgmtArea" class="card-glass" style="display: none; padding: 20px; margin-bottom: 20px; border-left: 4px solid var(--accent);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 id="targetName" style="font-size: 16px; color: var(--accent);">Objekt-Zuweisung</h3>
+            <button onclick="closeMgmt()" style="background:none; border:none; color:var(--muted); cursor:pointer;"><i data-lucide="x-circle"></i></button>
+        </div>
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr) auto; gap:10px; margin-top:15px;">
+            <input type="text" id="obj_n" placeholder="Objekt Name" style="background:rgba(0,0,0,0.3); border:1px solid var(--glass-border); color:white; padding:10px; border-radius:8px;">
+            <input type="text" id="obj_a" placeholder="Straße / Nr." style="background:rgba(0,0,0,0.3); border:1px solid var(--glass-border); color:white; padding:10px; border-radius:8px;">
+            <input type="text" id="obj_c" placeholder="PLZ / Stadt" style="background:rgba(0,0,0,0.3); border:1px solid var(--glass-border); color:white; padding:10px; border-radius:8px;">
+            <button class="theme-btn" onclick="saveObj()">HINZUFÜGEN</button>
+        </div>
+      </div>
+
+      <div class="card-glass">
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="border-bottom: 1px solid var(--glass-border); text-align: left;">
+              <th style="padding: 15px; font-size: 11px; color: var(--muted);">MANDANT</th>
+              <th style="padding: 15px; font-size: 11px; color: var(--muted);">STATUS</th>
+              <th style="padding: 15px; font-size: 11px; color: var(--muted); text-align: right;">AKTION</th>
+            </tr>
+          </thead>
+          <tbody id="kunden-liste"></tbody>
+        </table>
+      </div>
     </div>
   </main>
 
   <script src="../config.js"></script>
   <script>
     lucide.createIcons();
+    const WS_ID = '8648e581-297d-419b-9c71-292418e26895';
     let selId = null;
+
+    function toggleAddForm() {
+      const f = document.getElementById('addKundeForm');
+      f.style.display = f.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function closeMgmt() { document.getElementById('mgmtArea').style.display = 'none'; }
+
     async function loadKunden() {
-      const { data } = await _supabase.from('customers').select('*');
+      const { data } = await _supabase.from('customers').select('*').order('company');
       document.getElementById('kunden-liste').innerHTML = data.map(k => `
-        <tr>
-          <td><strong>${k.company}</strong></td>
-          <td><span style="color:#22c55e">Aktiv</span></td>
-          <td style="text-align:right;"><button class="btn-main" style="padding:5px 12px; font-size:11px;" onclick="openMgmt('${k.id}', '${k.company}')">OBJEKTE</button></td>
+        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+          <td style="padding: 15px; font-weight: 700;">${k.company}</td>
+          <td style="padding: 15px;"><span style="color: #22c55e; font-size: 11px; font-weight: 800;">● AKTIV</span></td>
+          <td style="padding: 15px; text-align: right;">
+            <button onclick="openMgmt('${k.id}', '${k.company}')" class="theme-btn" style="padding: 5px 12px; font-size: 10px; background: rgba(37,99,235,0.1); color: var(--accent); border: 1px solid var(--accent);">OBJEKTE VERWALTEN</button>
+          </td>
         </tr>
       `).join('');
+      lucide.createIcons();
     }
+
     function openMgmt(id, name) {
         selId = id;
-        document.getElementById('targetName').innerText = "Objekt-Zuweisung: " + name;
+        document.getElementById('targetName').innerText = "Objekte verwalten für: " + name;
         document.getElementById('mgmtArea').style.display = 'block';
+        window.scrollTo({top: 0, behavior: 'smooth'});
     }
+
+    async function saveKunde() {
+      const name = document.getElementById('k_company').value;
+      if(!name) return;
+      await _supabase.from('customers').insert([{ company: name, workspace_id: WS_ID }]);
+      location.reload();
+    }
+
     async function saveObj() {
-        await _supabase.from('objects').insert([{ name: document.getElementById('obj_n').value, customer_id: selId, workspace_id: '8648e581-297d-419b-9c71-292418e26895' }]);
-        alert("Objekt gespeichert!");
-        document.getElementById('mgmtArea').style.display = 'none';
+        const payload = {
+            name: document.getElementById('obj_n').value,
+            address: document.getElementById('obj_a').value,
+            city: document.getElementById('obj_c').value,
+            customer_id: selId,
+            workspace_id: WS_ID
+        };
+        const { error } = await _supabase.from('objects').insert([payload]);
+        if(!error) {
+            alert("Objekt erfolgreich zugewiesen!");
+            closeMgmt();
+        }
     }
+
     document.addEventListener('DOMContentLoaded', loadKunden);
   </script>
 </body>
