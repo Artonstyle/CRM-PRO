@@ -41,41 +41,46 @@
       <div class="nav-label">SaaS Admin</div>
       <a href="views/saas_freischaltung.html" class="nav-link"><i data-lucide="user-plus"></i> SaaS</a>
       <a href="views/tarife.html" class="nav-link"><i data-lucide="tags"></i> Tarife</a>
-      <a href="views/einstellungen.html" class="nav-link"><i data-lucide="settings"></i> Settings</a>
       <a href="views/support.html" class="nav-link"><i data-lucide="help-circle"></i> Support</a>
+      
+      <div class="nav-label">Erscheinungsbild</div>
+      <a href="#" class="nav-link" id="themeToggle">
+        <i data-lucide="sun-moon"></i> Theme wechseln
+      </a>
+      <a href="views/einstellungen.html" class="nav-link"><i data-lucide="settings"></i> Settings</a>
     </div>
   </aside>
 
   <main class="main">
-    <header class="header">
-      <h1 style="font-size: 20px; font-weight: 800;">DASHBOARD ÜBERSICHT</h1>
+    <header class="header" style="display: flex; justify-content: space-between; align-items: center; padding: 20px 30px; border-bottom: 1px solid var(--glass-border);">
+      <h1 style="font-size: 20px; font-weight: 800; margin: 0;">DASHBOARD ÜBERSICHT</h1>
       <div style="display: flex; gap: 15px; align-items: center;">
-        <span style="font-size: 12px; color: var(--muted);">Status: <span style="color: var(--green);">Online</span></span>
-        <div style="width: 35px; height: 35px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900;">A</div>
+        <span style="font-size: 12px; color: var(--muted);">Status: <span style="color: var(--ok, #22c55e);">Online</span></span>
+        <div style="width: 35px; height: 35px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; color: white;">A</div>
       </div>
     </header>
 
     <div class="content">
-      <div class="stats-grid">
+      <div class="grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
         <div class="stat-card card-glass">
-          <div class="stat-label">AKTIVE OBJEKTE</div>
-          <div class="stat-value">24</div>
-          <div class="stat-change pos">+3 diesen Monat</div>
+          <div style="font-size: 10px; color: var(--muted); font-weight: 800;">AKTIVE OBJEKTE</div>
+          <div style="font-size: 24px; font-weight: 800; margin: 5px 0;">24</div>
+          <div style="font-size: 11px; color: var(--accent);">+3 diesen Monat</div>
         </div>
         <div class="stat-card card-glass">
-          <div class="stat-label">MITARBEITER IM DIENST</div>
-          <div class="stat-value">12</div>
-          <div class="stat-change">Live-Status</div>
+          <div style="font-size: 10px; color: var(--muted); font-weight: 800;">MITARBEITER IM DIENST</div>
+          <div style="font-size: 24px; font-weight: 800; margin: 5px 0;">12</div>
+          <div style="font-size: 11px; color: var(--muted);">Live-Status</div>
         </div>
         <div class="stat-card card-glass">
-          <div class="stat-label">OFFENE AUFGABEN</div>
-          <div class="stat-value">08</div>
-          <div class="stat-change neg">Handlungsbedarf</div>
+          <div style="font-size: 10px; color: var(--muted); font-weight: 800;">OFFENE AUFGABEN</div>
+          <div style="font-size: 24px; font-weight: 800; margin: 5px 0;">08</div>
+          <div style="font-size: 11px; color: var(--danger);">Handlungsbedarf</div>
         </div>
         <div class="stat-card card-glass">
-          <div class="stat-label">UMSATZ JANUAR</div>
-          <div class="stat-value">42.8k €</div>
-          <div class="stat-change pos">+12.4%</div>
+          <div style="font-size: 10px; color: var(--muted); font-weight: 800;">UMSATZ JANUAR</div>
+          <div style="font-size: 24px; font-weight: 800; margin: 5px 0;">42.8k €</div>
+          <div style="font-size: 11px; color: var(--accent);">+12.4%</div>
         </div>
       </div>
 
@@ -91,8 +96,25 @@
 
   <script src="config.js"></script>
   <script>
-    // Icons initialisieren
+    // 1. Icons initialisieren
     lucide.createIcons();
+
+    // 2. Theme-Logik
+    const themeToggle = document.getElementById('themeToggle');
+    
+    // Check beim Laden: Hat der User ein Theme gespeichert?
+    if (localStorage.getItem('theme') === 'light') {
+      document.body.classList.add('light-mode');
+    }
+
+    themeToggle.addEventListener('click', (e) => {
+      e.preventDefault(); // Verhindert, dass die Seite nach oben springt
+      document.body.classList.toggle('light-mode');
+      
+      // Einstellung speichern
+      const isLight = document.body.classList.contains('light-mode');
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    });
   </script>
 </body>
 </html>
