@@ -3,81 +3,41 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CORE MASTER 2026 | Personal</title>
+  <title>CORE MASTER 2026</title>
   <link rel="stylesheet" href="../style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    :root {
-      --sidebar-width: 260px;
-      --core-bg: #0f111a;
-      --core-card: #161b22;
-      --core-accent: #2563eb;
-      --core-border: #30363d;
-      --core-text: #ffffff;
-    }
-
-    body { display: flex; background: var(--core-bg); color: var(--core-text); font-family: 'Inter', sans-serif; margin: 0; min-height: 100vh; }
-
-    /* LINKES MENÜ (SIDEBAR) */
-    .sidebar {
-      width: var(--sidebar-width);
-      background: var(--core-card);
-      border-right: 1px solid var(--core-border);
-      display: flex;
-      flex-direction: column;
-      position: fixed;
-      height: 100vh;
-    }
-
-    .nav-item {
-      padding: 15px 25px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      color: #8b949e;
-      text-decoration: none;
-      font-size: 14px;
-      transition: 0.2s;
-      cursor: pointer;
-    }
-
-    .nav-item:hover, .nav-item.active {
-      background: rgba(37, 99, 235, 0.1);
-      color: var(--core-accent);
-      border-right: 3px solid var(--core-accent);
-    }
-
-    /* HAUPTINHALT */
-    .content {
-      margin-left: var(--sidebar-width);
-      flex: 1;
-      padding: 40px;
-    }
-
-    .form-section { background: var(--core-card); border: 1px solid var(--core-border); border-radius: 12px; padding: 25px; margin-bottom: 25px; }
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; }
+    :root { --sidebar-w: 260px; --core-bg: #0f111a; --core-card: #161b22; --core-accent: #2563eb; --core-border: #30363d; }
+    body { display: flex; background: var(--core-bg); color: white; font-family: 'Inter', sans-serif; margin: 0; min-height: 100vh; overflow-x: hidden; }
+    
+    /* SIDEBAR LINKS */
+    .sidebar { width: var(--sidebar-w); background: var(--core-card); border-right: 1px solid var(--core-border); position: fixed; height: 100vh; display: flex; flex-direction: column; z-index: 100; }
+    .nav-logo { padding: 30px 25px; font-weight: 900; font-size: 22px; color: var(--core-accent); letter-spacing: 1px; }
+    .nav-item { padding: 15px 25px; display: flex; align-items: center; gap: 12px; color: #8b949e; text-decoration: none; cursor: pointer; transition: 0.2s; font-size: 14px; }
+    .nav-item.active { background: rgba(37, 99, 235, 0.1); color: var(--core-accent); border-right: 3px solid var(--core-accent); }
+    
+    /* CONTENT AREA */
+    .content { margin-left: var(--sidebar-w); flex: 1; padding: 40px; max-width: 1200px; }
+    .form-card { background: var(--core-card); border: 1px solid var(--core-border); border-radius: 12px; padding: 25px; margin-bottom: 25px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
     
     label { display: block; font-size: 10px; color: #8b949e; text-transform: uppercase; font-weight: 700; margin-bottom: 8px; }
-    input, select, textarea { 
-      width: 100%; padding: 12px; background: #0d1117; border: 1px solid var(--core-border); 
-      border-radius: 8px; color: #fff; box-sizing: border-box; 
-    }
+    input, select, textarea { width: 100%; padding: 12px; background: #0d1117; border: 1px solid var(--core-border); border-radius: 8px; color: #fff; box-sizing: border-box; font-size: 14px; }
+    
+    .photo-area { text-align: center; margin-bottom: 30px; }
+    .preview-circle { width: 120px; height: 120px; border-radius: 50%; background: #0d1117; margin: 0 auto 15px; border: 2px dashed var(--core-border); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .preview-circle img { width: 100%; height: 100%; object-fit: cover; }
 
-    .btn-main { 
-      background: var(--core-accent); color: white; border: none; padding: 15px 30px; 
-      border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; text-transform: uppercase;
-    }
-
-    .preview-box { width: 100px; height: 100px; border-radius: 50%; background: #0d1117; border: 2px dashed var(--core-border); margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-    .preview-box img { width: 100%; height: 100%; object-fit: cover; }
+    .btn-submit { background: var(--core-accent); color: white; border: none; padding: 18px; border-radius: 8px; font-weight: 800; cursor: pointer; width: 100%; text-transform: uppercase; letter-spacing: 1px; margin-top: 10px; transition: 0.3s; }
+    .btn-submit:hover { background: #1d4ed8; transform: translateY(-2px); }
   </style>
 </head>
 <body>
 
   <aside class="sidebar">
-    <div style="padding: 30px 25px; font-weight: 900; font-size: 20px; color: var(--core-accent);">CORE MASTER</div>
-    <div class="nav-item" onclick="location.href='dashboard.html'"><i data-lucide="layout-dashboard"></i> Dashboard</div>
+    <div class="nav-logo">CORE MASTER</div>
+    <div class="nav-item"><i data-lucide="layout-dashboard"></i> Dashboard</div>
     <div class="nav-item active"><i data-lucide="users"></i> Mitarbeiter</div>
     <div class="nav-item"><i data-lucide="calendar"></i> Schichtplan</div>
     <div class="nav-item"><i data-lucide="file-text"></i> Dokumente</div>
@@ -85,57 +45,54 @@
   </aside>
 
   <main class="content">
-    <h2 style="margin-bottom: 30px;">Personalverwaltung 2026</h2>
+    <h1 style="margin: 0 0 30px 0; font-size: 24px;">Personalverwaltung</h1>
 
-    <div style="max-width: 1000px;">
-      
-      <div class="form-section" style="text-align: center;">
-        <div id="img-prev" class="preview-box"><i data-lucide="camera" size="32" color="#30363d"></i></div>
-        <input type="file" id="f_photo" style="display:none" onchange="handlePreview()">
-        <button onclick="document.getElementById('f_photo').click()" style="background:none; border:1px solid var(--core-accent); color:var(--core-accent); padding:8px 15px; border-radius:5px; cursor:pointer;">Foto hochladen</button>
-      </div>
-
-      <div class="form-section">
-        <label>1. Stammdaten</label>
-        <div class="grid-3">
-          <div><label>Vorname</label><input type="text" id="f_vn"></div>
-          <div><label>Nachname</label><input type="text" id="f_nn"></div>
-          <div><label>Personalnummer</label><input type="text" id="f_pnr"></div>
-        </div>
-        <div class="grid-3">
-          <div><label>E-Mail</label><input type="email" id="f_mail"></div>
-          <div><label>Telefon</label><input type="text" id="f_tel"></div>
-          <div><label>Geburtsdatum</label><input type="date" id="f_geb"></div>
-        </div>
-      </div>
-
-      <div class="form-section">
-        <label>2. Konditionen & Bank</label>
-        <div class="grid-3">
-          <div><label>Position</label><input type="text" id="f_pos"></div>
-          <div><label>Lohn / Std (€)</label><input type="number" id="f_wage" step="0.01"></div>
-          <div><label>Stunden / Woche</label><input type="number" id="f_hours"></div>
-        </div>
-        <div class="grid-3">
-          <div><label>IBAN</label><input type="text" id="f_iban"></div>
-          <div><label>BIC</label><input type="text" id="f_bic"></div>
-          <div><label>Krankenkasse</label><input type="text" id="f_insur"></div>
-        </div>
-      </div>
-
-      <div class="form-section">
-        <label>3. Adresse & Sonstiges</label>
-        <div style="margin-bottom:20px;"><label>Vollständige Adresse</label><input type="text" id="f_addr"></div>
-        <div class="grid-3">
-          <div><label>Eintritt</label><input type="date" id="f_entry"></div>
-          <div><label>Beschäftigung</label><select id="f_type"><option>Vollzeit</option><option>Teilzeit</option><option>Minijob</option></select></div>
-          <div><label>Status</label><select id="f_status"><option>Aktiv</option><option>Inaktiv</option></select></div>
-        </div>
-        <div style="margin-top:20px;"><label>Notizen</label><textarea id="f_notes" rows="3"></textarea></div>
-      </div>
-
-      <button class="btn-main" onclick="saveAll()">Mitarbeiter final speichern</button>
+    <div class="photo-area">
+      <div id="img-prev" class="preview-circle"><i data-lucide="camera" size="40" color="#30363d"></i></div>
+      <input type="file" id="inp_photo" style="display:none" onchange="previewImage()">
+      <button onclick="document.getElementById('inp_photo').click()" style="background:none; border:1px solid var(--core-accent); color:var(--core-accent); padding:8px 20px; border-radius:20px; cursor:pointer; font-weight:700; font-size:11px;">FOTO HOCHLADEN</button>
     </div>
+
+    <div class="form-card">
+      <label style="color:var(--core-accent); margin-bottom:20px; font-size:12px;">Stammdaten & Kontakt</label>
+      <div class="grid-3">
+        <div><label>Vorname</label><input type="text" id="m_vn"></div>
+        <div><label>Nachname</label><input type="text" id="m_nn"></div>
+        <div><label>Personalnummer</label><input type="text" id="m_pnr"></div>
+      </div>
+      <div class="grid-3" style="margin-top:20px;">
+        <div><label>E-Mail Adresse</label><input type="email" id="m_mail"></div>
+        <div><label>Telefonnummer</label><input type="text" id="m_tel"></div>
+        <div><label>Geburtsdatum</label><input type="date" id="m_geb"></div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <label style="color:var(--core-accent); margin-bottom:20px; font-size:12px;">Vertrag & Vergütung</label>
+      <div class="grid-3">
+        <div><label>Position / Rolle</label><input type="text" id="m_pos"></div>
+        <div><label>Stundenlohn (€)</label><input type="number" id="m_wage" step="0.01"></div>
+        <div><label>Wochenstunden</label><input type="number" id="m_hours"></div>
+      </div>
+      <div class="grid-3" style="margin-top:20px;">
+        <div><label>Eintrittsdatum</label><input type="date" id="m_entry"></div>
+        <div><label>Beschäftigungsart</label><select id="m_type"><option>Vollzeit</option><option>Teilzeit</option><option>Minijob</option></select></div>
+        <div><label>Status</label><select id="m_status"><option>Aktiv</option><option>Inaktiv</option></select></div>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <label style="color:var(--core-accent); margin-bottom:20px; font-size:12px;">Adresse & Bankdaten</label>
+      <div style="margin-bottom:20px;"><label>Vollständige Adresse (Str, PLZ, Ort)</label><input type="text" id="m_addr"></div>
+      <div class="grid-3">
+        <div><label>IBAN</label><input type="text" id="m_iban"></div>
+        <div><label>BIC</label><input type="text" id="m_bic"></div>
+        <div><label>Krankenkasse</label><input type="text" id="m_insur"></div>
+      </div>
+      <div style="margin-top:20px;"><label>Interne Notizen</label><textarea id="m_notes" rows="3"></textarea></div>
+    </div>
+
+    <button class="btn-submit" onclick="saveStaff()">Mitarbeiter final speichern</button>
   </main>
 
   <script src="../config.js"></script>
@@ -143,8 +100,8 @@
     lucide.createIcons();
     const WS_ID = '8648e581-297d-419b-9c71-292418e26895';
 
-    function handlePreview() {
-      const file = document.getElementById('f_photo').files[0];
+    function previewImage() {
+      const file = document.getElementById('inp_photo').files[0];
       if(file) {
         const reader = new FileReader();
         reader.onload = e => document.getElementById('img-prev').innerHTML = `<img src="${e.target.result}">`;
@@ -152,8 +109,8 @@
       }
     }
 
-    async function saveAll() {
-      const file = document.getElementById('f_photo').files[0];
+    async function saveStaff() {
+      const file = document.getElementById('inp_photo').files[0];
       let url = null;
 
       if(file) {
@@ -164,20 +121,27 @@
 
       const { error } = await _supabase.from('employees').insert([{
         workspace_id: WS_ID,
-        first_name: document.getElementById('f_vn').value,
-        last_name: document.getElementById('f_nn').value,
-        email: document.getElementById('f_mail').value,
-        role: document.getElementById('f_pos').value,
+        first_name: document.getElementById('m_vn').value,
+        last_name: document.getElementById('m_nn').value,
+        email: document.getElementById('m_mail').value,
+        role: document.getElementById('m_pos').value,
         avatar_url: url,
-        employee_number: document.getElementById('f_pnr').value,
-        hourly_wage: parseFloat(document.getElementById('f_wage').value) || 0,
-        address: document.getElementById('f_addr').value,
-        notes: document.getElementById('f_notes').value,
-        // Die restlichen Felder müssen per ALTER TABLE im SQL Editor angelegt sein!
+        employee_number: document.getElementById('m_pnr').value,
+        hourly_wage: parseFloat(document.getElementById('m_wage').value) || 0,
+        address: document.getElementById('m_addr').value,
+        notes: document.getElementById('m_notes').value,
+        phone: document.getElementById('m_tel').value,
+        birth_date: document.getElementById('m_geb').value || null,
+        weekly_hours: parseFloat(document.getElementById('m_hours').value) || 0,
+        entry_date: document.getElementById('m_entry').value || null,
+        status: document.getElementById('m_status').value,
+        iban: document.getElementById('m_iban').value,
+        bic: document.getElementById('m_bic').value,
+        insurance: document.getElementById('m_insur').value
       }]);
 
-      if(error) alert("Fehler: " + error.message);
-      else alert("Gespeichert!");
+      if(error) alert("Datenbank Fehler: " + error.message);
+      else { alert("Mitarbeiter erfolgreich angelegt!"); location.reload(); }
     }
   </script>
 </body>
