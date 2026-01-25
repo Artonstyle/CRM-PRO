@@ -2,160 +2,161 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CORE MASTER 2026 | MITARBEITER</title>
-  
+  <title>CORE MASTER 2026 | PERSONAL</title>
   <link rel="stylesheet" href="../style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root { --accent: #2563eb; --bg: #050505; --card: #0d0d0d; --border: rgba(255,255,255,0.08); }
+    body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+    
+    /* Sidebar Layout (Vollständige 18 Punkte) */
+    .sidebar { width: 260px; border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; background: #000; height: 100vh; }
+    .custom-scrollbar { overflow-y: auto; flex: 1; padding-right: 5px; }
+    .custom-scrollbar::-webkit-scrollbar { width: 3px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #222; border-radius: 10px; }
+    .nav-link { display: flex; align-items: center; gap: 10px; color: #aaa; text-decoration: none; padding: 10px; border-radius: 8px; font-size: 14px; transition: 0.2s; }
+    .nav-link:hover { color: #fff; background: rgba(255,255,255,0.03); }
+    .nav-link.active { color: white; background: rgba(37, 99, 235, 0.1); border: 1px solid rgba(37, 99, 235, 0.2); }
+    .nav-group { font-size: 10px; color: #444; font-weight: 800; padding: 15px 12px 5px; text-transform: uppercase; letter-spacing: 1px; }
+
+    /* Main UI */
+    .main-content { flex: 1; overflow-y: auto; padding: 40px; }
+    .creation-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 25px; margin-bottom: 30px; }
+    .grid-form { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 10px; font-weight: 800; color: #555; text-transform: uppercase; }
+    input, select { background: #000; border: 1px solid var(--border); padding: 12px; border-radius: 8px; color: #fff; font-size: 14px; }
+    
+    .btn-save { background: var(--accent); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+    
+    /* Tabelle */
+    .table-container { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: rgba(255,255,255,0.02); padding: 15px 20px; text-align: left; font-size: 11px; color: #444; text-transform: uppercase; }
+    td { padding: 18px 20px; border-top: 1px solid var(--border); font-size: 14px; }
+    .status-badge { background: rgba(34, 197, 94, 0.1); color: #22c55e; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; }
+  </style>
 </head>
 <body>
 
   <aside class="sidebar">
-    <div class="sidebar-header">
-      <div style="font-weight: 900; font-size: 20px; color: var(--accent);">CORE MASTER</div>
-      <div style="font-size: 10px; color: var(--muted); font-weight: 700;">PERSONAL-MANAGEMENT</div>
-    </div>
-    
-    <div class="sidebar-content">
-      <div class="nav-label">Main Console</div>
+    <div style="font-weight: 900; font-size: 20px; color: var(--accent); margin-bottom: 30px; padding-left: 10px;">CORE MASTER 2026</div>
+    <nav class="custom-scrollbar">
+      <div class="nav-group">Zentrale</div>
       <a href="../admin.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+      <a href="live-monitor.html" class="nav-link"><i data-lucide="activity"></i> Live-Monitor</a>
+      
+      <div class="nav-group">CRM & Objekte</div>
       <a href="kunden.html" class="nav-link"><i data-lucide="users"></i> Kunden</a>
       <a href="objekte.html" class="nav-link"><i data-lucide="building-2"></i> Objekte</a>
-      <a href="mitarbeiter.html" class="nav-link active"><i data-lucide="hard-hat"></i> Mitarbeiter</a>
-      <a href="schichtplan.html" class="nav-link"><i data-lucide="calendar-days"></i> Schichtplan</a>
-      <a href="zeiterfassung.html" class="nav-link"><i data-lucide="timer"></i> Zeiterfassung</a>
-      <a href="aufgaben.html" class="nav-link"><i data-lucide="check-square"></i> Aufgaben</a>
+      <a href="geofencing.html" class="nav-link"><i data-lucide="map-pin"></i> Geofencing</a>
       
-      <div class="nav-label">Operations</div>
-      <a href="finanzen.html" class="nav-link"><i data-lucide="banknote"></i> Finanzen</a>
-      <a href="rechnungen.html" class="nav-link"><i data-lucide="file-text"></i> Rechnungen</a>
-      <a href="angebote.html" class="nav-link"><i data-lucide="file-spreadsheet"></i> Angebote</a>
-      <a href="lager.html" class="nav-link"><i data-lucide="package"></i> Lager</a>
-      <a href="dokumente.html" class="nav-link"><i data-lucide="folder"></i> Dokumente</a>
-      <a href="chat_video.html" class="nav-link"><i data-lucide="video"></i> Chat & Video</a>
-      <a href="analyse.html" class="nav-link"><i data-lucide="bar-chart-3"></i> Analyse</a>
+      <div class="nav-group">Personal</div>
+      <a href="mitarbeiter.html" class="nav-link active"><i data-lucide="hard-hat"></i> Mitarbeiter</a>
+      <a href="schichtplan.html" class="nav-link"><i data-lucide="calendar"></i> Schichtplan</a>
+      <a href="zeiterfassung.html" class="nav-link"><i data-lucide="clock"></i> Zeiterfassung</a>
+      <a href="lohn.html" class="nav-link"><i data-lucide="wallet"></i> Lohnabrechnung</a>
 
-      <div class="nav-label">SaaS Administration</div>
-      <a href="saas_freischaltung.html" class="nav-link"><i data-lucide="user-plus"></i> SaaS Freischaltung</a>
-      <a href="tarife.html" class="nav-link"><i data-lucide="tags"></i> Master Tarife</a>
+      <div class="nav-group">Einsatz & Sicherheit</div>
+      <a href="wachbuch.html" class="nav-link"><i data-lucide="book-open"></i> Wachbuch</a>
+      <a href="ereignisse.html" class="nav-link"><i data-lucide="alert-triangle"></i> Ereignisse</a>
+      <a href="rundgaenge.html" class="nav-link"><i data-lucide="navigation"></i> Rundgänge</a>
+      <a href="schlussel.html" class="nav-link"><i data-lucide="key"></i> Schlüssel</a>
+
+      <div class="nav-group">Backoffice</div>
+      <a href="angebote.html" class="nav-link"><i data-lucide="file-text"></i> Angebote</a>
+      <a href="rechnungen.html" class="nav-link"><i data-lucide="credit-card"></i> Rechnungen</a>
+      <a href="dokumente.html" class="nav-link"><i data-lucide="folder-closed"></i> Dokumente</a>
+      
+      <div class="nav-group">System</div>
       <a href="einstellungen.html" class="nav-link"><i data-lucide="settings"></i> Einstellungen</a>
-      <a href="support.html" class="nav-link"><i data-lucide="help-circle"></i> System Support</a>
-    </div>
+      <a href="logs.html" class="nav-link"><i data-lucide="terminal"></i> System-Logs</a>
+    </nav>
   </aside>
 
-  <main class="main">
-    <div class="content">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-          <h2 style="margin:0;">Mitarbeiter-Verwaltung</h2>
-          <button class="btn-main" onclick="openEmpModal()" style="width:auto; padding:8px 20px;">+ NEUER MITARBEITER</button>
-      </div>
+  <main class="main-content">
+    <header style="margin-bottom: 30px;">
+      <h1 style="font-size: 32px; margin: 0; letter-spacing: -1.5px;">Personal-Zentrale</h1>
+      <p style="color: #555;">Verwalten Sie Ihre Sicherheitskräfte und Zuweisungen.</p>
+    </header>
 
-      <div class="card-glass">
-        <div style="margin-bottom: 20px;">
-            <input type="text" id="searchEmp" placeholder="Mitarbeiter suchen..." onkeyup="filterEmp()" style="width: 300px; margin-bottom:0;">
+    <section class="creation-card">
+      <div class="grid-form">
+        <div class="field"><label>Vorname</label><input type="text" id="m_vorname" placeholder="Max"></div>
+        <div class="field"><label>Nachname</label><input type="text" id="m_nachname" placeholder="Mustermann"></div>
+        <div class="field"><label>E-Mail (Login)</label><input type="email" id="m_email" placeholder="max@beispiel.de"></div>
+        <div class="field"><label>Rolle</label>
+          <select id="m_role">
+            <option>Sicherheitskraft</option>
+            <option>Objektleiter</option>
+            <option>Einsatzleiter</option>
+            <option>Administrator</option>
+          </select>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Firma (Mandant)</th>
-              <th>Rolle</th>
-              <th>Status</th>
-              <th>Aktion</th>
-            </tr>
-          </thead>
-          <tbody id="emp-liste">
-            </tbody>
-        </table>
       </div>
+      <button class="btn-save" style="width: 100%;" onclick="saveMitarbeiter()">MITARBEITER INS SYSTEM AUFNEHMEN</button>
+    </section>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>E-Mail</th>
+            <th>Rolle</th>
+            <th>Status</th>
+            <th style="text-align: right; padding-right:20px;">Aktion</th>
+          </tr>
+        </thead>
+        <tbody id="mitarbeiter-liste"></tbody>
+      </table>
     </div>
   </main>
 
-  <div id="empModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:100;">
-      <div class="card-glass" style="width:400px; background:#111;">
-          <h3>Personal anlegen</h3>
-          <div style="display:flex; gap:10px;">
-            <input type="text" id="e_fname" placeholder="Vorname">
-            <input type="text" id="e_lname" placeholder="Nachname">
-          </div>
-          <label>Zugehörige Firma</label>
-          <select id="e_kunde"></select>
-          <label>Rolle / Position</label>
-          <select id="e_role">
-              <option>Sicherheitsmitarbeiter</option>
-              <option>Objektleiter</option>
-              <option>Einsatzleiter</option>
-              <option>Verwaltung</option>
-          </select>
-          <div style="display:flex; gap:10px; margin-top:10px;">
-              <button class="btn-main" onclick="saveEmp()">HINZUFÜGEN</button>
-              <button class="btn-main" onclick="closeEmpModal()" style="background:#334155;">ABBRECHEN</button>
-          </div>
-      </div>
-  </div>
-
   <script src="../config.js"></script>
   <script>
-    function openEmpModal() { 
-        document.getElementById('empModal').style.display = 'flex'; 
-        loadKundenSelect();
-    }
-    function closeEmpModal() { document.getElementById('empModal').style.display = 'none'; }
+    lucide.createIcons();
+    const WS_ID = '8648e581-297d-419b-9c71-292418e26895';
 
-    async function loadKundenSelect() {
-        const { data } = await _supabase.from('clients').select('id, company');
-        const sel = document.getElementById('e_kunde');
-        if(data) sel.innerHTML = data.map(c => `<option value="${c.id}">${c.company}</option>`).join('');
-    }
-
-    async function loadEmployees() {
-        const { data, error } = await _supabase.from('employees').select('*, clients(company)');
-        const tbody = document.getElementById('emp-liste');
-        if(data && data.length > 0) {
-            tbody.innerHTML = data.map(e => `
-                <tr>
-                    <td><strong>${e.first_name} ${e.last_name}</strong></td>
-                    <td>${e.clients?.company || 'Keine Zuordnung'}</td>
-                    <td style="color:var(--muted);">${e.role}</td>
-                    <td><span class="status-pill">Aktiv</span></td>
-                    <td><button onclick="deleteEmp('${e.id}')" style="color:var(--danger); background:none; border:none; cursor:pointer;">LÖSCHEN</button></td>
-                </tr>
-            `).join('');
-        } else {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--muted);">Keine Mitarbeiter im System.</td></tr>';
-        }
+    async function loadMitarbeiter() {
+      const { data, error } = await _supabase.from('employees').select('*').order('created_at', {ascending: false});
+      if(error) return console.error(error);
+      
+      document.getElementById('mitarbeiter-liste').innerHTML = data.map(m => `
+        <tr>
+          <td><strong style="color:white">${m.first_name} ${m.last_name}</strong></td>
+          <td style="color:#666">${m.email || '-'}</td>
+          <td><span style="color:#aaa">${m.role || 'Sicherheitskraft'}</span></td>
+          <td><span class="status-badge">AKTIV</span></td>
+          <td style="text-align: right; padding-right:20px;">
+            <button onclick="deleteMitarbeiter('${m.id}')" style="background:none; border:none; color:#333; cursor:pointer;"><i data-lucide="trash-2" size="16"></i></button>
+          </td>
+        </tr>
+      `).join('');
+      lucide.createIcons();
     }
 
-    async function saveEmp() {
-        const emp = {
-            first_name: document.getElementById('e_fname').value,
-            last_name: document.getElementById('e_lname').value,
-            client_id: document.getElementById('e_kunde').value,
-            role: document.getElementById('e_role').value
-        };
-        const { error } = await _supabase.from('employees').insert([emp]);
-        if(!error) { closeEmpModal(); loadEmployees(); }
+    async function saveMitarbeiter() {
+      const payload = {
+        first_name: document.getElementById('m_vorname').value,
+        last_name: document.getElementById('m_nachname').value,
+        email: document.getElementById('m_email').value,
+        role: document.getElementById('m_role').value,
+        workspace_id: WS_ID
+      };
+      const { error } = await _supabase.from('employees').insert([payload]);
+      if(!error) location.reload(); else alert(error.message);
     }
 
-    async function deleteEmp(id) {
-        if(confirm("Mitarbeiter wirklich entfernen?")) {
-            await _supabase.from('employees').delete().eq('id', id);
-            loadEmployees();
-        }
+    async function deleteMitarbeiter(id) {
+      if(confirm("Mitarbeiter wirklich löschen?")) {
+        await _supabase.from('employees').delete().eq('id', id);
+        loadMitarbeiter();
+      }
     }
 
-    function filterEmp() {
-        let input = document.getElementById("searchEmp").value.toUpperCase();
-        let rows = document.getElementById("emp-liste").getElementsByTagName("tr");
-        for (let row of rows) {
-            row.style.display = row.textContent.toUpperCase().includes(input) ? "" : "none";
-        }
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        loadEmployees();
-    });
+    document.addEventListener('DOMContentLoaded', loadMitarbeiter);
   </script>
 </body>
 </html>
