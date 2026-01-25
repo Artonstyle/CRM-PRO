@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CORE MASTER ADMIN 2026</title>
+  <title>CORE MASTER ADMIN 2026 | SAAS</title>
   
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -11,87 +11,89 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
 
-  <link rel="stylesheet" href="../style.css">
-
   <style>
-    /* Spezifische Ergänzungen für dein Theme-System */
     :root {
       --bg: #0f172a; --sidebar: #1e293b; --sidebar-hover: #334155; --accent: #2563eb;
       --card: #1e293b; --border: #334155; --text: #ffffff;
       --text-muted: #cbd5e1; --success: #22c55e; --danger: #ef4444; --gold: #f59e0b; --radius: 8px;
     }
-
     [data-theme="black"] {
       --bg: #000000; --sidebar: #0a0a0a; --sidebar-hover: #1a1a1a; --accent: #2563eb;
       --card: #0d0d0d; --border: #1f1f1f; --text: #ffffff;
       --text-muted: #888888; --success: #22c55e; --danger: #ef4444; --gold: #f59e0b; --radius: 6px;
     }
-
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
     ::-webkit-scrollbar { display: none; }
 
     body { margin:0; background:var(--bg); color:var(--text); font-family:'Inter', sans-serif; font-size:13px; display:flex; height:100vh; overflow:hidden; transition: background 0.3s ease; }
     
-    .sidebar { width: 190px; background: var(--sidebar); border-right: 1px solid var(--border); padding: 20px 0; flex-shrink: 0; display: flex; flex-direction: column; }
-    .logo-area { padding: 0 20px; margin-bottom: 25px; }
-    
+    /* SIDEBAR */
+    .sidebar { width: 220px; background: var(--sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+    .logo-area { padding: 25px 20px; border-bottom: 1px solid var(--border); }
+    .sidebar-content { flex: 1; overflow-y: auto; padding: 10px 0; }
+    .nav-label { font-size: 9px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding: 15px 20px 5px; }
+    .nav-link { 
+      display: flex; align-items: center; gap: 10px; padding: 10px 20px; color: #94a3b8; 
+      text-decoration: none; font-size: 12px; font-weight: 600; transition: 0.2s; 
+    }
+    .nav-link i { width: 16px; height: 16px; }
+    .nav-link:hover { background: var(--sidebar-hover); color: #fff; }
+    .nav-link.active { background: rgba(37, 99, 235, 0.1); color: var(--accent); border-left: 4px solid var(--accent); }
+
+    /* CONTENT */
     .main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
     .content { flex:1; padding:20px; overflow-y:auto; }
-    
     .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 20px; }
     .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; }
     .stat-card small { display: block; color: var(--text-muted); font-size: 10px; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
     .stat-card span { font-size: 20px; font-weight: 800; }
-
     .grid-top { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px; margin-bottom: 20px; }
     .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
     h3 { margin: 0 0 15px 0; font-size: 14px; font-weight: 700; border-bottom: 1px solid var(--border); padding-bottom: 8px; text-transform: uppercase; color: white; }
-
     label { display: block; font-size: 10px; color: var(--text-muted); margin-bottom: 4px; font-weight: 700; text-transform: uppercase; }
     input, select { width: 100%; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: #fff; font-size: 13px; outline: none; box-sizing: border-box; }
-
     .flex-row { display: flex; gap: 12px; margin-bottom: 12px; }
     .btn-main { background: var(--accent); color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; font-weight: 800; width: 100%; text-transform: uppercase; font-size: 12px; margin-top: 10px; }
-    
-    .package-item { display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid var(--border); cursor: pointer; border-radius: 6px; margin-bottom: 4px; }
+    .package-item { display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid var(--border); cursor: pointer; border-radius: 6px; }
     .package-item:hover { background: var(--sidebar-hover); }
-
     .search-box { background: var(--bg); border: 1px solid var(--accent); color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 12px; width: 200px; margin-left: auto; }
     table { width: 100%; border-collapse: collapse; }
     th { text-align: left; color: var(--text-muted); padding: 12px; font-size: 10px; border-bottom: 1px solid var(--border); text-transform: uppercase; }
     td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
-
-    .theme-switch { padding: 10px 20px; border-top: 1px solid var(--border); }
-    .theme-btn { width: 100%; padding: 8px; font-size: 9px; font-weight: 800; border: 1px solid var(--border); background: var(--sidebar-hover); color: #fff; cursor: pointer; border-radius: 4px; margin-top: 5px; }
+    .theme-switch { padding: 10px; border-top: 1px solid var(--border); display: flex; gap: 5px; }
+    .theme-btn { flex:1; padding: 6px; font-size: 8px; font-weight: 800; border: 1px solid var(--border); background: var(--sidebar-hover); color: #fff; cursor: pointer; border-radius: 4px; }
     .theme-btn.active { border-color: var(--accent); color: var(--accent); }
-
-    #context-menu { position: fixed; display: none; background: var(--card); border: 1px solid var(--border); border-radius: 8px; z-index: 1000; min-width: 140px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
-    .menu-item { padding: 10px 15px; font-size: 12px; cursor: pointer; color: #fff; font-weight: 600; }
-    .menu-item:hover { background: var(--danger); }
   </style>
 </head>
-<body onclick="hideMenu()">
+<body>
 
   <aside class="sidebar">
     <div class="logo-area">
-        <div style="font-weight: 900; font-size: 18px; color: var(--accent);">CORE</div>
-        <div style="font-weight: 300; font-size: 16px; color: #fff;">MASTER</div>
-        <div style="font-size: 9px; color: var(--text-muted); font-weight: 800; margin-top: 2px;">ADMIN 2026</div>
+        <div style="font-weight: 900; font-size: 18px; color: var(--accent);">CORE MASTER</div>
+        <div style="font-size: 9px; color: var(--text-muted); font-weight: 800;">SYSTEM MODULE 2026</div>
     </div>
     
-    <div class="theme-switch">
-      <label>THEME WÄHLEN</label>
-      <button id="btn-blue" class="theme-btn active" onclick="setTheme('blue')">Core Blue</button>
-      <button id="btn-black" class="theme-btn" onclick="setTheme('black')">Core Dark</button>
+    <div class="sidebar-content">
+      <div class="nav-label">Main Console</div>
+      <a href="../admin.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+      
+      <div class="nav-label">SaaS Administration</div>
+      <a href="saas_freischaltung.html" class="nav-link active"><i data-lucide="user-plus"></i> SaaS Freischaltung</a>
+      <a href="tarife.html" class="nav-link"><i data-lucide="tags"></i> Master Tarife</a>
+      
+      <div class="nav-label">CRM Module</div>
+      <a href="kunden.html" class="nav-link"><i data-lucide="users"></i> Kunden</a>
+      <a href="objekte.html" class="nav-link"><i data-lucide="building-2"></i> Objekte</a>
+      <a href="mitarbeiter.html" class="nav-link"><i data-lucide="hard-hat"></i> Mitarbeiter</a>
+      <a href="schichtplan.html" class="nav-link"><i data-lucide="calendar-days"></i> Schichtplan</a>
+      <a href="finanzen.html" class="nav-link"><i data-lucide="banknote"></i> Finanzen</a>
     </div>
 
-    <nav style="margin-top: 20px;">
-        <a href="../admin.html" class="nav-link" style="text-decoration:none; display:block; padding:12px 20px; color:var(--text-muted); font-weight:700; font-size:11px; text-transform:uppercase;">
-            DASHBOARD
-        </a>
-        <div class="nav-item active">SaaS Freischaltung</div>
-    </nav>
+    <div class="theme-switch">
+      <button id="btn-blue" class="theme-btn active" onclick="setTheme('blue')">BLUE</button>
+      <button id="btn-black" class="theme-btn" onclick="setTheme('black')">DARK</button>
+    </div>
   </aside>
 
   <main class="main">
@@ -106,7 +108,7 @@
 
       <div class="grid-top">
         <div class="card">
-          <h3 id="form-title">Kundeninstanz anlegen</h3>
+          <h3 id="form-title">Firma Management</h3>
           <div class="flex-row">
             <div style="flex:1;"><label>Firma</label><input type="text" id="c_name"></div>
             <div style="flex:1;"><label>Telefon</label><input type="text" id="c_phone"></div>
@@ -117,15 +119,20 @@
             <div style="flex:2;"><label>E-Mail Adresse</label><input type="email" id="c_mail"></div>
           </div>
           <div class="flex-row">
-            <div style="flex:1.5;"><label>Tarif-Paket (inkl. MA-Limit)</label><select id="c_package"></select></div>
+            <div style="flex:2;"><label>Strasse / Hausnr.</label><input type="text" id="c_address"></div>
+            <div style="flex:0.8;"><label>PLZ</label><input type="text" id="c_plz"></div>
+            <div style="flex:1.5;"><label>Ort</label><input type="text" id="c_city"></div>
+          </div>
+          <div class="flex-row">
+            <div style="flex:1.5;"><label>Tarif-Paket</label><select id="c_package"></select></div>
             <div style="flex:1;"><label>Zyklus</label>
               <select id="c_cycle"><option value="1">Monatlich</option><option value="12">Jährlich</option></select>
             </div>
           </div>
-          <label>Login-Schlüssel (Token)</label>
+          <label>Login-Schlüssel</label>
           <div class="flex-row">
             <input type="text" id="c_token" style="flex:1;">
-            <button class="btn-auto" onclick="genToken()" style="background:var(--sidebar-hover); color:white; border:none; padding:0 15px; border-radius:6px; cursor:pointer;">AUTO</button>
+            <button onclick="genToken()" style="background:var(--sidebar-hover); color:#fff; border:none; border-radius:6px; padding:0 15px; cursor:pointer; font-weight:800; font-size:10px;">AUTO</button>
           </div>
           <button class="btn-main" onclick="saveData()" id="save-btn">LIZENZ SPEICHERN & FREISCHALTEN</button>
         </div>
@@ -137,7 +144,7 @@
             <div style="flex:0.8;"><label>Preis €</label><input type="number" id="p_price"></div>
             <div style="flex:1;"><label>Mitarbeiter</label><input type="number" id="p_limit"></div>
           </div>
-          <button class="btn-main" id="btn-save-pkg" onclick="savePackage()" style="background:var(--sidebar-hover)">TARIF SPEICHERN</button>
+          <button class="btn-main" onclick="savePackage()" style="background:var(--sidebar-hover)">TARIF SPEICHERN</button>
           <div id="package-preview" style="margin-top:10px; border-top:1px solid var(--border); padding-top:10px;"></div>
         </div>
       </div>
@@ -165,30 +172,27 @@
     </div>
   </main>
 
-  <div id="context-menu">
-      <div class="menu-item" id="menu-delete-btn">Löschen</div>
-  </div>
-
   <script src="../config.js"></script>
   <script>
-    // Supabase ist in config.js initialisiert (_supabase)
-    let packages = [];
-    let clients = [];
-    let editIndex = -1;
-    let editPkgIndex = -1;
+    let packages = []; let clients = [];
+    lucide.createIcons();
 
     async function init() {
       await fetchPackages();
       await fetchClients();
       setTheme(localStorage.getItem('coreTheme') || 'blue');
-      lucide.createIcons();
     }
 
     async function fetchPackages() {
       const { data } = await _supabase.from('packages').select('*').order('price');
       packages = data || [];
-      renderPackageDropdown();
-      renderPackagePreview();
+      const select = document.getElementById('c_package');
+      select.innerHTML = packages.map(p => `<option value="${p.name}">${p.name} (${p.employee_limi} MA) | ${p.price}€</option>`).join('');
+      document.getElementById('package-preview').innerHTML = packages.map(p => `
+        <div class="package-item">
+          <span><strong>${p.name}</strong><br><small>${p.employee_limi} MA</small></span>
+          <span style="font-weight:700">${p.price} €</span>
+        </div>`).join('');
     }
 
     async function fetchClients() {
@@ -197,49 +201,13 @@
       renderClients();
     }
 
-    function renderPackageDropdown() {
-      const select = document.getElementById('c_package');
-      select.innerHTML = packages.map(p => `<option value="${p.name}">${p.name} (${p.employee_limi} MA) | ${p.price}€</option>`).join('');
-    }
-
-    function renderPackagePreview() {
-      const div = document.getElementById('package-preview');
-      div.innerHTML = packages.map((p, i) => `
-        <div class="package-item" onclick="editPackage(${i})">
-          <span><strong>${p.name}</strong><br><small style="color:var(--text-muted)">${p.employee_limi} Mitarbeiter</small></span>
-          <span style="font-weight:700">${p.price} €</span>
-        </div>`).join('');
-    }
-
-    async function savePackage() {
-      const pkg = { 
-        name: document.getElementById('p_name').value, 
-        price: parseFloat(document.getElementById('p_price').value), 
-        employee_limi: parseInt(document.getElementById('p_limit').value) 
-      };
-      await _supabase.from('packages').upsert(pkg, { onConflict: 'name' });
-      fetchPackages();
-    }
-
-    async function saveData() {
-      const client = {
-        company: document.getElementById('c_name').value,
-        email: document.getElementById('c_mail').value,
-        fname: document.getElementById('c_fname').value,
-        lname: document.getElementById('c_lname').value,
-        token: document.getElementById('c_token').value,
-        package_name: document.getElementById('c_package').value,
-        billing_cycle: parseInt(document.getElementById('c_cycle').value),
-        status: "Aktiv"
-      };
-      await _supabase.from('clients').insert([client]);
-      fetchClients();
-    }
-
     function renderClients() {
       const tbody = document.getElementById('client-list');
+      const searchTerm = document.getElementById('search').value.toLowerCase();
       let rev = 0; let act = 0;
-      tbody.innerHTML = clients.map((c, i) => {
+      const filtered = clients.filter(c => c.company.toLowerCase().includes(searchTerm));
+      
+      tbody.innerHTML = filtered.map((c, i) => {
         const p = packages.find(pkg => pkg.name === c.package_name) || {price:0, employee_limi:0};
         const sum = p.price * (c.billing_cycle || 1);
         act++; rev += sum;
@@ -256,22 +224,21 @@
       document.getElementById('stat_revenue').innerText = rev.toLocaleString('de-DE') + " €";
     }
 
-    async function deleteClient(id) {
-      if(confirm("Löschen?")) { await _supabase.from('clients').delete().eq('id', id); fetchClients(); }
+    async function savePackage() {
+      const pkg = { name: document.getElementById('p_name').value, price: parseFloat(document.getElementById('p_price').value), employee_limi: parseInt(document.getElementById('p_limit').value) };
+      await _supabase.from('packages').upsert(pkg, { onConflict: 'name' });
+      fetchPackages();
     }
 
-    function setTheme(theme) {
-      document.body.setAttribute('data-theme', theme);
-      document.getElementById('btn-blue').classList.toggle('active', theme === 'blue');
-      document.getElementById('btn-black').classList.toggle('active', theme === 'black');
-      localStorage.setItem('coreTheme', theme);
+    async function saveData() {
+      const client = { company: document.getElementById('c_name').value, email: document.getElementById('c_mail').value, fname: document.getElementById('c_fname').value, lname: document.getElementById('c_lname').value, token: document.getElementById('c_token').value, package_name: document.getElementById('c_package').value, billing_cycle: parseInt(document.getElementById('c_cycle').value), status: "Aktiv" };
+      await _supabase.from('clients').insert([client]);
+      fetchClients();
     }
 
-    function genToken() { 
-      document.getElementById('c_token').value = "CORE-" + Math.random().toString(36).substr(2, 4).toUpperCase() + "-26"; 
-    }
-
-    function hideMenu() { document.getElementById('context-menu').style.display = 'none'; }
+    async function deleteClient(id) { if(confirm("Löschen?")) { await _supabase.from('clients').delete().eq('id', id); fetchClients(); } }
+    function genToken() { document.getElementById('c_token').value = "CORE-" + Math.random().toString(36).substr(2, 4).toUpperCase() + "-26"; }
+    function setTheme(t) { document.body.setAttribute('data-theme', t); localStorage.setItem('coreTheme', t); document.getElementById('btn-blue').classList.toggle('active', t==='blue'); document.getElementById('btn-black').classList.toggle('active', t==='black'); }
 
     init();
   </script>
