@@ -10,64 +10,75 @@
     :root { --accent: #2563eb; --bg: #050505; --card: #0d0d0d; --border: rgba(255,255,255,0.08); }
     body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
     
-    .sidebar { width: 260px; border-right: 1px solid var(--border); padding: 25px; display: flex; flex-direction: column; background: #000; }
-    .main-content { flex: 1; overflow-y: auto; padding: 40px; }
+    /* Sidebar Layout */
+    .sidebar { width: 260px; border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; background: #000; height: 100vh; }
+    .custom-scrollbar { overflow-y: auto; flex: 1; padding-right: 5px; }
+    .custom-scrollbar::-webkit-scrollbar { width: 3px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #222; border-radius: 10px; }
+    .nav-link { display: flex; align-items: center; gap: 10px; color: #aaa; text-decoration: none; padding: 10px; border-radius: 8px; font-size: 14px; transition: 0.2s; }
+    .nav-link:hover { color: #fff; background: rgba(255,255,255,0.03); }
+    .nav-link.active { color: white; background: rgba(37, 99, 235, 0.1); border: 1px solid rgba(37, 99, 235, 0.2); }
+    .nav-group { font-size: 10px; color: #444; font-weight: 800; padding: 15px 12px 5px; text-transform: uppercase; letter-spacing: 1px; }
 
-    /* Header & Action */
-    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    /* Content Area */
+    .main-content { flex: 1; overflow-y: auto; padding: 40px; }
     .btn-main { background: var(--accent); color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; }
 
     /* Tabelle */
-    .table-container { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+    .table-container { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-top: 20px; }
     table { width: 100%; border-collapse: collapse; }
     th { background: rgba(255,255,255,0.02); padding: 15px 20px; text-align: left; font-size: 11px; color: #444; text-transform: uppercase; }
     td { padding: 18px 20px; border-top: 1px solid var(--border); font-size: 14px; }
-    .tr-hover:hover { background: rgba(255,255,255,0.01); }
 
-    /* Modal / Fenster */
-    .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(5px); }
-    .modal-content { background: #0d0d0d; width: 90%; max-width: 1100px; height: 85vh; border-radius: 24px; border: 1px solid var(--border); padding: 40px; overflow-y: auto; }
-
-    .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
-    .field { display: flex; flex-direction: column; gap: 6px; }
-    label { font-size: 10px; font-weight: 800; color: #555; text-transform: uppercase; }
-    input, select { background: #000; border: 1px solid var(--border); padding: 12px; border-radius: 8px; color: #fff; }
+    /* Modal */
+    .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(8px); }
+    .modal-content { background: #0d0d0d; width: 90%; max-width: 1000px; height: 85vh; border-radius: 24px; border: 1px solid var(--border); padding: 40px; overflow-y: auto; }
     
-    .badge-count { background: rgba(37, 99, 235, 0.1); color: var(--accent); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; border: 1px solid rgba(37, 99, 235, 0.2); }
+    .field-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+    label { font-size: 10px; font-weight: 800; color: #555; text-transform: uppercase; margin-bottom: 5px; display: block; }
+    input, select { background: #000; border: 1px solid var(--border); padding: 12px; border-radius: 8px; color: #fff; width: 100%; box-sizing: border-box; }
   </style>
 </head>
 <body>
 
   <aside class="sidebar">
-    <div style="font-weight: 900; font-size: 22px; color: var(--accent); margin-bottom: 40px; letter-spacing: -1px;">CORE MASTER</div>
-    <nav style="display: flex; flex-direction: column; gap: 8px;">
-      <a href="../admin.html" class="nav-link" style="color:#555; text-decoration:none; padding:12px;"><i data-lucide="layout-dashboard"></i> Dashboard</a>
-      <a href="kunden.html" class="nav-link active" style="color:white; text-decoration:none; padding:12px; background:rgba(255,255,255,0.05); border-radius:10px;"><i data-lucide="users"></i> Kunden</a>
-      <a href="objekte.html" class="nav-link" style="color:#555; text-decoration:none; padding:12px;"><i data-lucide="building-2"></i> Objekte</a>
-      <a href="mitarbeiter.html" class="nav-link" style="color:#555; text-decoration:none; padding:12px;"><i data-lucide="hard-hat"></i> Mitarbeiter</a>
-      <a href="schichtplan.html" class="nav-link" style="color:#555; text-decoration:none; padding:12px;"><i data-lucide="calendar"></i> Schichtplan</a>
+    <div style="font-weight: 900; font-size: 20px; color: var(--accent); margin-bottom: 30px; padding-left: 10px;">CORE MASTER</div>
+    <nav class="custom-scrollbar">
+      <div class="nav-group">Zentrale</div>
+      <a href="../admin.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+      <a href="live-monitor.html" class="nav-link"><i data-lucide="activity"></i> Live-Monitor</a>
+      <div class="nav-group">CRM & Objekte</div>
+      <a href="kunden.html" class="nav-link active"><i data-lucide="users"></i> Kunden</a>
+      <a href="objekte.html" class="nav-link"><i data-lucide="building-2"></i> Objekte</a>
+      <a href="geofencing.html" class="nav-link"><i data-lucide="map-pin"></i> Geofencing</a>
+      <div class="nav-group">Personal</div>
+      <a href="mitarbeiter.html" class="nav-link"><i data-lucide="hard-hat"></i> Mitarbeiter</a>
+      <a href="schichtplan.html" class="nav-link"><i data-lucide="calendar"></i> Schichtplan</a>
+      <a href="zeiterfassung.html" class="nav-link"><i data-lucide="clock"></i> Zeiterfassung</a>
+      <a href="lohn.html" class="nav-link"><i data-lucide="wallet"></i> Lohnabrechnung</a>
+      <div class="nav-group">Einsatz</div>
+      <a href="wachbuch.html" class="nav-link"><i data-lucide="book-open"></i> Wachbuch</a>
+      <a href="ereignisse.html" class="nav-link"><i data-lucide="alert-triangle"></i> Ereignisse</a>
+      <a href="rundgaenge.html" class="nav-link"><i data-lucide="navigation"></i> Rundgänge</a>
+      <a href="schlussel.html" class="nav-link"><i data-lucide="key"></i> Schlüssel</a>
+      <div class="nav-group">Backoffice</div>
+      <a href="angebote.html" class="nav-link"><i data-lucide="file-text"></i> Angebote</a>
+      <a href="rechnungen.html" class="nav-link"><i data-lucide="credit-card"></i> Rechnungen</a>
+      <a href="dokumente.html" class="nav-link"><i data-lucide="folder-closed"></i> Dokumente</a>
+      <div class="nav-group">System</div>
+      <a href="einstellungen.html" class="nav-link"><i data-lucide="settings"></i> Einstellungen</a>
     </nav>
   </aside>
 
   <main class="main-content">
-    <header class="page-header">
-      <div>
-        <h1 style="font-size: 32px; margin: 0; letter-spacing: -1.5px;">Kunden-Zentrale</h1>
-        <p style="color: #555; margin-top:5px;">Mandantenverwaltung & Objekt-Zuweisung 2026</p>
-      </div>
-      <button class="btn-main" onclick="openCreateKunde()">+ NEUER KUNDE</button>
+    <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:40px;">
+      <h1>Mandanten-Stamm</h1>
+      <button class="btn-main" onclick="saveKundePrompt()">+ KUNDE ANLEGEN</button>
     </header>
 
     <div class="table-container">
       <table>
-        <thead>
-          <tr>
-            <th>Unternehmen</th>
-            <th>Ansprechpartner</th>
-            <th>Objekte</th>
-            <th style="text-align: right; padding-right:20px;">Optionen</th>
-          </tr>
-        </thead>
+        <thead><tr><th>Firma</th><th>Ansprechpartner</th><th>Objekte</th><th style="text-align:right;">Management</th></tr></thead>
         <tbody id="kunden-liste"></tbody>
       </table>
     </div>
@@ -76,30 +87,21 @@
   <div class="modal" id="mgmtModal">
     <div class="modal-content">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
-        <h2 id="modalTitle" style="font-size:26px; letter-spacing:-1px;">Kunde bearbeiten</h2>
-        <button onclick="closeModal()" style="background:none; border:none; color:#555; cursor:pointer;"><i data-lucide="x" size="32"></i></button>
+        <h2 id="modalTitle">Kunde verwalten</h2>
+        <button onclick="closeModal()" style="background:none; border:none; color:#555; cursor:pointer;"><i data-lucide="x" size="30"></i></button>
       </div>
-
       <div style="background: rgba(255,255,255,0.02); padding: 25px; border-radius: 16px; border: 1px solid var(--border);">
-        <label style="color:var(--accent); margin-bottom:15px; display:block;">Objekt für diesen Kunden hinzufügen</label>
-        <div class="form-grid">
-          <div class="field"><label>Name des Objekts</label><input type="text" id="mo_name" placeholder="z.B. Werksschutz Tor 1"></div>
-          <div class="field"><label>Straße / Nr.</label><input type="text" id="mo_address"></div>
-          <div class="field"><label>Stadt</label><input type="text" id="mo_city"></div>
+        <label style="color:var(--accent);">Neues Objekt hinzufügen</label>
+        <div class="field-grid" style="margin-top:10px;">
+          <input type="text" id="mo_name" placeholder="Objekt Name">
+          <input type="text" id="mo_address" placeholder="Straße / Nr.">
+          <input type="text" id="mo_city" placeholder="Stadt">
         </div>
         <button class="btn-main" style="width:100%; justify-content:center;" onclick="saveObjectForKunde()">OBJEKT SPEICHERN</button>
       </div>
-
-      <h3 style="margin-top:40px; font-size:14px; color:#444; text-transform:uppercase;">Zugeordnete Objekte & Personal</h3>
-      <div class="table-container" style="margin-top:15px;">
-        <table>
-          <thead>
-            <tr>
-              <th>Objekt</th>
-              <th>Adresse</th>
-              <th>Mitarbeiter Zuweisung</th>
-            </tr>
-          </thead>
+      <div class="table-container" style="margin-top:30px;">
+        <table style="width:100%;">
+          <thead><tr><th>Objekt</th><th>Adresse</th><th>Zuweisung</th></tr></thead>
           <tbody id="modal-objekt-liste"></tbody>
         </table>
       </div>
@@ -109,26 +111,23 @@
   <script src="../config.js"></script>
   <script>
     lucide.createIcons();
-    let selectedKundeId = null;
+    let currentKundeId = null;
     const WS_ID = '8648e581-297d-419b-9c71-292418e26895';
 
     async function loadKunden() {
       const { data } = await _supabase.from('customers').select('*, objects(count)');
       document.getElementById('kunden-liste').innerHTML = data.map(k => `
-        <tr class="tr-hover">
-          <td><strong style="color:white; font-size:16px;">${k.company}</strong></td>
-          <td style="color:#777;">${k.contact_person || 'Nicht hinterlegt'}</td>
-          <td><span class="badge-count">${k.objects?.[0]?.count || 0} Standorte</span></td>
-          <td style="text-align: right; padding-right:20px;">
-            <button class="btn-main" style="background:#111; border:1px solid #222; font-size:12px;" onclick="openMgmt('${k.id}', '${k.company}')">VERWALTEN</button>
-          </td>
+        <tr>
+          <td><strong>${k.company}</strong></td>
+          <td style="color:#555;">${k.contact_person || '-'}</td>
+          <td><span style="background:rgba(37,99,235,0.1); color:#2563eb; padding:4px 10px; border-radius:20px; font-size:11px;">${k.objects?.[0]?.count || 0} Objekte</span></td>
+          <td style="text-align:right;"><button class="btn-main" style="background:#111; font-size:12px;" onclick="openMgmt('${k.id}', '${k.company}')">VERWALTEN</button></td>
         </tr>
       `).join('');
-      lucide.createIcons();
     }
 
     function openMgmt(id, name) {
-      selectedKundeId = id;
+      currentKundeId = id;
       document.getElementById('modalTitle').innerText = name;
       document.getElementById('mgmtModal').style.display = 'flex';
       loadObjectsForModal();
@@ -137,31 +136,22 @@
     function closeModal() { document.getElementById('mgmtModal').style.display = 'none'; }
 
     async function loadObjectsForModal() {
-      const { data: objects } = await _supabase.from('objects').select('*').eq('customer_id', selectedKundeId);
-      const { data: staff } = await _supabase.from('employees').select('id, first_name, last_name');
-      
+      const { data: objects } = await _supabase.from('objects').select('*').eq('customer_id', currentKundeId);
       document.getElementById('modal-objekt-liste').innerHTML = objects.map(o => `
-        <tr>
-          <td><strong>${o.name}</strong></td>
-          <td><small style="color:#555">${o.address || ''}</small></td>
-          <td>
-            <select style="width:100%; padding:8px;" onchange="updateAssign('${o.id}', this.value)">
-              <option value="">Nicht zugewiesen</option>
-              ${staff?.map(s => `<option value="${s.id}" ${o.assigned_employee_id === s.id ? 'selected' : ''}>${s.first_name} ${s.last_name}</option>`).join('')}
-            </select>
-          </td>
-        </tr>
+        <tr><td><strong>${o.name}</strong></td><td>${o.address || ''}</td><td><select><option>Mitarbeiter wählen...</option></select></td></tr>
       `).join('');
     }
 
+    async function saveKundePrompt() {
+      const name = prompt("Firmenname des Kunden:");
+      if(name) {
+        await _supabase.from('customers').insert([{ company: name, workspace_id: WS_ID }]);
+        loadKunden();
+      }
+    }
+
     async function saveObjectForKunde() {
-      const obj = {
-        name: document.getElementById('mo_name').value,
-        address: document.getElementById('mo_address').value,
-        city: document.getElementById('mo_city').value,
-        customer_id: selectedKundeId,
-        workspace_id: WS_ID
-      };
+      const obj = { name: document.getElementById('mo_name').value, address: document.getElementById('mo_address').value, city: document.getElementById('mo_city').value, customer_id: currentKundeId, workspace_id: WS_ID };
       await _supabase.from('objects').insert([obj]);
       loadObjectsForModal();
       loadKunden();
