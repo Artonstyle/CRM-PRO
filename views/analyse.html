@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CORE MASTER 2026 | ANALYTICS</title>
+  
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div style="font-weight: 900; font-size: 18px; color: var(--accent);">CORE MASTER</div>
+      <div style="font-size: 10px; color: var(--muted); font-weight: 700;">DATA ANALYTICS 2026</div>
+    </div>
+    
+    <div class="sidebar-content">
+      <div class="nav-label">Main Console</div>
+      <a href="../admin.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+      <a href="kunden.html" class="nav-link"><i data-lucide="users"></i> Kunden</a>
+      <a href="objekte.html" class="nav-link"><i data-lucide="building-2"></i> Objekte</a>
+      <a href="mitarbeiter.html" class="nav-link"><i data-lucide="hard-hat"></i> Mitarbeiter</a>
+      <a href="schichtplan.html" class="nav-link"><i data-lucide="calendar-days"></i> Schichtplan</a>
+      <a href="zeiterfassung.html" class="nav-link"><i data-lucide="timer"></i> Zeiterfassung</a>
+      <a href="aufgaben.html" class="nav-link"><i data-lucide="check-square"></i> Aufgaben</a>
+      
+      <div class="nav-label">Operations</div>
+      <a href="finanzen.html" class="nav-link"><i data-lucide="banknote"></i> Finanzen</a>
+      <a href="rechnungen.html" class="nav-link"><i data-lucide="file-text"></i> Rechnungen</a>
+      <a href="angebote.html" class="nav-link"><i data-lucide="file-spreadsheet"></i> Angebote</a>
+      <a href="lager.html" class="nav-link"><i data-lucide="package"></i> Lager</a>
+      <a href="dokumente.html" class="nav-link"><i data-lucide="folder"></i> Dokumente</a>
+      <a href="chat_video.html" class="nav-link"><i data-lucide="video"></i> Chat & Video</a>
+      <a href="analyse.html" class="nav-link active"><i data-lucide="bar-chart-3"></i> Analyse</a>
+
+      <div class="nav-label">SaaS Admin</div>
+      <a href="saas_freischaltung.html" class="nav-link"><i data-lucide="user-plus"></i> SaaS</a>
+      <a href="tarife.html" class="nav-link"><i data-lucide="tags"></i> Tarife</a>
+      <a href="einstellungen.html" class="nav-link"><i data-lucide="settings"></i> Settings</a>
+      <a href="support.html" class="nav-link"><i data-lucide="help-circle"></i> Support</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="content">
+      <h2 style="margin-top:0;">System-Analyse 2026</h2>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div class="card-glass">
+            <h3>Arbeitsstunden (Trend)</h3>
+            <canvas id="hoursChart"></canvas>
+        </div>
+
+        <div class="card-glass">
+            <h3>SaaS Paket-Verteilung</h3>
+            <div style="max-width: 250px; margin: auto;">
+                <canvas id="packageChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card-glass" style="grid-column: span 2;">
+            <h3>Top Objekte (Einsatzdichte)</h3>
+            <canvas id="objectPerformanceChart" style="max-height: 250px;"></canvas>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="../config.js"></script>
+  <script>
+    lucide.createIcons();
+
+    // Chart 1: Stunden
+    new Chart(document.getElementById('hoursChart'), {
+        type: 'line',
+        data: {
+            labels: ['KW 01', 'KW 02', 'KW 03', 'KW 04'],
+            datasets: [{
+                label: 'Gesamtstunden',
+                data: [1200, 1450, 1300, 1600],
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                fill: true
+            }]
+        },
+        options: { scales: { y: { beginAtZero: true } } }
+    });
+
+    // Chart 2: Pakete (Pie Chart)
+    new Chart(document.getElementById('packageChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Basic', 'Pro', 'Enterprise'],
+            datasets: [{
+                data: [15, 30, 10],
+                backgroundColor: ['#64748b', '#3b82f6', '#22c55e'],
+                borderWidth: 0
+            }]
+        },
+        options: { plugins: { legend: { position: 'bottom' } } }
+    });
+
+    // Chart 3: Objekt Performance (Bar Chart)
+    new Chart(document.getElementById('objectPerformanceChart'), {
+        type: 'bar',
+        data: {
+            labels: ['Objekt A', 'Objekt B', 'Objekt C', 'Objekt D', 'Objekt E'],
+            datasets: [{
+                label: 'Einsätze pro Monat',
+                data: [45, 67, 32, 89, 54],
+                backgroundColor: '#3b82f6'
+            }]
+        }
+    });
+  </script>
+</body>
+</html>
