@@ -9,9 +9,10 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
 
   <style>
-    /* Entfernt die Pfeile (Spinner) bei Number-Inputs */
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
 
@@ -28,6 +29,8 @@
     
     .btn-auto { background: #374151; color: #fff; border: none; border-radius: 8px; padding: 0 15px; cursor: pointer; font-size: 11px; font-weight: 800; }
     .btn-test { background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 10px; font-weight: 700; cursor: pointer; }
+    .btn-pdf { background: #ef4444; color: white; border: none; padding: 8px 15px; border-radius: 6px; font-size: 11px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+    
     .package-item { display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid rgba(255,255,255,0.05); cursor: pointer; }
     .package-item.editing { border: 1px solid var(--accent); background: rgba(255, 122, 0, 0.05); }
     
@@ -104,7 +107,7 @@
           </div>
           <div class="flex-row">
             <div style="flex:1.5;"><label>Tarif-Paket</label><select id="c_package"></select></div>
-            <div style="flex:1;"><label>Zyklus</label>
+            <div style="flex:1;"><label>Bezahlen</label>
               <select id="c_cycle"><option value="1">Monatlich</option><option value="12">Jährlich</option></select>
             </div>
           </div>
@@ -137,10 +140,13 @@
       </div>
 
       <div class="card-glass">
-        <h3>Kundenübersicht <input type="text" id="search" class="search-box" style="margin-left:20px;" placeholder="Suchen..." oninput="refreshUI()"></h3>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3>Kundenübersicht <input type="text" id="search" class="search-box" style="margin-left:20px; width:200px;" placeholder="Suchen..." oninput="refreshUI()"></h3>
+          <button class="btn-pdf" onclick="exportPDF()"><i data-lucide="file-down"></i> PDF EXPORT</button>
+        </div>
         <table>
           <thead>
-            <tr><th>Nr.</th><th>Firma / Inhaber</th><th>Paket / Mitarbeiter</th><th>Gültig bis</th><th>Preis</th><th>Status</th><th>Aktion</th></tr>
+            <tr><th>Nr.</th><th>Firma / Inhaber</th><th>Paket / MA</th><th>Bezahlen</th><th>Gültig bis</th><th>Preis</th><th>Status</th><th>Aktion</th></tr>
           </thead>
           <tbody id="client-list"></tbody>
         </table>
@@ -173,13 +179,8 @@
       e.preventDefault();
       const menu = document.getElementById('context-menu');
       document.getElementById('menu-delete-btn').onclick = async () => {
-        if(type === 'client') {
-          await _supabase.from('clients').delete().eq('id', idOrIndex);
-          loadData();
-        } else {
-          packages.splice(idOrIndex, 1);
-          refreshUI();
-        }
+        if(type === 'client') { await _supabase.from('clients').delete().eq('id', idOrIndex); loadData(); }
+        else { packages.splice(idOrIndex, 1); refreshUI(); }
         hideMenu();
       };
       menu.style.display = 'block'; menu.style.left = e.pageX + 'px'; menu.style.top = e.pageY + 'px';
@@ -251,10 +252,8 @@
 
     function savePackage() {
       const pkg = {
-        name: document.getElementById('p_name').value,
-        price: parseFloat(document.getElementById('p_price').value),
-        limit: parseInt(document.getElementById('p_limit').value),
-        testDays: parseInt(document.getElementById('p_test_days').value),
+        name: document.getElementById('p_name').value, price: parseFloat(document.getElementById('p_price').value),
+        limit: parseInt(document.getElementById('p_limit').value), testDays: parseInt(document.getElementById('p_test_days').value),
         isFree: document.getElementById('p_is_free').checked
       };
       if(editPkgIndex > -1) { packages[editPkgIndex] = pkg; editPkgIndex = -1; document.getElementById('btn-save-pkg').innerText = "TARIF SPEICHERN"; }
@@ -277,11 +276,13 @@
         const p = packages.find(pkg => pkg.name === c.package_name) || {price:0, limit: 0};
         const price = p.price * parseInt(c.billing_cycle || 1);
         if(c.status === "Aktiv") { act++; rev += price; } else { off++; }
+        const cycleText = c.billing_cycle == "12" ? "Jährlich" : "Monatlich";
 
         return `<tr oncontextmenu="showMenu(event, 'client', '${c.id}')">
           <td>${i+1}</td>
           <td><strong>${c.company}</strong><br><small>${c.fname} ${c.lname}</small></td>
-          <td>${c.package_name} (${p.limit} Mitarbeiter)</td>
+          <td>${c.package_name} (${p.limit})</td>
+          <td>${cycleText}</td>
           <td>${c.start_date ? new Date(c.start_date).toLocaleDateString() : '-'}</td>
           <td style="color:#22c55e; font-weight:700;">${price.toFixed(2)} €</td>
           <td><span onclick="toggleStatus('${c.id}', '${c.status}')" style="color:${c.status === 'Aktiv' ? '#22c55e' : '#ef4444'}; font-weight:800; cursor:pointer">● ${c.status}</span></td>
@@ -293,6 +294,22 @@
       document.getElementById('stat_offline').innerText = off;
       document.getElementById('stat_revenue').innerText = rev.toLocaleString('de-DE', {minimumFractionDigits: 2}) + " €";
       lucide.createIcons();
+    }
+
+    function exportPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.text("CORE MASTER - Kundenübersicht 2026", 14, 15);
+      const rows = clients.map((c, i) => [
+        i+1, c.company, c.package_name, c.billing_cycle == "12" ? "Jährlich" : "Monatlich",
+        c.start_date ? new Date(c.start_date).toLocaleDateString() : '-', c.status
+      ]);
+      doc.autoTable({
+        head: [['Nr.', 'Firma', 'Paket', 'Bezahlen', 'Startdatum', 'Status']],
+        body: rows,
+        startY: 25
+      });
+      doc.save('Kundenliste_2026.pdf');
     }
 
     function genToken() { document.getElementById('c_token').value = Math.random().toString(36).substring(2,12).toUpperCase(); }
