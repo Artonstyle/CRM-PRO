@@ -204,7 +204,7 @@
       if (data) { clients = data; refreshUI(); }
     }
 
-    // --- NEUE EMAIL FUNKTION ---
+    // --- GOOGLE APPS SCRIPT WEB-APP INTEGRATION ---
     async function sendWelcomeEmail(clientData) {
       const scriptURL = "https://script.google.com/macros/s/AKfycbztMb_fNogMQBmmAJahVApNRxBpSlT8W6R7mRdqo0TVwNCApV3x8KHf-GmaJWHc9BEwmw/exec";
       try {
@@ -215,7 +215,7 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(clientData)
         });
-      } catch (e) { console.error("E-Mail Fehler:", e); }
+      } catch (e) { console.error("Email Fehler:", e); }
     }
 
     function showMenu(e, type, idOrIndex) {
@@ -258,7 +258,7 @@
       reader.onload = async (e) => {
         try {
           const imported = JSON.parse(e.target.result);
-          if (imported.clients && Array.isArray(imported.clients)) {
+          if (imported.clients) {
             for (let c of imported.clients) {
               const { id, created_at, ...cleanClient } = c;
               await _supabase.from('clients').insert([cleanClient]);
@@ -287,7 +287,6 @@
       document.getElementById('c_package').value = c.package_name;
       document.getElementById('c_cycle').value = c.billing_cycle || "1";
       document.getElementById('btn-save-client').innerText = "ÄNDERUNGEN SPEICHERN";
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     async function toggleStatus(id, current) {
@@ -296,7 +295,6 @@
       loadData();
     }
 
-    // --- AKTUALISIERTE SAVE DATA FUNKTION ---
     async function saveData() {
       const entry = {
         company: document.getElementById('c_name').value,
@@ -317,17 +315,14 @@
         await _supabase.from('clients').update(entry).eq('id', editClientId);
         editClientId = null;
         document.getElementById('btn-save-client').innerText = "LIZENZ SPEICHERN & FREISCHALTEN";
-        alert("Änderungen gespeichert.");
       } else {
         entry.start_date = new Date().toISOString();
         const { error } = await _supabase.from('clients').insert([entry]);
-        // E-Mail nur bei Neuanlage senden
         if(!error) {
-          sendWelcomeEmail(entry);
-          alert("Kunde angelegt und E-Mail versendet!");
+            sendWelcomeEmail(entry);
+            alert("Kunde gespeichert und E-Mail versendet!");
         }
       }
-      
       loadData();
       ["c_name","c_phone","c_fname","c_lname","c_mail","c_address","c_plz","c_city","c_token"].forEach(id => document.getElementById(id).value = "");
     }
@@ -347,7 +342,7 @@
     }
 
     function refreshUI() {
-      document.getElementById('c_package').innerHTML = packages.map(p => `<option value="${p.name}">${p.name} (bis ${p.limit} MA) | ${p.price}€</option>`).join('');
+      document.getElementById('c_package').innerHTML = packages.map(p => `<option value="${p.name}">${p.name} (bis ${p.limit} Mitarbeiter) | ${p.price}€</option>`).join('');
       document.getElementById('package-preview').innerHTML = packages.map((p, i) => `
         <div class="package-item ${editPkgIndex === i ? 'editing' : ''}" onclick="editPackage(${i})" oncontextmenu="showMenu(event, 'package', ${i})">
           <span><strong>${p.name}</strong></span><span>${p.price.toFixed(2)} €</span>
@@ -362,13 +357,11 @@
           const p = packages.find(pkg => pkg.name === c.package_name) || {price:0, limit: 0};
           const price = p.price * parseInt(c.billing_cycle || 1);
           if(c.status === "Aktiv") { act++; rev += price; } else { off++; }
-          const cycleLabel = c.billing_cycle == "12" ? "Jährlich" : "Monatlich";
-
           return `<tr oncontextmenu="showMenu(event, 'client', '${c.id}')">
             <td>${i+1}</td>
             <td><strong>${c.company}</strong><br><small>${c.fname} ${c.lname}</small></td>
-            <td>${c.package_name} (Max. ${p.limit})</td>
-            <td><span style="background:rgba(255,255,255,0.05); padding:4px 8px; border-radius:4px;">${cycleLabel}</span></td>
+            <td>${c.package_name} (Max. ${p.limit} Mitarbeiter)</td>
+            <td><span style="background:rgba(255,255,255,0.05); padding:4px 8px; border-radius:4px;">${c.billing_cycle == "12" ? "Jährlich" : "Monatlich"}</span></td>
             <td>${c.start_date ? new Date(c.start_date).toLocaleDateString('de-DE') : '-'}</td>
             <td style="color:#22c55e; font-weight:700;">${price.toFixed(2)} €</td>
             <td><span onclick="toggleStatus('${c.id}', '${c.status}')" style="color:${c.status === 'Aktiv' ? '#22c55e' : '#ef4444'}; font-weight:800; cursor:pointer">● ${c.status.toUpperCase()}</span></td>
@@ -388,8 +381,11 @@
       doc.setFontSize(22);
       doc.setTextColor(255, 122, 0);
       doc.text("CORE MASTER ADMIN 2026", 14, 20);
-      const tableData = clients.map((c, i) => [i+1, c.company, `${c.fname} ${c.lname}`, c.email, c.phone, `${c.address || ''}, ${c.plz || ''} ${c.city || ''}`, c.package_name, c.billing_cycle == "12" ? "Jahr" : "Monat", c.token, c.status]);
-      doc.autoTable({ head: [['Nr.', 'Firma', 'Name', 'E-Mail', 'Tel', 'Anschrift', 'Paket', 'Zyklus', 'Passwort', 'Status']], body: tableData, startY: 35, styles: { fontSize: 7 } });
+      const tableData = clients.map((c, i) => {
+          const p = packages.find(pkg => pkg.name === c.package_name) || {limit: 0};
+          return [i+1, c.company, `${c.fname} ${c.lname}`, c.email, `${p.limit} Mitarbeiter`, c.billing_cycle == "12" ? "Jahr" : "Monat", c.token, c.status];
+      });
+      doc.autoTable({ head: [['Nr.', 'Firma', 'Ansprechpartner', 'E-Mail', 'Limit (Mitarbeiter)', 'Zyklus', 'Passwort', 'Status']], body: tableData, startY: 35, styles: { fontSize: 7 } });
       doc.save('CORE_MASTER_Export_2026.pdf');
     }
 
