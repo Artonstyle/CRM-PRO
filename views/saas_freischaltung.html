@@ -264,10 +264,10 @@
     }
 
     function refreshUI() {
-      document.getElementById('c_package').innerHTML = packages.map(p => `<option value="${p.name}">${p.name} (${p.limit} MA) | ${p.price}€</option>`).join('');
+      document.getElementById('c_package').innerHTML = packages.map(p => `<option value="${p.name}">${p.name} (${p.limit} Mitarbeiter) | ${p.price}€</option>`).join('');
       document.getElementById('package-preview').innerHTML = packages.map((p, i) => `
         <div class="package-item ${editPkgIndex === i ? 'editing' : ''}" onclick="editPackage(${i})" oncontextmenu="showMenu(event, 'package', ${i})">
-          <span><strong>${p.name}</strong> (${p.limit} MA)</span><span>${p.price} €</span>
+          <span><strong>${p.name}</strong> (${p.limit} Mitarbeiter)</span><span>${p.price} €</span>
         </div>`).join('');
       
       const searchTerm = document.getElementById('search').value.toLowerCase();
@@ -281,7 +281,7 @@
         return `<tr oncontextmenu="showMenu(event, 'client', '${c.id}')">
           <td>${i+1}</td>
           <td><strong>${c.company}</strong><br><small>${c.fname} ${c.lname}</small></td>
-          <td>${c.package_name} (${p.limit} MA)</td>
+          <td>${c.package_name} (${p.limit} Mitarbeiter)</td>
           <td>${c.start_date ? new Date(c.start_date).toLocaleDateString() : '-'}</td>
           <td style="color:#22c55e; font-weight:700;">${price.toFixed(2)} €</td>
           <td><span onclick="toggleStatus('${c.id}', '${c.status}')" style="color:${c.status === 'Aktiv' ? '#22c55e' : '#ef4444'}; font-weight:800; cursor:pointer">● ${c.status}</span></td>
