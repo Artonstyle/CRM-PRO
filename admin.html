@@ -11,7 +11,7 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
-    /* Ergänzende Styles für das Dashboard-Layout */
+    /* Dashboard Layout */
     .stats-grid { 
       display: grid; 
       grid-template-columns: repeat(4, 1fr); 
@@ -40,8 +40,20 @@
     }
     .stat-change.pos { color: #22c55e; }
     .stat-change.neg { color: #ef4444; }
+
+    /* Liste der letzten Aktivitäten */
+    .activity-list {
+      margin-top: 20px;
+    }
+    .activity-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .activity-item:last-child { border-bottom: none; }
     
-    /* Theme Toggle Button unten in Sidebar */
     .theme-switch-wrapper {
       padding: 20px;
       border-top: 1px solid var(--glass-border);
@@ -119,46 +131,110 @@
     <div class="content">
       <div class="stats-grid">
         <div class="stat-card card-glass">
-          <div class="stat-label">AKTIVE OBJEKTE</div>
-          <div class="stat-value">24</div>
-          <div class="stat-change pos">+3 diesen Monat</div>
+          <div class="stat-label">Aktive Mandanten</div>
+          <div class="stat-value" id="stat_active_clients">0</div>
+          <div class="stat-change" id="stat_client_trend">Live aus DB</div>
         </div>
         <div class="stat-card card-glass">
-          <div class="stat-label">MITARBEITER IM DIENST</div>
-          <div class="stat-value">12</div>
-          <div class="stat-change" style="color: var(--accent);">Live-Status</div>
+          <div class="stat-label">System Status</div>
+          <div class="stat-value" style="color: #22c55e;">AKTIV</div>
+          <div class="stat-change">Server 2026-A1</div>
         </div>
         <div class="stat-card card-glass">
-          <div class="stat-label">OFFENE AUFGABEN</div>
-          <div class="stat-value">08</div>
+          <div class="stat-label">Ablaufende Testphasen</div>
+          <div class="stat-value" id="stat_expiring">0</div>
           <div class="stat-change neg">Handlungsbedarf</div>
         </div>
         <div class="stat-card card-glass">
-          <div class="stat-label">UMSATZ JANUAR 2026</div>
-          <div class="stat-value">42.850 €</div>
-          <div class="stat-change pos">+12.4%</div>
+          <div class="stat-label">Umsatz Prognose</div>
+          <div class="stat-value" id="stat_total_rev">0,00 €</div>
+          <div class="stat-change pos">Berechnet (mtl.)</div>
         </div>
       </div>
 
-      <div class="card-glass" style="margin-top: 20px; padding: 60px 40px; text-align: center;">
-          <div style="background: var(--accent); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
-            <i data-lucide="shield-check" style="color: white; width: 30px; height: 30px;"></i>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div class="card-glass" style="padding: 40px; text-align: center;">
+            <div style="background: var(--accent); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+              <i data-lucide="shield-check" style="color: white; width: 30px; height: 30px;"></i>
+            </div>
+            <h2 style="font-size: 20px; font-weight: 900; margin-bottom: 10px;">Willkommen zurück!</h2>
+            <p style="font-size: 13px; color: var(--muted); line-height: 1.6;">
+              Alle SaaS-Systeme für das Jahr 2026 laufen stabil. Sie haben volle Kontrolle über Ihre Mandanten und Tarife.
+            </p>
+        </div>
+
+        <div class="card-glass" style="padding: 20px;">
+          <h3 style="font-size: 14px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+            <i data-lucide="history" size="18"></i> NEUESTE MANDANTEN
+          </h3>
+          <div id="latest-activities-list" class="activity-list">
+            <div style="color: var(--muted); font-size: 12px; text-align: center; padding: 20px;">Lade Daten...</div>
           </div>
-          <h2 style="font-size: 24px; font-weight: 900; margin-bottom: 10px;">Willkommen im Core Master Kontrollzentrum</h2>
-          <p style="color: var(--muted); max-width: 600px; margin: 0 auto;">
-            Alle Systeme für das Jahr 2026 sind aktiv. Nutzen Sie die Sidebar links, um Ihre Mandanten, 
-            Einsatzpläne und Finanzen zentral zu steuern.
-          </p>
+        </div>
       </div>
     </div>
   </main>
 
   <script src="config.js"></script>
   <script>
-    // Icons initialisieren
     lucide.createIcons();
 
-    // Theme Toggle Funktion (Konsistent mit saas_freischaltung)
+    // --- FUNKTION: ECHTE DATEN LADEN ---
+    async function loadDashboardData() {
+      try {
+        const { data: clients, error } = await _supabase
+          .from('clients')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (clients) {
+          // 1. Statistiken berechnen
+          const activeCount = clients.filter(c => c.status === 'Aktiv').length;
+          
+          let totalRevenue = 0;
+          clients.forEach(c => {
+            if (c.status === 'Aktiv') {
+              // Einfache Preis-Logik (muss mit deinen Tarifen übereinstimmen)
+              let price = 0;
+              if (c.package_name === 'Starter') price = 29;
+              if (c.package_name === 'Pro') price = 99;
+              if (c.package_name === 'Premium') price = 149;
+              
+              // Wenn Jährlich, rechnen wir für die Prognose trotzdem den Monatswert
+              totalRevenue += price; 
+            }
+          });
+
+          // 2. UI Aktualisieren (Zahlen)
+          document.getElementById('stat_active_clients').innerText = activeCount;
+          document.getElementById('stat_total_rev').innerText = totalRevenue.toLocaleString('de-DE', { minimumFractionDigits: 2 }) + " €";
+
+          // 3. Letzte Aktivitäten (Top 5)
+          const activityContainer = document.getElementById('latest-activities-list');
+          const latest = clients.slice(0, 5); // Nur die letzten 5
+
+          if (latest.length === 0) {
+            activityContainer.innerHTML = `<div style="text-align:center; color:var(--muted); font-size:12px;">Noch keine Mandanten vorhanden.</div>`;
+          } else {
+            activityContainer.innerHTML = latest.map(c => `
+              <div class="activity-item">
+                <div>
+                  <div style="font-size: 13px; font-weight: 700;">${c.company}</div>
+                  <div style="font-size: 10px; color: var(--muted);">${new Date(c.created_at || c.start_date).toLocaleDateString('de-DE')}</div>
+                </div>
+                <div style="font-size: 11px; font-weight: 800; color: var(--accent);">${c.package_name}</div>
+              </div>
+            `).join('');
+          }
+        }
+      } catch (err) {
+        console.error("Fehler beim Dashboard-Update:", err);
+      }
+    }
+
+    // Theme Toggle Funktion
     function toggleTheme() {
       const body = document.body;
       const themeText = document.getElementById('themeText');
@@ -177,7 +253,7 @@
       lucide.createIcons();
     }
 
-    // Beim Laden gespeichertes Theme anwenden
+    // Start-Up
     window.onload = () => {
       const savedTheme = localStorage.getItem('theme');
       if (savedTheme === 'blue') {
@@ -186,6 +262,7 @@
         document.getElementById('themeIcon').setAttribute('data-lucide', 'moon');
         lucide.createIcons();
       }
+      loadDashboardData();
     };
   </script>
 </body>
