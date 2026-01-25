@@ -9,6 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
+  
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
 
@@ -29,14 +30,15 @@
     
     .btn-auto { background: #374151; color: #fff; border: none; border-radius: 8px; padding: 0 15px; cursor: pointer; font-size: 11px; font-weight: 800; }
     .btn-test { background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 10px; font-weight: 700; cursor: pointer; }
-    .btn-pdf { background: #ef4444; color: white; border: none; padding: 8px 15px; border-radius: 6px; font-size: 11px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+    .btn-pdf { background: #ef4444; color: white; border: none; padding: 8px 15px; border-radius: 6px; font-size: 11px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.3s; }
+    .btn-pdf:hover { background: #dc2626; transform: translateY(-1px); }
     
     .package-item { display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid rgba(255,255,255,0.05); cursor: pointer; }
     .package-item.editing { border: 1px solid var(--accent); background: rgba(255, 122, 0, 0.05); }
     
     table { width: 100%; border-collapse: collapse; margin-top: 15px; }
     th { text-align: left; color: var(--muted); padding: 12px; font-size: 10px; border-bottom: 1px solid var(--glass-border); text-transform: uppercase; }
-    td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
+    td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 12px; }
 
     #context-menu { position: absolute; display: none; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; z-index: 1000; min-width: 160px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); padding: 5px 0; }
     .menu-item { padding: 10px 15px; font-size: 12px; color: #fff; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; }
@@ -142,7 +144,7 @@
       <div class="card-glass">
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <h3>Kundenübersicht <input type="text" id="search" class="search-box" style="margin-left:20px; width:200px;" placeholder="Suchen..." oninput="refreshUI()"></h3>
-          <button class="btn-pdf" onclick="exportPDF()"><i data-lucide="file-down"></i> PDF EXPORT</button>
+          <button class="btn-pdf" onclick="exportPDF()"><i data-lucide="file-down"></i> VOLLSTÄNDIGE KUNDENLISTE (PDF)</button>
         </div>
         <table>
           <thead>
@@ -298,18 +300,48 @@
 
     function exportPDF() {
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      doc.text("CORE MASTER - Kundenübersicht 2026", 14, 15);
+      const doc = new jsPDF({ orientation: 'landscape' });
+
+      // HEADER
+      doc.setFontSize(22);
+      doc.setTextColor(255, 122, 0); // Deine Akzentfarbe (Orange)
+      doc.text("CORE MASTER", 14, 20);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text("KUNDEN-DATENBLATT EXPORT | JAHR 2026", 14, 28);
+      doc.text("Erstellt am: " + new Date().toLocaleString(), 14, 33);
+      
+      // Trennlinie
+      doc.setDrawColor(200);
+      doc.line(14, 36, 280, 36);
+
       const rows = clients.map((c, i) => [
-        i+1, c.company, c.package_name, c.billing_cycle == "12" ? "Jährlich" : "Monatlich",
-        c.start_date ? new Date(c.start_date).toLocaleDateString() : '-', c.status
+        i+1, 
+        c.company, 
+        `${c.fname} ${c.lname}`, 
+        c.email, 
+        c.phone || '-', 
+        `${c.address}, ${c.plz} ${c.city}`, 
+        c.package_name, 
+        c.billing_cycle == "12" ? "Jährlich" : "Monatlich",
+        c.token || '-',
+        c.status
       ]);
+
       doc.autoTable({
-        head: [['Nr.', 'Firma', 'Paket', 'Bezahlen', 'Startdatum', 'Status']],
+        head: [['Nr.', 'Firma', 'Ansprechpartner', 'E-Mail', 'Telefon', 'Anschrift', 'Paket', 'Bezahlen', 'Login-Code', 'Status']],
         body: rows,
-        startY: 25
+        startY: 42,
+        styles: { fontSize: 8, cellPadding: 2 },
+        headStyles: { fillColor: [40, 40, 40], textColor: [255, 255, 255] },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
+        columnStyles: {
+          5: { cellWidth: 40 } // Macht die Anschrift etwas breiter
+        }
       });
-      doc.save('Kundenliste_2026.pdf');
+
+      doc.save('CORE_MASTER_Kundenliste_Vollständig_2026.pdf');
     }
 
     function genToken() { document.getElementById('c_token').value = Math.random().toString(36).substring(2,12).toUpperCase(); }
