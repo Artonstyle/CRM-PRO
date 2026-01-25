@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CORE MASTER 2026 | SYSTEM SUPPORT</title>
+  
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div style="font-weight: 900; font-size: 18px; color: var(--accent);">CORE MASTER</div>
+      <div style="font-size: 10px; color: var(--muted); font-weight: 700;">HELP DESK 2026</div>
+    </div>
+    
+    <div class="sidebar-content">
+      <div class="nav-label">Main Console</div>
+      <a href="../admin.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+      
+      <div class="nav-label">SaaS Administration</div>
+      <a href="saas_freischaltung.html" class="nav-link"><i data-lucide="user-plus"></i> SaaS Freischaltung</a>
+      <a href="tarife.html" class="nav-link"><i data-lucide="tags"></i> Master Tarife</a>
+      <a href="einstellungen.html" class="nav-link"><i data-lucide="settings"></i> Einstellungen</a>
+      <a href="support.html" class="nav-link active"><i data-lucide="help-circle"></i> Support</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="content">
+      <h2 style="margin-top:0;">Support-Tickets & Anfragen</h2>
+
+      <div style="display: grid; grid-template-columns: 1fr 3fr; gap: 20px;">
+        
+        <div class="card-glass" style="height: fit-content;">
+            <h3>Übersicht</h3>
+            <div style="margin-bottom:15px;">
+                <small style="color:var(--muted);">OFFENE TICKETS</small>
+                <div style="font-size:24px; font-weight:900; color:var(--danger);">04</div>
+            </div>
+            <div style="margin-bottom:15px;">
+                <small style="color:var(--muted);">DURCHSCHN. ANTWORTZEIT</small>
+                <div style="font-size:24px; font-weight:900; color:var(--accent);">1.2h</div>
+            </div>
+            <button class="btn-main" style="font-size:11px;">TICKET-HISTORIE EXPORTIEREN</button>
+        </div>
+
+        <div class="card-glass">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 style="margin:0;">Posteingang</h3>
+                <select style="width:auto; margin-bottom:0; font-size:12px; padding:5px;">
+                    <option>Dringlichkeit: Alle</option>
+                    <option>Kritisch 🚨</option>
+                    <option>Normal</option>
+                </select>
+            </div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th>Kunde</th>
+                  <th>Betreff / Problem</th>
+                  <th>Eingang</th>
+                  <th>Status</th>
+                  <th>Aktion</th>
+                </tr>
+              </thead>
+              <tbody id="ticket-liste">
+                <tr>
+                    <td><strong>Sicherheitsdienst West</strong></td>
+                    <td>Login-Probleme bei Mitarbeiter-App</td>
+                    <td>Vor 20 Min.</td>
+                    <td><span class="status-pill" style="border-color:var(--danger); color:var(--danger);">Dringend</span></td>
+                    <td><button style="color:var(--accent); background:none; border:none; cursor:pointer; font-weight:800;">BEANTWORTEN</button></td>
+                </tr>
+                <tr>
+                    <td><strong>Nord-Wache GmbH</strong></td>
+                    <td>Frage zur Rechnungsstellung</td>
+                    <td>Gestern</td>
+                    <td><span class="status-pill" style="border-color:var(--gold); color:var(--gold);">In Arbeit</span></td>
+                    <td><button style="color:var(--accent); background:none; border:none; cursor:pointer; font-weight:800;">DETAILS</button></td>
+                </tr>
+              </tbody>
+            </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="../config.js"></script>
+  <script>
+    lucide.createIcons();
+    
+    // Hier kannst du später die Tabelle 'support_tickets' abfragen
+    async function loadTickets() {
+       // const { data } = await _supabase.from('support_tickets').select('*');
+       // ... Logik zum Befüllen der Tabelle
+    }
+  </script>
+</body>
+</html>
