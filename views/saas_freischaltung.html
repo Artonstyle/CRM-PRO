@@ -101,7 +101,20 @@
 
         <div class="card-glass">
           <h3 style="margin-top:0; text-transform:uppercase; font-size:14px;">Master Tarife</h3>
-          <div id="package-list">
+          <div class="flex-row">
+            <div class="field" style="flex:1.5;"><label>Tarif Name</label><input type="text" id="p_name"></div>
+            <div class="field" style="flex:0.8;"><label>Preis €</label><input type="number" id="p_price"></div>
+            <div class="field"><label>Mitarbeiter</label><input type="number" id="p_limit"></div>
+          </div>
+          <div style="display:flex; gap:10px; margin-bottom:15px; align-items:center;">
+            <button class="btn-test" onclick="setTest(7)">7 TAGE TEST</button>
+            <button class="btn-test" onclick="setTest(14)">14 TAGE TEST</button>
+            <div style="margin-left:auto; display:flex; align-items:center; gap:5px;">
+              <input type="checkbox" id="p_is_free" style="width:auto;"> <label style="margin:0;">FREE</label>
+            </div>
+          </div>
+          <button class="btn-main" onclick="addPackage()">TARIF SPEICHERN</button>
+          <div id="package-list" style="margin-top:20px;">
              <div class="package-item"><span><strong>Starter</strong> (15 Mitarbeiter)</span><span>29 €</span></div>
              <div class="package-item"><span><strong>Pro</strong> (50 Mitarbeiter)</span><span>99 €</span></div>
              <div class="package-item"><span><strong>Premium</strong> (100 Mitarbeiter)</span><span>149 €</span></div>
@@ -116,7 +129,15 @@
         </div>
         <table>
           <thead>
-            <tr><th>Nr.</th><th>Firma / Inhaber</th><th>Paket / Mitarbeiter</th><th>Gültig bis</th><th>Status</th><th>Aktion</th></tr>
+            <tr>
+              <th>Nr.</th>
+              <th>Firma / Inhaber</th>
+              <th>Paket / Mitarbeiter</th>
+              <th>Gültig bis</th>
+              <th>Preis</th>
+              <th>Status</th>
+              <th>Aktion</th>
+            </tr>
           </thead>
           <tbody id="client-table"></tbody>
         </table>
@@ -129,7 +150,6 @@
     lucide.createIcons();
     let clients = [];
 
-    // Greift jetzt auf die Tabelle "clients" zu
     async function loadData() {
         const { data, error } = await _supabase.from('clients').select('*').order('created_at', { ascending: false });
         if (data) { 
@@ -139,6 +159,12 @@
     }
 
     async function saveToSupabase() {
+        const pkgName = document.getElementById('c_package').value;
+        const cycle = parseInt(document.getElementById('c_cycle').value);
+        
+        // Preisermittlung für DB (einfachheitshalber aus dem select Text extrahiert oder manuell)
+        let priceValue = pkgName === "Starter" ? 29 : pkgName === "Pro" ? 99 : 149;
+        
         const newEntry = {
             company: document.getElementById('c_name').value,
             phone: document.getElementById('c_phone').value,
@@ -149,33 +175,45 @@
             plz: document.getElementById('c_plz').value,
             city: document.getElementById('c_city').value,
             token: document.getElementById('c_token').value,
-            package_name: document.getElementById('c_package').value,
-            billing_cycle: document.getElementById('c_cycle').value,
+            package_name: pkgName,
+            billing_cycle: cycle,
             status: "Aktiv",
             start_date: new Date().toISOString()
         };
 
         const { error } = await _supabase.from('clients').insert([newEntry]);
-        if (!error) { alert("Klient erfolgreich gespeichert!"); loadData(); }
+        if (!error) { alert("Gespeichert!"); loadData(); }
     }
 
     function renderTable() {
         const search = document.getElementById('search').value.toLowerCase();
         const filtered = clients.filter(c => (c.company || "").toLowerCase().includes(search));
-        
-        document.getElementById('client-table').innerHTML = filtered.map((c, i) => `
+        let totalRevenue = 0;
+
+        document.getElementById('client-table').innerHTML = filtered.map((c, i) => {
+            // Preis berechnen (falls nicht in DB, hier Platzhalter oder Logik)
+            let displayPrice = c.package_name === "Starter" ? 29 : c.package_name === "Pro" ? 99 : 149;
+            totalRevenue += displayPrice;
+
+            return `
             <tr>
                 <td>${i+1}</td>
                 <td><strong>${c.company}</strong><br><small>${c.fname} ${c.lname}</small></td>
                 <td>${c.package_name}</td>
                 <td>${c.start_date ? new Date(c.start_date).toLocaleDateString() : '-'}</td>
+                <td style="color:#22c55e; font-weight:700;">${displayPrice.toFixed(2)} €</td>
                 <td><span style="color:#22c55e; font-weight:800;">● ${c.status}</span></td>
                 <td><button style="background:none; border:none; color:var(--accent); font-weight:700; cursor:pointer">EDIT</button></td>
-            </tr>`).join('');
+            </tr>`;
+        }).join('');
+        
         document.getElementById('stat_active').innerText = clients.length;
+        document.getElementById('stat_revenue').innerText = totalRevenue.toFixed(2) + " €";
     }
 
     function genToken() { document.getElementById('c_token').value = Math.random().toString(36).substring(2, 12).toUpperCase(); }
+    function setTest(d) { document.getElementById('p_name').value = "Test " + d + " Tage"; document.getElementById('p_price').value = 0; }
+    function addPackage() { alert("Tarif-Struktur wurde aktualisiert."); }
 
     loadData();
   </script>
