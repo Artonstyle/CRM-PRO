@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CORE MASTER 2026 | ZEITERFASSUNG</title>
+  
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div style="font-weight: 900; font-size: 18px; color: var(--accent);">CORE MASTER</div>
+      <div style="font-size: 10px; color: var(--muted); font-weight: 700;">ZEITKONTROLLE 2026</div>
+    </div>
+    
+    <div class="sidebar-content">
+      <div class="nav-label">Main Console</div>
+      <a href="../admin.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+      <a href="kunden.html" class="nav-link"><i data-lucide="users"></i> Kunden</a>
+      <a href="objekte.html" class="nav-link"><i data-lucide="building-2"></i> Objekte</a>
+      <a href="mitarbeiter.html" class="nav-link"><i data-lucide="hard-hat"></i> Mitarbeiter</a>
+      <a href="schichtplan.html" class="nav-link"><i data-lucide="calendar-days"></i> Schichtplan</a>
+      <a href="zeiterfassung.html" class="nav-link active"><i data-lucide="timer"></i> Zeiterfassung</a>
+      <a href="aufgaben.html" class="nav-link"><i data-lucide="check-square"></i> Aufgaben</a>
+      
+      <div class="nav-label">Operations</div>
+      <a href="finanzen.html" class="nav-link"><i data-lucide="banknote"></i> Finanzen</a>
+      <a href="rechnungen.html" class="nav-link"><i data-lucide="file-text"></i> Rechnungen</a>
+      <a href="angebote.html" class="nav-link"><i data-lucide="file-spreadsheet"></i> Angebote</a>
+      <a href="lager.html" class="nav-link"><i data-lucide="package"></i> Lager</a>
+      <a href="dokumente.html" class="nav-link"><i data-lucide="folder"></i> Dokumente</a>
+      <a href="chat_video.html" class="nav-link"><i data-lucide="video"></i> Chat & Video</a>
+      <a href="analyse.html" class="nav-link"><i data-lucide="bar-chart-3"></i> Analyse</a>
+
+      <div class="nav-label">SaaS Admin</div>
+      <a href="saas_freischaltung.html" class="nav-link"><i data-lucide="user-plus"></i> SaaS Freischaltung</a>
+      <a href="tarife.html" class="nav-link"><i data-lucide="tags"></i> Master Tarife</a>
+      <a href="einstellungen.html" class="nav-link"><i data-lucide="settings"></i> Einstellungen</a>
+      <a href="support.html" class="nav-link"><i data-lucide="help-circle"></i> Support</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <h2 style="margin:0;">Live Zeiterfassung</h2>
+          <div style="background:var(--glass); padding:8px 15px; border-radius:8px; border:1px solid var(--green); color:var(--green); font-size:11px; font-weight:800;">
+            ● SYSTEM LIVE
+          </div>
+      </div>
+
+      <div class="card-glass">
+        <div style="display:flex; gap:15px; margin-bottom: 20px;">
+            <div style="flex:1;">
+                <label>Filter: Mitarbeiter</label>
+                <select id="filter_emp_time" onchange="loadTimeLogs()">
+                    <option value="">Alle Mitarbeiter</option>
+                </select>
+            </div>
+            <div style="flex:1;">
+                <label>Zeitraum</label>
+                <input type="month" id="filter_month" onchange="loadTimeLogs()">
+            </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Mitarbeiter</th>
+              <th>Datum</th>
+              <th>Kommen</th>
+              <th>Gehen</th>
+              <th>Dauer (Std)</th>
+              <th>Ort/GPS</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="time-liste">
+            </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="../config.js"></script>
+  <script>
+    // Aktuellen Monat als Standard setzen
+    document.getElementById('filter_month').value = new Date().toISOString().substring(0, 7);
+
+    async function loadDropdowns() {
+        const { data: emps } = await _supabase.from('employees').select('id, first_name, last_name');
+        if(emps) {
+            document.getElementById('filter_emp_time').innerHTML += emps.map(e => 
+                `<option value="${e.id}">${e.first_name} ${e.last_name}</option>`
+            ).join('');
+        }
+    }
+
+    async function loadTimeLogs() {
+        const empId = document.getElementById('filter_emp_time').value;
+        const month = document.getElementById('filter_month').value; // YYYY-MM
+
+        let query = _supabase.from('time_logs').select('*, employees(first_name, last_name)');
+        
+        if(empId) query = query.eq('employee_id', empId);
+        if(month) {
+            query = query.gte('date', `${month}-01`).lte('date', `${month}-31`);
+        }
+
+        const { data, error } = await query.order('date', { ascending: false });
+
+        const tbody = document.getElementById('time-liste');
+        if(data && data.length > 0) {
+            tbody.innerHTML = data.map(log => {
+                const duration = calculateDuration(log.check_in, log.check_out);
+                return `
+                <tr>
+                    <td><strong>${log.employees?.first_name} ${log.employees?.last_name}</strong></td>
+                    <td>${new Date(log.date).toLocaleDateString('de-DE')}</td>
+                    <td style="color:var(--green); font-weight:600;">${log.check_in.substring(0,5)}</td>
+                    <td style="color:var(--danger); font-weight:600;">${log.check_out ? log.check_out.substring(0,5) : '--:--'}</td>
+                    <td>${duration} h</td>
+                    <td><span style="font-size:10px; color:var(--muted); cursor:pointer;">📍 Karte öffnen</span></td>
+                    <td><span class="status-pill" style="${log.check_out ? '' : 'border-color:var(--gold); color:var(--gold);'}">
+                        ${log.check_out ? 'Beendet' : 'Laufend'}
+                    </span></td>
+                </tr>`;
+            }).join('');
+        } else {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--muted);">Keine Einträge für diesen Filter.</td></tr>';
+        }
+    }
+
+    function calculateDuration(start, end) {
+        if(!start || !end) return "0.00";
+        const s = start.split(':');
+        const e = end.split(':');
+        const startDate = new Date(0,0,0, s[0], s[1]);
+        const endDate = new Date(0,0,0, e[0], e[1]);
+        let diff = endDate.getTime() - startDate.getTime();
+        let hours = diff / 1000 / 60 / 60;
+        return hours.toFixed(2);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadDropdowns();
+        loadTimeLogs();
+    });
+  </script>
+</body>
+</html>
