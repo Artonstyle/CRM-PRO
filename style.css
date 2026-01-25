@@ -1,6 +1,6 @@
 /* --- THEME VARIABLEN --- */
 :root {
-  /* Dark Theme (Default) */
+  /* Dark Theme (Standard) */
   --bg: #000;
   --main-gradient: radial-gradient(circle at top right, #111, #000);
   --sidebar: rgba(0, 0, 0, 0.96);
@@ -12,18 +12,19 @@
   --danger: #ef4444;
   --input-bg: #111;
   --nav-hover: #fff;
+  --radius: 12px;
 }
 
 /* --- LIGHT THEME OVERRIDES --- */
 body.light-mode {
-  --bg: #f8fafc;
-  --main-gradient: radial-gradient(circle at top right, #f1f5f9, #e2e8f0);
-  --sidebar: #ffffff;
-  --glass: rgba(0, 0, 0, 0.03);
+  --bg: #f1f5f9; /* Sanftes Blaugrau statt Reinweiß */
+  --main-gradient: radial-gradient(circle at top right, #f8fafc, #e2e8f0);
+  --sidebar: #1e293b; /* Sidebar bleibt für den Kontrast dunkel (Pro-Look) */
+  --glass: rgba(255, 255, 255, 0.8);
   --glass-border: rgba(0, 0, 0, 0.08);
-  --accent: #2563eb; /* Etwas kräftigeres Blau für Kontrast */
+  --accent: #0284c7; /* Kräftigeres Blau für bessere Lesbarkeit */
   --text: #0f172a;
-  --muted: #64748b;
+  --muted: #475569;
   --input-bg: #ffffff;
   --nav-hover: #000;
 }
@@ -37,12 +38,12 @@ body {
   display: flex; 
   height: 100vh; 
   overflow: hidden; 
-  transition: background 0.3s ease; /* Sanfter Wechsel */
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 /* Sidebar */
 .sidebar { 
-  width: 220px; 
+  width: 240px; 
   background: var(--sidebar); 
   border-right: 1px solid var(--glass-border); 
   display: flex; 
@@ -51,11 +52,20 @@ body {
   transition: background 0.3s ease;
 }
 
-.sidebar-header { padding: 20px; border-bottom: 1px solid var(--glass-border); }
-.sidebar-content { flex: 1; overflow-y: auto; padding: 10px; scrollbar-width: none; }
+.sidebar-header { 
+  padding: 20px; 
+  border-bottom: 1px solid var(--glass-border); 
+}
+
+.sidebar-content { 
+  flex: 1; 
+  overflow-y: auto; 
+  padding: 10px; 
+  scrollbar-width: none; 
+}
 
 .nav-label { 
-  font-size: 8px; 
+  font-size: 10px; 
   color: var(--muted); 
   font-weight: 800; 
   text-transform: uppercase; 
@@ -74,6 +84,11 @@ body {
   border-radius: 8px; 
   transition: 0.2s; 
   margin-bottom: 2px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
 }
 
 .nav-link:hover { 
@@ -88,34 +103,78 @@ body {
   border-left: 3px solid var(--accent); 
 }
 
+/* Theme Switcher in der Sidebar */
+.theme-switch-wrapper {
+  padding: 15px;
+  border-top: 1px solid var(--glass-border);
+  margin-top: auto;
+}
+
+.theme-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  color: #fff; /* Text in dunkler Sidebar immer hell */
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: 0.3s;
+}
+
+/* Im Light Mode die Button-Farbe anpassen, falls die Sidebar hell wäre */
+body.light-mode .theme-btn {
+  color: #fff; /* Bleibt weiß, da die Sidebar dunkel bleibt */
+}
+
+.theme-btn:hover {
+  background: var(--accent);
+}
+
 /* Main Area */
 .main { 
   flex: 1; 
   display: flex; 
   flex-direction: column; 
   background: var(--main-gradient); 
+  overflow: hidden;
 }
 
-.content { flex: 1; padding: 30px; overflow-y: auto; }
+.content { 
+  flex: 1; 
+  padding: 30px; 
+  overflow-y: auto; 
+}
 
 .card-glass { 
   background: var(--glass); 
   border: 1px solid var(--glass-border); 
-  border-radius: 12px; 
+  border-radius: var(--radius); 
   padding: 25px; 
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
 }
 
 /* Formulare & Tabellen */
-input, select { 
+input, select, textarea { 
   width: 100%; 
-  padding: 10px; 
+  padding: 12px; 
   background: var(--input-bg); 
   border: 1px solid var(--glass-border); 
   border-radius: 8px; 
   color: var(--text); 
-  margin-bottom: 10px; 
+  margin-bottom: 15px; 
   outline: none;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+input:focus, select:focus {
+  border-color: var(--accent);
 }
 
 .btn-main { 
@@ -127,7 +186,34 @@ input, select {
   cursor: pointer; 
   font-weight: 700; 
   width: 100%; 
-  transition: opacity 0.2s;
+  transition: transform 0.1s, opacity 0.2s;
 }
 
 .btn-main:hover { opacity: 0.9; }
+.btn-main:active { transform: scale(0.98); }
+
+/* Tabelle Styling */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th {
+  text-align: left;
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  padding: 10px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--glass-border);
+  font-size: 14px;
+}
+
+tr:hover td {
+  background: var(--glass);
+}
