@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CORE MASTER 2026 | EINSTELLUNGEN</title>
+  
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div style="font-weight: 900; font-size: 18px; color: var(--accent);">CORE MASTER</div>
+      <div style="font-size: 10px; color: var(--muted); font-weight: 700;">SYSTEM CONFIG</div>
+    </div>
+    
+    <div class="sidebar-content">
+      <div class="nav-label">Main Console</div>
+      <a href="../admin.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+      
+      <div class="nav-label">SaaS Administration</div>
+      <a href="saas_freischaltung.html" class="nav-link"><i data-lucide="user-plus"></i> SaaS Freischaltung</a>
+      <a href="tarife.html" class="nav-link"><i data-lucide="tags"></i> Master Tarife</a>
+      <a href="einstellungen.html" class="nav-link active"><i data-lucide="settings"></i> Einstellungen</a>
+      <a href="support.html" class="nav-link"><i data-lucide="help-circle"></i> Support</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="content">
+      <h2 style="margin-top:0;">System-Einstellungen 2026</h2>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        
+        <div class="card-glass">
+            <h3>Branding & Identität</h3>
+            <label>Plattform-Name</label>
+            <input type="text" id="sys_name" value="CORE MASTER 2026">
+            
+            <label>Support-Email (Global)</label>
+            <input type="email" id="sys_email" value="support@coremaster-2026.de">
+
+            <label>System-Logo (URL)</label>
+            <input type="text" id="sys_logo" placeholder="https://deine-url.de/logo.png">
+            
+            <button class="btn-main" onclick="saveSettings()" style="margin-top:10px;">ÄNDERUNGEN SPEICHERN</button>
+        </div>
+
+        <div class="card-glass">
+            <h3>Sicherheit & Schnittstellen</h3>
+            <label>Zwei-Faktor-Authentifizierung (2FA)</label>
+            <select id="sys_2fa">
+                <option value="optional">Optional für Kunden</option>
+                <option value="mandatory">Erzwungen (High Security)</option>
+            </select>
+
+            <label>Wartungsmodus</label>
+            <div style="display:flex; align-items:center; gap:10px; margin-top:10px;">
+                <input type="checkbox" id="sys_maintenance" style="width:auto; margin:0;">
+                <span style="font-size:13px; color:var(--muted);">Plattform für Wartung sperren</span>
+            </div>
+
+            <div style="margin-top:25px; padding:15px; background:rgba(255,0,0,0.1); border:1px solid var(--danger); border-radius:8px;">
+                <h4 style="margin:0; color:var(--danger); font-size:12px;">GEFAHRENZONE</h4>
+                <p style="font-size:10px; color:var(--muted);">Alle Cache-Daten leeren oder System-Reset durchführen.</p>
+                <button style="background:var(--danger); color:white; border:none; padding:5px 10px; border-radius:4px; font-size:10px; cursor:pointer;">SYSTEM RESET</button>
+            </div>
+        </div>
+
+        <div class="card-glass" style="grid-column: span 2;">
+            <h3>Rechtliche Texte (SaaS Vertrag)</h3>
+            <label>Standard-AGB für neue Instanzen</label>
+            <textarea id="sys_agb" style="width:100%; height:150px; background:#000; color:var(--text); border:1px solid var(--glass-border); padding:10px; border-radius:8px; font-family:monospace; font-size:12px;">
+Hier stehen die Standard-Nutzungsbedingungen für das Jahr 2026...
+            </textarea>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <script src="../config.js"></script>
+  <script>
+    lucide.createIcons();
+
+    async function saveSettings() {
+        // Logik zum Speichern in einer 'settings' Tabelle in Supabase
+        alert("System-Konfiguration für 2026 wurde aktualisiert!");
+    }
+  </script>
+</body>
+</html>
