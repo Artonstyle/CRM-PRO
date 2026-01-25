@@ -3,248 +3,199 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CORE MASTER 2026 | OBJEKT-CENTER</title>
-  
+  <title>CORE MASTER 2026 | OBJEKTE</title>
   <link rel="stylesheet" href="../style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-
   <style>
-    /* Korrektur für das Side-Panel Layout */
-    .main-wrapper { display: flex; min-height: 100vh; }
-    .content-area { flex: 1; padding: 30px; transition: all 0.3s ease; }
-    
-    /* Side Panel Design */
+    .main-wrapper { display: flex; min-height: 100vh; background: #000; }
+    .content-area { flex: 1; padding: 40px; }
     .side-panel {
-      width: 0; opacity: 0; overflow: hidden;
-      background: var(--glass); border-left: 1px solid var(--glass-border);
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      height: 100vh; position: sticky; top: 0;
+      width: 0; opacity: 0; background: #0a0a0a; border-left: 1px solid #222;
+      transition: all 0.4s ease; overflow-y: auto; position: sticky; top: 0; height: 100vh;
     }
-    .side-panel.active { width: 450px; opacity: 1; padding: 30px; overflow-y: auto; }
-
-    /* Tabelle & Badges */
-    .status-badge { 
-      padding: 4px 10px; border-radius: 20px; font-size: 10px; 
-      font-weight: 800; background: rgba(34,197,94,0.1); color: #22c55e; border: 1px solid #22c55e;
-    }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th { text-align: left; padding: 15px; color: var(--muted); font-size: 11px; text-transform: uppercase; border-bottom: 1px solid var(--glass-border); }
-    td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-
-    /* Formular */
-    .field-group { margin-bottom: 15px; }
-    label { font-size: 10px; color: var(--muted); font-weight: 800; display: block; margin-bottom: 5px; }
-    input, select { width: 100%; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 8px; color: #fff; }
-    .geo-box { background: rgba(37, 99, 235, 0.1); border: 1px dashed var(--accent); padding: 15px; border-radius: 10px; margin-top: 20px; }
+    .side-panel.active { width: 480px; opacity: 1; padding: 30px; }
+    .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 11px; background: rgba(34,197,94,0.1); color: #22c55e; border: 1px solid #22c55e; }
+    .geo-box { background: rgba(37, 99, 235, 0.05); border: 1px dashed #2563eb; padding: 20px; border-radius: 12px; margin-top: 20px; }
+    label { font-size: 10px; color: #666; font-weight: 800; display: block; margin: 15px 0 5px 0; text-transform: uppercase; }
+    input, select { width: 100%; padding: 12px; background: #111; border: 1px solid #333; color: #fff; border-radius: 8px; }
+    .action-btn { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 8px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+    .action-btn:hover { border-color: #2563eb; color: #2563eb; }
   </style>
 </head>
 <body>
 
-  <div class="main-wrapper">
-    <aside class="sidebar">
-      <div class="sidebar-header">
-        <div style="font-weight: 900; font-size: 20px; color: var(--accent);">CORE MASTER</div>
-        <div style="font-size: 10px; color: var(--muted); font-weight: 700;">PRO-MANAGEMENT 2026</div>
-      </div>
-      <div class="sidebar-content">
-        <div class="nav-label">Main Console</div>
-        <a href="../admin.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a>
-        <a href="kunden.html" class="nav-link"><i data-lucide="users"></i> Kunden</a>
-        <a href="objekte.html" class="nav-link active"><i data-lucide="building-2"></i> Objekte</a>
-        <a href="mitarbeiter.html" class="nav-link"><i data-lucide="hard-hat"></i> Mitarbeiter</a>
-        <a href="schichtplan.html" class="nav-link"><i data-lucide="calendar-days"></i> Schichtplan</a>
-        <div class="nav-label">System</div>
-        <a href="einstellungen.html" class="nav-link"><i data-lucide="settings"></i> Einstellungen</a>
-      </div>
-    </aside>
+<div class="main-wrapper">
+  <aside class="sidebar">
+    <div style="padding:25px; font-weight:900; color:#2563eb; font-size:22px;">CORE MASTER</div>
+    <nav style="padding:15px;">
+      <a href="objekte.html" class="nav-link active"><i data-lucide="building-2"></i> Objekte</a>
+      <a href="mitarbeiter.html" class="nav-link"><i data-lucide="users"></i> Mitarbeiter</a>
+    </nav>
+  </aside>
 
-    <main class="content-area">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
-        <div>
-          <h1 style="margin:0;">Objekt-Zentrale</h1>
-          <p style="color:var(--muted); margin-top:5px;">Verwalten Sie Ihre Standorte und Geofencing-Zonen.</p>
-        </div>
-        <button class="btn-main" onclick="openForm()" style="width:auto; padding:12px 25px;">+ NEUES OBJEKT</button>
+  <main class="content-area">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:40px;">
+      <div>
+        <h1 style="font-size:32px; margin:0;">Objekt-Zentrale</h1>
+        <p style="color:#666;">Verwalten Sie Standorte und automatisiertes Geofencing.</p>
       </div>
+      <button class="btn-main" onclick="openForm()" style="width:auto; padding:12px 30px;">+ NEUES OBJEKT</button>
+    </div>
 
-      <div class="card-glass" style="padding:0;">
-        <table>
-          <thead>
-            <tr>
-              <th>Objekt / Adresse</th>
-              <th>Mandant</th>
-              <th>Status</th>
-              <th>Turnus</th>
-              <th style="text-align:right;">Aktion</th>
-            </tr>
-          </thead>
-          <tbody id="objekt-liste">
-            </tbody>
-        </table>
-      </div>
-    </main>
+    <div class="card-glass" style="padding:0;">
+      <table style="width:100%; border-collapse:collapse;">
+        <thead>
+          <tr style="text-align:left; color:#444; font-size:12px; text-transform:uppercase;">
+            <th style="padding:20px;">Objekt / Adresse</th>
+            <th>Mandant</th>
+            <th>Status</th>
+            <th>Turnus</th>
+            <th style="text-align:right; padding-right:20px;">Aktionen</th>
+          </tr>
+        </thead>
+        <tbody id="objekt-liste"></tbody>
+      </table>
+    </div>
+  </main>
 
-    <div class="side-panel" id="sidePanel">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
-        <h2 id="formTitle" style="margin:0; color:var(--accent);">Objekt-Details</h2>
-        <button onclick="closeForm()" style="background:none; border:none; color:#fff; cursor:pointer;"><i data-lucide="x"></i></button>
-      </div>
+  <div class="side-panel" id="sidePanel">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h2 id="formTitle">Objekt bearbeiten</h2>
+      <button onclick="closeForm()" style="background:none; border:none; color:#fff; cursor:pointer;"><i data-lucide="x"></i></button>
+    </div>
 
-      <input type="hidden" id="o_id">
+    <input type="hidden" id="o_id">
+    
+    <label>Name des Objekts</label>
+    <input type="text" id="o_name" placeholder="z.B. Logistikzentrum">
 
-      <div class="field-group">
-        <label>Name des Objekts</label>
-        <input type="text" id="o_name" placeholder="z.B. Werksgelände Süd">
-      </div>
+    <label>Zugehöriger Mandant</label>
+    <select id="o_kunde"></select>
 
-      <div class="field-group">
-        <label>Zugehöriger Mandant</label>
-        <select id="o_kunde"></select>
-      </div>
+    <label>Vollständige Adresse (Auto-GPS)</label>
+    <input type="text" id="o_address" placeholder="Musterstraße 1, 12345 Stadt" onblur="autoGeocode()">
 
-      <div class="field-group">
-        <label>Vollständige Adresse (für GPS-Suche)</label>
-        <input type="text" id="o_address" placeholder="Straße Nr, PLZ Stadt" onblur="autoGeocode()">
-      </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+      <div><label>PLZ</label><input type="text" id="o_zip"></div>
+      <div><label>Stadt</label><input type="text" id="o_city"></div>
+    </div>
 
+    <div class="geo-box">
+      <div style="font-size:11px; font-weight:900; color:#2563eb; margin-bottom:10px;">GEOFENCING (GPS-DATEN)</div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
-        <div class="field-group"><label>PLZ</label><input type="text" id="o_zip"></div>
-        <div class="field-group"><label>Stadt</label><input type="text" id="o_city"></div>
+        <input type="text" id="o_lat" placeholder="Breitengrad" readonly>
+        <input type="text" id="o_lng" placeholder="Längengrad" readonly>
       </div>
+      <p style="font-size:10px; color:#555; margin-top:8px;">Diese Daten werden automatisch anhand der Adresse ermittelt.</p>
+    </div>
 
-      <div class="field-group">
-        <label>Besuchs-Turnus</label>
-        <select id="o_turnus">
-          <option>Täglich</option>
-          <option>Wöchentlich</option>
-          <option>2-Wöchentlich</option>
-          <option>Monatlich</option>
-        </select>
-      </div>
+    <label>Besuchs-Turnus</label>
+    <select id="o_turnus">
+      <option>Täglich</option>
+      <option>Wöchentlich</option>
+      <option>Monatlich</option>
+    </select>
 
-      <div class="geo-box">
-        <div style="display:flex; align-items:center; gap:8px; color:var(--accent); font-weight:bold; font-size:11px; margin-bottom:10px;">
-          <i data-lucide="map-pin" size="14"></i> AUTOMATISCHES GEOFENCING
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
-          <input type="text" id="o_lat" placeholder="Breitengrad">
-          <input type="text" id="o_lng" placeholder="Längengrad">
-        </div>
-      </div>
-
-      <div style="display:flex; gap:15px; margin-top:30px;">
-        <button class="btn-main" onclick="saveObjekt()">SPEICHERN</button>
-        <button class="btn-main" onclick="closeForm()" style="background:#374151;">ABBRECHEN</button>
-      </div>
+    <div style="display:flex; gap:15px; margin-top:30px;">
+      <button class="btn-main" onclick="saveObjekt()">SPEICHERN</button>
+      <button class="btn-main" onclick="closeForm()" style="background:#222;">ABBRECHEN</button>
     </div>
   </div>
+</div>
 
-  <script src="../config.js"></script>
-  <script>
-    lucide.createIcons();
+<script src="../config.js"></script>
+<script>
+  lucide.createIcons();
 
-    // Panel Steuerung
-    function openForm(editData = null) {
-      document.getElementById('sidePanel').classList.add('active');
-      loadKundenDropdown(editData ? editData.customer_id : null);
-      
-      if(editData) {
-        document.getElementById('formTitle').innerText = "Objekt bearbeiten";
-        document.getElementById('o_id').value = editData.id;
-        document.getElementById('o_name').value = editData.name || '';
-        document.getElementById('o_address').value = editData.address || '';
-        document.getElementById('o_city').value = editData.city || '';
-        document.getElementById('o_zip').value = editData.zip || '';
-        document.getElementById('o_lat').value = editData.lat || '';
-        document.getElementById('o_lng').value = editData.lng || '';
-        document.getElementById('o_turnus').value = editData.turnus || 'Täglich';
-      } else {
-        document.getElementById('formTitle').innerText = "Neues Objekt";
-        document.getElementById('o_id').value = "";
-        document.getElementById('o_name').value = "";
-        document.getElementById('o_address').value = "";
-      }
+  function openForm(editData = null) {
+    document.getElementById('sidePanel').classList.add('active');
+    loadKundenDropdown(editData ? editData.customer_id : null);
+    if(editData) {
+      document.getElementById('o_id').value = editData.id;
+      document.getElementById('o_name').value = editData.name;
+      document.getElementById('o_address').value = editData.address || '';
+      document.getElementById('o_zip').value = editData.zip || '';
+      document.getElementById('o_city').value = editData.city || '';
+      document.getElementById('o_lat').value = editData.lat || '';
+      document.getElementById('o_lng').value = editData.lng || '';
     }
+  }
 
-    function closeForm() { document.getElementById('sidePanel').classList.remove('active'); }
+  function closeForm() { document.getElementById('sidePanel').classList.remove('active'); }
 
-    // Automatische GPS-Suche via OpenStreetMap
-    async function autoGeocode() {
-      const addr = document.getElementById('o_address').value;
-      if(addr.length < 5) return;
-      try {
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr)}`);
-        const data = await res.json();
-        if(data && data.length > 0) {
-          document.getElementById('o_lat').value = data[0].lat;
-          document.getElementById('o_lng').value = data[0].lon;
+  // AUTOMATISCHES GEOFENCING LOGIK
+  async function autoGeocode() {
+    const address = document.getElementById('o_address').value;
+    if(address.length < 8) return;
+    
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`);
+      const data = await res.json();
+      if(data[0]) {
+        document.getElementById('o_lat').value = parseFloat(data[0].lat).toFixed(6);
+        document.getElementById('o_lng').value = parseFloat(data[0].lon).toFixed(6);
+        // PLZ/Stadt Auto-Fill falls leer
+        if(!document.getElementById('o_city').value) {
+            const parts = data[0].display_name.split(',');
+            document.getElementById('o_city').value = parts[parts.length-3]?.trim() || '';
         }
-      } catch(e) { console.error("GPS Fehler", e); }
-    }
-
-    async function loadKundenDropdown(selectedId) {
-      const { data } = await _supabase.from('customers').select('id, company').order('company');
-      const sel = document.getElementById('o_kunde');
-      if(data) {
-        sel.innerHTML = data.map(c => `<option value="${c.id}" ${c.id === selectedId ? 'selected' : ''}>${c.company}</option>`).join('');
       }
+    } catch(e) { console.error("Geocoding failed", e); }
+  }
+
+  async function loadKundenDropdown(selected) {
+    const { data } = await _supabase.from('customers').select('id, company');
+    const sel = document.getElementById('o_kunde');
+    if(data) sel.innerHTML = data.map(k => `<option value="${k.id}" ${k.id === selected ? 'selected' : ''}>${k.company}</option>`).join('');
+  }
+
+  async function loadObjekte() {
+    const { data } = await _supabase.from('objects').select('*, customers(company)').order('created_at', {ascending: false});
+    const tbody = document.getElementById('objekt-liste');
+    if(data) {
+      tbody.innerHTML = data.map(o => `
+        <tr>
+          <td style="padding:20px;"><strong>${o.name}</strong><br><small style="color:#555;">${o.address || '-'}</small></td>
+          <td>${o.customers?.company || 'Privat'}</td>
+          <td><span class="status-badge">Aktiv</span></td>
+          <td>${o.turnus}</td>
+          <td style="text-align:right; padding-right:20px;">
+            <button class="action-btn" onclick='openForm(${JSON.stringify(o)})'><i data-lucide="edit-3" size="16"></i></button>
+            <button class="action-btn" style="color:#ef4444;" onclick="deleteObjekt('${o.id}')"><i data-lucide="trash-2" size="16"></i></button>
+          </td>
+        </tr>
+      `).join('');
+      lucide.createIcons();
     }
+  }
 
-    async function loadObjekte() {
-      const { data, error } = await _supabase.from('objects').select('*, customers(company)').order('created_at', {ascending: false});
-      const tbody = document.getElementById('objekt-liste');
-      if(data) {
-        tbody.innerHTML = data.map(o => `
-          <tr>
-            <td><strong>${o.name}</strong><br><small style="color:var(--muted)">${o.address || ''}</small></td>
-            <td>${o.customers?.company || 'Privat'}</td>
-            <td><span class="status-badge">Aktiv</span></td>
-            <td>${o.turnus || 'Standard'}</td>
-            <td style="text-align:right;">
-              <button class="nav-link" style="display:inline; padding:5px;" onclick='editObjekt(${JSON.stringify(o)})'><i data-lucide="edit-3" size="16"></i></button>
-              <button class="nav-link" style="display:inline; padding:5px; color:#ef4444;" onclick="deleteObjekt('${o.id}')"><i data-lucide="trash-2" size="16"></i></button>
-            </td>
-          </tr>
-        `).join('');
-        lucide.createIcons();
-      }
+  async function saveObjekt() {
+    const id = document.getElementById('o_id').value;
+    const obj = {
+      name: document.getElementById('o_name').value,
+      customer_id: document.getElementById('o_kunde').value,
+      address: document.getElementById('o_address').value,
+      zip: document.getElementById('o_zip').value,
+      city: document.getElementById('o_city').value,
+      lat: parseFloat(document.getElementById('o_lat').value) || null,
+      lng: parseFloat(document.getElementById('o_lng').value) || null,
+      turnus: document.getElementById('o_turnus').value,
+      workspace_id: '8648e581-297d-419b-9c71-292418e26895'
+    };
+
+    const { error } = id ? await _supabase.from('objects').update(obj).eq('id', id) : await _supabase.from('objects').insert([obj]);
+    if(!error) location.reload(); else alert("Fehler: " + error.message);
+  }
+
+  async function deleteObjekt(id) {
+    if(confirm("Löschen?")) {
+      await _supabase.from('objects').delete().eq('id', id);
+      loadObjekte();
     }
+  }
 
-    window.editObjekt = (obj) => { openForm(obj); };
-
-    async function saveObjekt() {
-      const id = document.getElementById('o_id').value;
-      const { data: ws } = await _supabase.from('workspaces').select('id').limit(1).single();
-      
-      const objData = {
-        name: document.getElementById('o_name').value,
-        customer_id: document.getElementById('o_kunde').value,
-        address: document.getElementById('o_address').value,
-        zip: document.getElementById('o_zip').value,
-        city: document.getElementById('o_city').value,
-        lat: parseFloat(document.getElementById('o_lat').value) || null,
-        lng: parseFloat(document.getElementById('o_lng').value) || null,
-        turnus: document.getElementById('o_turnus').value,
-        workspace_id: ws.id
-      };
-
-      const { error } = id ? 
-        await _supabase.from('objects').update(objData).eq('id', id) : 
-        await _supabase.from('objects').insert([objData]);
-
-      if(!error) location.reload();
-      else alert("Fehler: " + error.message);
-    }
-
-    async function deleteObjekt(id) {
-      if(confirm("Löschen?")) {
-        await _supabase.from('objects').delete().eq('id', id);
-        loadObjekte();
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', loadObjekte);
-  </script>
+  document.addEventListener('DOMContentLoaded', loadObjekte);
+</script>
 </body>
 </html>
