@@ -14,130 +14,132 @@
 
   <aside class="sidebar">
     <div class="sidebar-header">
-      <div style="font-weight: 900; font-size: 18px; color: var(--accent);">CORE MASTER</div>
-      <div style="font-size: 10px; color: var(--muted); font-weight: 700;">ENTERPRISE CRM 2026</div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 900;">C</div>
+        <div>
+          <div style="font-weight: 900; font-size: 16px; color: var(--text); line-height: 1;">CORE MASTER</div>
+          <div style="font-size: 9px; color: var(--muted); font-weight: 700; text-transform: uppercase;">Admin Console</div>
+        </div>
+      </div>
     </div>
     
     <div class="sidebar-content">
-      <div class="nav-label">Main Console</div>
+      <div class="nav-label">Übersicht</div>
       <a href="admin.html" class="nav-link active"><i data-lucide="layout-dashboard"></i> Dashboard</a>
-      
       <a href="views/kunden.html" class="nav-link"><i data-lucide="users"></i> Kunden</a>
       <a href="views/objekte.html" class="nav-link"><i data-lucide="building-2"></i> Objekte</a>
-      <a href="views/mitarbeiter.html" class="nav-link"><i data-lucide="hard-hat"></i> Mitarbeiter</a>
-      <a href="views/schichtplan.html" class="nav-link"><i data-lucide="calendar-days"></i> Schichtplan</a>
-      <a href="views/zeiterfassung.html" class="nav-link"><i data-lucide="timer"></i> Zeiterfassung</a>
-      <a href="views/aufgaben.html" class="nav-link"><i data-lucide="check-square"></i> Aufgaben</a>
+      <a href="views/projekte.html" class="nav-link"><i data-lucide="briefcase"></i> Projekte</a>
       
-      <div class="nav-label">Operations</div>
-      <a href="views/finanzen.html" class="nav-link"><i data-lucide="banknote"></i> Finanzen</a>
+      <div class="nav-label">Management</div>
+      <a href="views/termine.html" class="nav-link"><i data-lucide="calendar"></i> Termine</a>
+      <a href="views/angebote.html" class="nav-link"><i data-lucide="file-plus"></i> Angebote</a>
       <a href="views/rechnungen.html" class="nav-link"><i data-lucide="file-text"></i> Rechnungen</a>
-      <a href="views/angebote.html" class="nav-link"><i data-lucide="file-spreadsheet"></i> Angebote</a>
-      <a href="views/lager.html" class="nav-link"><i data-lucide="package"></i> Lager</a>
-      <a href="views/dokumente.html" class="nav-link"><i data-lucide="folder"></i> Dokumente</a>
-      <a href="views/chat_video.html" class="nav-link"><i data-lucide="video"></i> Chat & Video</a>
-      <a href="views/analyse.html" class="nav-link"><i data-lucide="bar-chart-3"></i> Analyse</a>
-
-      <div class="nav-label">SaaS Admin</div>
-      <a href="views/saas_freischaltung.html" class="nav-link"><i data-lucide="user-plus"></i> SaaS</a>
-      <a href="views/tarife.html" class="nav-link"><i data-lucide="tags"></i> Tarife</a>
+      <a href="views/auszahlungen.html" class="nav-link"><i data-lucide="wallet"></i> Auszahlungen</a>
       
-      <a href="views/einstellungen.html" class="nav-link"><i data-lucide="settings"></i> Settings</a>
+      <div class="nav-label">System</div>
+      <a href="views/katalog.html" class="nav-link"><i data-lucide="layers"></i> Katalog</a>
+      <a href="views/mitarbeiter.html" class="nav-link"><i data-lucide="hard-hat"></i> Mitarbeiter</a>
+      <a href="views/schichtplan.html" class="nav-link"><i data-lucide="clock"></i> Schichtpläne</a>
     </div>
 
     <div class="theme-switch-wrapper">
-      <button class="theme-btn" id="themeToggle">
+      <button class="theme-btn" id="themeToggle" onclick="toggleTheme()">
         <i data-lucide="sun" id="themeIcon"></i> 
-        <span id="themeText">Heller Modus</span>
+        <span id="themeText">Blue Mode</span>
       </button>
     </div>
   </aside>
 
   <main class="main">
-    <header class="header" style="display: flex; justify-content: space-between; align-items: center; padding: 20px 30px; border-bottom: 1px solid var(--glass-border); background: var(--glass);">
-      <h1 style="font-size: 20px; font-weight: 800; margin: 0; color: var(--text);">DASHBOARD ÜBERSICHT</h1>
-      <div style="display: flex; gap: 15px; align-items: center;">
-        <span style="font-size: 12px; color: var(--muted);">System-Status: <span style="color: var(--ok, #22c55e); font-weight: 700;">● Online</span></span>
-        <div style="width: 35px; height: 35px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: white; box-shadow: var(--shadow);">A</div>
+    <header class="header">
+      <div>
+        <h1 style="font-size: 24px; font-weight: 800; margin: 0;">Dashboard</h1>
+        <p style="font-size: 13px; color: var(--muted); margin: 5px 0 0;">Übersicht deiner Firma</p>
       </div>
+      <button class="btn-main" style="width: auto; padding: 10px 20px;">Login / Registrieren</button>
     </header>
 
     <div class="content">
-      <div class="grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
-        <div class="stat-card card-glass">
-          <div style="font-size: 10px; color: var(--muted); font-weight: 800; text-transform: uppercase;">Aktive Objekte</div>
-          <div style="font-size: 28px; font-weight: 800; margin: 5px 0; color: var(--text);">24</div>
-          <div style="font-size: 11px; color: var(--accent);">+3 diesen Monat</div>
-        </div>
-        <div class="stat-card card-glass">
-          <div style="font-size: 10px; color: var(--muted); font-weight: 800; text-transform: uppercase;">Personal im Dienst</div>
-          <div style="font-size: 28px; font-weight: 800; margin: 5px 0; color: var(--text);">12</div>
-          <div style="font-size: 11px; color: var(--ok, #22c55e);">Live im Einsatz</div>
-        </div>
-        <div class="stat-card card-glass">
-          <div style="font-size: 10px; color: var(--muted); font-weight: 800; text-transform: uppercase;">Offene Tickets</div>
-          <div style="font-size: 28px; font-weight: 800; margin: 5px 0; color: var(--text);">08</div>
-          <div style="font-size: 11px; color: var(--danger);">Priorität: Hoch</div>
-        </div>
-        <div class="stat-card card-glass">
-          <div style="font-size: 10px; color: var(--muted); font-weight: 800; text-transform: uppercase;">Umsatz Prognose</div>
-          <div style="font-size: 28px; font-weight: 800; margin: 5px 0; color: var(--text);">42.850 €</div>
-          <div style="font-size: 11px; color: var(--accent);">Januar 2026</div>
-        </div>
-      </div>
-
-      <div class="card-glass" style="margin-top: 25px; padding: 60px 40px; text-align: center; border: 1px dashed var(--glass-border);">
-          <div style="background: rgba(59, 130, 246, 0.1); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
-            <i data-lucide="shield-check" style="color: var(--accent); width: 30px; height: 30px;"></i>
+      <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px;">
+        
+        <div class="card-glass">
+          <h3 style="margin-top: 0; font-size: 16px;">Firma</h3>
+          <div style="display: flex; gap: 10px; margin-bottom: 25px;">
+            <span style="background: var(--glass); padding: 5px 15px; border-radius: 20px; font-size: 12px; border: 1px solid var(--glass-border);">Lade...</span>
+            <span style="background: var(--glass); padding: 5px 15px; border-radius: 20px; font-size: 12px; border: 1px solid var(--glass-border);">Mitarbeiter: 0</span>
+            <span style="background: var(--glass); padding: 5px 15px; border-radius: 20px; font-size: 12px; border: 1px solid var(--glass-border);">Kunden: 0</span>
+            <span style="background: var(--glass); padding: 5px 15px; border-radius: 20px; font-size: 12px; border: 1px solid var(--glass-border);">Objekte: 0</span>
           </div>
-          <h2 style="color: var(--text); margin-bottom: 10px;">Willkommen im Core Master Kontrollzentrum</h2>
-          <p style="color: var(--muted); max-width: 600px; margin: 0 auto 25px; line-height: 1.6;">
-            Alle Sicherheitssysteme für das Geschäftsjahr 2026 sind einsatzbereit. 
-            Überwachen Sie Ihre Mandanten und optimieren Sie Ihre Betriebsabläufe zentral von dieser Konsole aus.
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+            <div>
+              <h4 style="color: var(--accent); font-size: 14px; text-transform: uppercase;">Dein nächster Schritt</h4>
+              <ul style="list-style: none; padding: 0; font-size: 13px; line-height: 1.8; color: var(--text);">
+                <li>1) Unter <b>Einstellungen</b> Firmendaten setzen.</li>
+                <li>2) Unter <b>Mitarbeiter</b> per Invite einladen.</li>
+                <li>3) Unter <b>Schichtpläne</b> Schichten planen.</li>
+              </ul>
+            </div>
+            <div>
+              <h4 style="color: var(--accent); font-size: 14px; text-transform: uppercase;">Plan / Limit</h4>
+              <p style="font-size: 12px; color: var(--muted);">Limit wird automatisch in der DB enforced. Wenn voll → Upgrade nötig.</p>
+              <div style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--glass-border); display: flex; align-items: center; justify-content: center; color: var(--muted);">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-glass">
+          <h3 style="margin-top: 0; font-size: 16px;">Schnellaktionen</h3>
+          <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+            <button class="action-btn">Mitarbeiter</button>
+            <button class="action-btn" style="background: #3b82f6;">Kunden</button>
+            <button class="action-btn" style="background: #2563eb;">Objekte</button>
+            <button class="action-btn" style="background: #1d4ed8;">Schichtpläne</button>
+            <button class="action-btn" style="background: var(--glass); border: 1px solid var(--glass-border); color: var(--text);">Chat/Video</button>
+          </div>
+          <p style="margin-top: 30px; font-size: 11px; color: var(--muted); font-style: italic;">
+            Hinweis: Für Lebenslauf-PDF nutzt du später Supabase Storage (cv_file_url speichern).
           </p>
-          <button class="btn-main" style="max-width: 250px;">PROJEKT-ÜBERSICHT ÖFFNEN</button>
+        </div>
+
       </div>
     </div>
   </main>
 
-  <script src="config.js"></script>
   <script>
-    // 1. Icons initialisieren
+    // Icons initialisieren
     lucide.createIcons();
 
-    // 2. Theme-Logik
-    const themeToggle = document.getElementById('themeToggle');
-    const themeIcon = document.getElementById('themeIcon');
-    const themeText = document.getElementById('themeText');
-    
-    // Funktion zum UI-Update des Buttons
-    function updateThemeUI(isLight) {
-      if (isLight) {
-        document.body.classList.add('light-mode');
-        themeIcon.setAttribute('data-lucide', 'moon');
-        themeText.innerText = "Dunkler Modus";
-      } else {
-        document.body.classList.remove('light-mode');
-        themeIcon.setAttribute('data-lucide', 'sun');
-        themeText.innerText = "Heller Modus";
-      }
-      lucide.createIcons(); // Icons neu zeichnen
-    }
-
-    // Check beim Laden
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'light') {
-      updateThemeUI(true);
-    }
-
-    themeToggle.addEventListener('click', (e) => {
-      e.preventDefault();
-      const isCurrentlyLight = document.body.classList.contains('light-mode');
-      const nextIsLight = !isCurrentlyLight;
+    // Theme-Toggle Funktion
+    function toggleTheme() {
+      const body = document.body;
+      const themeText = document.getElementById('themeText');
+      const themeIcon = document.getElementById('themeIcon');
       
-      updateThemeUI(nextIsLight);
-      localStorage.setItem('theme', nextIsLight ? 'light' : 'dark');
-    });
+      const isBlue = body.classList.toggle('light-mode');
+      
+      if (isBlue) {
+        themeText.innerText = "Black Mode";
+        themeIcon.setAttribute('data-lucide', 'moon');
+      } else {
+        themeText.innerText = "Blue Mode";
+        themeIcon.setAttribute('data-lucide', 'sun');
+      }
+      
+      localStorage.setItem('theme', isBlue ? 'blue' : 'black');
+      lucide.createIcons();
+    }
+
+    // Beim Laden gespeichertes Theme anwenden
+    window.onload = () => {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'blue') {
+        document.body.classList.add('light-mode');
+        document.getElementById('themeText').innerText = "Black Mode";
+        document.getElementById('themeIcon').setAttribute('data-lucide', 'moon');
+        lucide.createIcons();
+      }
+    };
   </script>
 </body>
 </html>
