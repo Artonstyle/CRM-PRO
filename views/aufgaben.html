@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CORE MASTER 2026 | AUFGABEN-MANAGEMENT</title>
+  
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div style="font-weight: 900; font-size: 18px; color: var(--accent);">CORE MASTER</div>
+      <div style="font-size: 10px; color: var(--muted); font-weight: 700;">TASK-CENTER 2026</div>
+    </div>
+    
+    <div class="sidebar-content">
+      <div class="nav-label">Main Console</div>
+      <a href="../admin.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+      <a href="kunden.html" class="nav-link"><i data-lucide="users"></i> Kunden</a>
+      <a href="objekte.html" class="nav-link"><i data-lucide="building-2"></i> Objekte</a>
+      <a href="mitarbeiter.html" class="nav-link"><i data-lucide="hard-hat"></i> Mitarbeiter</a>
+      <a href="schichtplan.html" class="nav-link"><i data-lucide="calendar-days"></i> Schichtplan</a>
+      <a href="zeiterfassung.html" class="nav-link"><i data-lucide="timer"></i> Zeiterfassung</a>
+      <a href="aufgaben.html" class="nav-link active"><i data-lucide="check-square"></i> Aufgaben</a>
+      
+      <div class="nav-label">Operations</div>
+      <a href="finanzen.html" class="nav-link"><i data-lucide="banknote"></i> Finanzen</a>
+      <a href="rechnungen.html" class="nav-link"><i data-lucide="file-text"></i> Rechnungen</a>
+      <a href="angebote.html" class="nav-link"><i data-lucide="file-spreadsheet"></i> Angebote</a>
+      <a href="lager.html" class="nav-link"><i data-lucide="package"></i> Lager</a>
+      <a href="dokumente.html" class="nav-link"><i data-lucide="folder"></i> Dokumente</a>
+      <a href="chat_video.html" class="nav-link"><i data-lucide="video"></i> Chat & Video</a>
+      <a href="analyse.html" class="nav-link"><i data-lucide="bar-chart-3"></i> Analyse</a>
+
+      <div class="nav-label">SaaS Admin</div>
+      <a href="saas_freischaltung.html" class="nav-link"><i data-lucide="user-plus"></i> SaaS Freischaltung</a>
+      <a href="tarife.html" class="nav-link"><i data-lucide="tags"></i> Master Tarife</a>
+      <a href="einstellungen.html" class="nav-link"><i data-lucide="settings"></i> Einstellungen</a>
+      <a href="support.html" class="nav-link"><i data-lucide="help-circle"></i> Support</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <h2 style="margin:0;">Aufgaben & Tickets</h2>
+          <button class="btn-main" onclick="openTaskModal()" style="width:auto; padding:8px 20px;">+ NEUE AUFGABE</button>
+      </div>
+
+      <div class="card-glass">
+        <div style="margin-bottom:20px;">
+            <label>Status Filter</label>
+            <select id="filter_status" onchange="loadTasks()" style="width:200px;">
+                <option value="">Alle Status</option>
+                <option value="Offen">Offen</option>
+                <option value="In Arbeit">In Arbeit</option>
+                <option value="Erledigt">Erledigt</option>
+            </select>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Aufgabe</th>
+              <th>Objekt</th>
+              <th>Priorität</th>
+              <th>Status</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="task-liste">
+            </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <div id="taskModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:center; z-index:100;">
+      <div class="card-glass" style="width:400px; background:#111;">
+          <h3>Aufgabe erstellen</h3>
+          <label>Titel / Beschreibung</label>
+          <input type="text" id="t_title" placeholder="z.B. Außenkontrolle Parkdeck 2">
+          
+          <label>Objekt</label>
+          <select id="t_objekt"></select>
+
+          <label>Priorität</label>
+          <select id="t_prio">
+              <option value="Normal">Normal</option>
+              <option value="Hoch">Hoch</option>
+              <option value="Dringend">Dringend 🚨</option>
+          </select>
+
+          <div style="display:flex; gap:10px; margin-top:15px;">
+              <button class="btn-main" onclick="saveTask()">ERSTELLEN</button>
+              <button class="btn-main" onclick="closeTaskModal()" style="background:#334155;">ABBRECHEN</button>
+          </div>
+      </div>
+  </div>
+
+  <script src="../config.js"></script>
+  <script>
+    function openTaskModal() { 
+        document.getElementById('taskModal').style.display = 'flex'; 
+        loadObjDropdown();
+    }
+    function closeTaskModal() { document.getElementById('taskModal').style.display = 'none'; }
+
+    async function loadObjDropdown() {
+        const { data } = await _supabase.from('objects').select('id, name');
+        if(data) document.getElementById('t_objekt').innerHTML = data.map(o => `<option value="${o.id}">${o.name}</option>`).join('');
+    }
+
+    async function loadTasks() {
+        const statusFilter = document.getElementById('filter_status').value;
+        let query = _supabase.from('tasks').select('*, objects(name)');
+        
+        if(statusFilter) query = query.eq('status', statusFilter);
+
+        const { data } = await query.order('created_at', { ascending: false });
+
+        const tbody = document.getElementById('task-liste');
+        if(data && data.length > 0) {
+            tbody.innerHTML = data.map(t => {
+                const prioColor = t.priority === 'Dringend' ? 'var(--danger)' : (t.priority === 'Hoch' ? 'var(--gold)' : 'var(--text)');
+                return `
+                <tr>
+                    <td><strong>${t.title}</strong></td>
+                    <td>${t.objects?.name || '---'}</td>
+                    <td><span style="color:${prioColor}; font-weight:800; font-size:10px;">${t.priority.toUpperCase()}</span></td>
+                    <td><span class="status-pill" style="border-color:${t.status === 'Erledigt' ? 'var(--green)' : 'var(--muted)'}">${t.status}</span></td>
+                    <td>
+                        <button onclick="updateStatus('${t.id}', 'Erledigt')" style="color:var(--green); background:none; border:none; cursor:pointer; font-size:11px;">ABSCHLIESSEN</button>
+                    </td>
+                </tr>`;
+            }).join('');
+        } else {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--muted);">Keine Aufgaben gefunden.</td></tr>';
+        }
+    }
+
+    async function saveTask() {
+        const task = {
+            title: document.getElementById('t_title').value,
+            object_id: document.getElementById('t_objekt').value,
+            priority: document.getElementById('t_prio').value,
+            status: 'Offen'
+        };
+        const { error } = await _supabase.from('tasks').insert([task]);
+        if(!error) { closeTaskModal(); loadTasks(); }
+    }
+
+    async function updateStatus(id, newStatus) {
+        await _supabase.from('tasks').update({ status: newStatus }).eq('id', id);
+        loadTasks();
+    }
+
+    document.addEventListener('DOMContentLoaded', loadTasks);
+  </script>
+</body>
+</html>
+
