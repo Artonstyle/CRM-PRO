@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CORE MASTER 2026 | DOKUMENTE</title>
+  
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div style="font-weight: 900; font-size: 18px; color: var(--accent);">CORE MASTER</div>
+      <div style="font-size: 10px; color: var(--muted); font-weight: 700;">DOCUMENT ARCHIVE</div>
+    </div>
+    
+    <div class="sidebar-content">
+      <div class="nav-label">Main Console</div>
+      <a href="../admin.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+      <a href="kunden.html" class="nav-link"><i data-lucide="users"></i> Kunden</a>
+      <a href="objekte.html" class="nav-link"><i data-lucide="building-2"></i> Objekte</a>
+      <a href="mitarbeiter.html" class="nav-link"><i data-lucide="hard-hat"></i> Mitarbeiter</a>
+      <a href="schichtplan.html" class="nav-link"><i data-lucide="calendar-days"></i> Schichtplan</a>
+      <a href="zeiterfassung.html" class="nav-link"><i data-lucide="timer"></i> Zeiterfassung</a>
+      <a href="aufgaben.html" class="nav-link"><i data-lucide="check-square"></i> Aufgaben</a>
+      
+      <div class="nav-label">Operations</div>
+      <a href="finanzen.html" class="nav-link"><i data-lucide="banknote"></i> Finanzen</a>
+      <a href="rechnungen.html" class="nav-link"><i data-lucide="file-text"></i> Rechnungen</a>
+      <a href="angebote.html" class="nav-link"><i data-lucide="file-spreadsheet"></i> Angebote</a>
+      <a href="lager.html" class="nav-link"><i data-lucide="package"></i> Lager</a>
+      <a href="dokumente.html" class="nav-link active"><i data-lucide="folder"></i> Dokumente</a>
+      <a href="chat_video.html" class="nav-link"><i data-lucide="video"></i> Chat & Video</a>
+      <a href="analyse.html" class="nav-link"><i data-lucide="bar-chart-3"></i> Analyse</a>
+
+      <div class="nav-label">SaaS Admin</div>
+      <a href="saas_freischaltung.html" class="nav-link"><i data-lucide="user-plus"></i> SaaS</a>
+      <a href="tarife.html" class="nav-link"><i data-lucide="tags"></i> Tarife</a>
+      <a href="einstellungen.html" class="nav-link"><i data-lucide="settings"></i> Settings</a>
+      <a href="support.html" class="nav-link"><i data-lucide="help-circle"></i> Support</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <h2 style="margin:0;">Dokumenten-Archiv</h2>
+          <div style="display:flex; gap:10px;">
+              <button class="btn-main" onclick="document.getElementById('file_upload').click()" style="width:auto; padding:8px 20px;">+ DATEI HOCHLADEN</button>
+              <input type="file" id="file_upload" style="display:none" onchange="uploadFile()">
+          </div>
+      </div>
+
+      <div class="card-glass">
+        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:20px;" id="file-grid">
+            </div>
+        
+        <table style="margin-top:30px;">
+          <thead>
+            <tr>
+              <th>Dateiname</th>
+              <th>Kategorie</th>
+              <th>Hochgeladen am</th>
+              <th>Größe</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="document-liste">
+            </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <script src="../config.js"></script>
+  <script>
+    async function loadDocuments() {
+        // Hier ziehen wir Daten aus deiner 'documents' Tabelle
+        const { data, error } = await _supabase.from('documents').select('*').order('created_at', { ascending: false });
+        const tbody = document.getElementById('document-liste');
+
+        if(data && data.length > 0) {
+            tbody.innerHTML = data.map(doc => `
+                <tr>
+                    <td><i data-lucide="file" style="width:14px; vertical-align:middle; margin-right:5px;"></i> ${doc.name}</td>
+                    <td style="color:var(--muted);">${doc.category || 'Allgemein'}</td>
+                    <td>${new Date(doc.created_at).toLocaleDateString('de-DE')}</td>
+                    <td>${(doc.size / 1024).toFixed(1)} KB</td>
+                    <td>
+                        <a href="${doc.url}" target="_blank" style="color:var(--accent); text-decoration:none; font-size:12px; font-weight:800;">ÖFFNEN</a>
+                    </td>
+                </tr>
+            `).join('');
+            lucide.createIcons();
+        } else {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--muted);">Keine Dokumente gefunden.</td></tr>';
+        }
+    }
+
+    async function uploadFile() {
+        alert("Upload-Funktion: Hier würde die Datei in den Supabase Storage Bucket hochgeladen und der Link in die Tabelle geschrieben.");
+        // Logik für Supabase Storage: _supabase.storage.from('docs').upload(...)
+    }
+
+    document.addEventListener('DOMContentLoaded', loadDocuments);
+  </script>
+</body>
+</html>
