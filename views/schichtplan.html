@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CORE MASTER 2026 | SCHICHTPLANUNG</title>
+  
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div style="font-weight: 900; font-size: 18px; color: var(--accent);">CORE MASTER</div>
+      <div style="font-size: 10px; color: var(--muted); font-weight: 700;">EINSATZPLANUNG</div>
+    </div>
+    
+    <div class="sidebar-content">
+      <div class="nav-label">Main Console</div>
+      <a href="../admin.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+      <a href="kunden.html" class="nav-link"><i data-lucide="users"></i> Kunden</a>
+      <a href="objekte.html" class="nav-link"><i data-lucide="building-2"></i> Objekte</a>
+      <a href="mitarbeiter.html" class="nav-link"><i data-lucide="hard-hat"></i> Mitarbeiter</a>
+      <a href="schichtplan.html" class="nav-link active"><i data-lucide="calendar-days"></i> Schichtplan</a>
+      <a href="zeiterfassung.html" class="nav-link"><i data-lucide="timer"></i> Zeiterfassung</a>
+      <a href="aufgaben.html" class="nav-link"><i data-lucide="check-square"></i> Aufgaben</a>
+      
+      <div class="nav-label">Operations</div>
+      <a href="finanzen.html" class="nav-link"><i data-lucide="banknote"></i> Finanzen</a>
+      <a href="rechnungen.html" class="nav-link"><i data-lucide="file-text"></i> Rechnungen</a>
+      <a href="angebote.html" class="nav-link"><i data-lucide="file-spreadsheet"></i> Angebote</a>
+      <a href="lager.html" class="nav-link"><i data-lucide="package"></i> Lager</a>
+      <a href="dokumente.html" class="nav-link"><i data-lucide="folder"></i> Dokumente</a>
+      <a href="chat_video.html" class="nav-link"><i data-lucide="video"></i> Chat & Video</a>
+      <a href="analyse.html" class="nav-link"><i data-lucide="bar-chart-3"></i> Analyse</a>
+
+      <div class="nav-label">SaaS Admin</div>
+      <a href="saas_freischaltung.html" class="nav-link"><i data-lucide="user-plus"></i> SaaS Freischaltung</a>
+      <a href="tarife.html" class="nav-link"><i data-lucide="tags"></i> Master Tarife</a>
+      <a href="einstellungen.html" class="nav-link"><i data-lucide="settings"></i> Einstellungen</a>
+      <a href="support.html" class="nav-link"><i data-lucide="help-circle"></i> Support</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <h2 style="margin:0;">Schichtplan 2026</h2>
+          <button class="btn-main" onclick="openShiftModal()" style="width:auto; padding:8px 20px;">+ SCHICHT EINTRAGEN</button>
+      </div>
+
+      <div class="card-glass">
+        <div style="display:flex; gap:15px; margin-bottom: 20px;">
+            <div style="flex:1;">
+                <label>Objekt filtern</label>
+                <select id="filter_objekt" onchange="loadShifts()">
+                    <option value="">Alle Objekte</option>
+                </select>
+            </div>
+            <div style="flex:1;">
+                <label>Datum</label>
+                <input type="date" id="filter_date" onchange="loadShifts()">
+            </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Datum</th>
+              <th>Zeit</th>
+              <th>Objekt</th>
+              <th>Mitarbeiter</th>
+              <th>Status</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="shift-liste">
+            </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <div id="shiftModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); display:flex; align-items:center; justify-content:center; z-index:100;">
+      <div class="card-glass" style="width:450px; background:#111;">
+          <h3>Schicht zuweisen</h3>
+          <label>Datum</label>
+          <input type="date" id="s_date">
+          
+          <div style="display:flex; gap:10px;">
+            <div style="flex:1;"><label>Beginn</label><input type="time" id="s_start"></div>
+            <div style="flex:1;"><label>Ende</label><input type="time" id="s_end"></div>
+          </div>
+
+          <label>Objekt / Einsatzort</label>
+          <select id="s_objekt"></select>
+
+          <label>Mitarbeiter</label>
+          <select id="s_emp"></select>
+
+          <div style="display:flex; gap:10px; margin-top:15px;">
+              <button class="btn-main" onclick="saveShift()">PLANEN</button>
+              <button class="btn-main" onclick="closeShiftModal()" style="background:#334155;">ABBRECHEN</button>
+          </div>
+      </div>
+  </div>
+
+  <script src="../config.js"></script>
+  <script>
+    function openShiftModal() { 
+        document.getElementById('shiftModal').style.display = 'flex'; 
+        loadDropdowns();
+    }
+    function closeShiftModal() { document.getElementById('shiftModal').style.display = 'none'; }
+
+    async function loadDropdowns() {
+        const { data: objs } = await _supabase.from('objects').select('id, name');
+        const { data: emps } = await _supabase.from('employees').select('id, first_name, last_name');
+        
+        document.getElementById('s_objekt').innerHTML = objs.map(o => `<option value="${o.id}">${o.name}</option>`).join('');
+        document.getElementById('s_emp').innerHTML = emps.map(e => `<option value="${e.id}">${e.first_name} ${e.last_name}</option>`).join('');
+        
+        // Filter-Dropdown auch füllen
+        document.getElementById('filter_objekt').innerHTML = '<option value="">Alle Objekte</option>' + objs.map(o => `<option value="${o.id}">${o.name}</option>`).join('');
+    }
+
+    async function loadShifts() {
+        const objFilter = document.getElementById('filter_objekt').value;
+        const dateFilter = document.getElementById('filter_date').value;
+
+        let query = _supabase.from('shifts').select('*, objects(name), employees(first_name, last_name)');
+        
+        if(objFilter) query = query.eq('object_id', objFilter);
+        if(dateFilter) query = query.eq('date', dateFilter);
+
+        const { data, error } = await query.order('date', { ascending: true });
+
+        const tbody = document.getElementById('shift-liste');
+        if(data && data.length > 0) {
+            tbody.innerHTML = data.map(s => `
+                <tr>
+                    <td>${new Date(s.date).toLocaleDateString('de-DE')}</td>
+                    <td>${s.start_time.substring(0,5)} - ${s.end_time.substring(0,5)}</td>
+                    <td><strong>${s.objects?.name || 'Unbekannt'}</strong></td>
+                    <td>${s.employees?.first_name} ${s.employees?.last_name}</td>
+                    <td><span class="status-pill" style="border-color:var(--accent); color:var(--accent);">Geplant</span></td>
+                    <td><button onclick="deleteShift('${s.id}')" style="color:var(--danger); background:none; border:none; cursor:pointer;">LÖSCHEN</button></td>
+                </tr>
+            `).join('');
+        } else {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--muted);">Keine Schichten für diesen Zeitraum gefunden.</td></tr>';
+        }
+    }
+
+    async function saveShift() {
+        const shift = {
+            date: document.getElementById('s_date').value,
+            start_time: document.getElementById('s_start').value,
+            end_time: document.getElementById('s_end').value,
+            object_id: document.getElementById('s_objekt').value,
+            employee_id: document.getElementById('s_emp').value
+        };
+        const { error } = await _supabase.from('shifts').insert([shift]);
+        if(!error) { closeShiftModal(); loadShifts(); }
+    }
+
+    async function deleteShift(id) {
+        if(confirm("Schicht löschen?")) {
+            await _supabase.from('shifts').delete().eq('id', id);
+            loadShifts();
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadDropdowns();
+        loadShifts();
+    });
+  </script>
+</body>
+</html>
