@@ -3,68 +3,42 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CORE MASTER 2026 | OBJEKTE</title>
+  <title>CORE MASTER 2026 | OBJEKTE & GEO-CONTROL</title>
   
   <link rel="stylesheet" href="../style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
-    /* Layout Splitting */
-    .view-container {
-      display: flex;
-      gap: 20px;
-      transition: all 0.3s ease;
-      align-items: flex-start;
-    }
+    .view-container { display: flex; gap: 20px; transition: all 0.3s ease; align-items: flex-start; }
+    .list-section { flex: 1; }
 
-    .list-section { flex: 1; transition: all 0.3s ease; }
-
-    /* Das neue Formular-Panel (Slide-in Effekt) */
+    /* Side Panel Styling */
     .form-panel {
-      width: 0;
-      opacity: 0;
-      overflow: hidden;
-      background: var(--glass);
-      border: 1px solid var(--glass-border);
-      border-radius: 16px;
-      transition: all 0.3s ease;
-      position: sticky;
-      top: 20px;
+      width: 0; opacity: 0; overflow: hidden;
+      background: var(--glass); border: 1px solid var(--glass-border);
+      border-radius: 16px; transition: all 0.3s ease;
+      position: sticky; top: 20px;
     }
+    .form-panel.active { width: 450px; opacity: 1; padding: 25px; overflow-y: auto; max-height: 90vh; }
 
-    .form-panel.active {
-      width: 400px;
-      opacity: 1;
-      padding: 25px;
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
-    }
-
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .full-width { grid-column: span 2; }
 
-    label { font-size: 10px; color: var(--muted); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 5px; margin-top: 10px; }
+    label { font-size: 10px; color: var(--muted); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 4px; margin-top: 12px; }
     input, select, textarea { 
-      width: 100%; 
-      padding: 10px; 
-      background: rgba(0,0,0,0.3); 
-      border: 1px solid var(--glass-border); 
-      border-radius: 8px; 
-      color: #fff; 
-      font-size: 13px; 
+      width: 100%; padding: 10px; background: rgba(0,0,0,0.4); 
+      border: 1px solid var(--glass-border); border-radius: 8px; 
+      color: #fff; font-size: 13px; 
     }
-    textarea { resize: vertical; min-height: 80px; }
 
-    .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+    .geo-section {
+      margin-top: 15px; padding: 15px; background: rgba(var(--accent-rgb), 0.05);
+      border-radius: 10px; border: 1px dashed var(--accent);
+    }
 
-    /* Tabellen-Styling */
-    table { width: 100%; border-collapse: collapse; }
-    th { text-align: left; padding: 12px; font-size: 10px; color: var(--muted); text-transform: uppercase; border-bottom: 1px solid var(--glass-border); }
-    td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
+    /* Status Pillen */
+    .turnus-pill { font-size: 10px; padding: 2px 8px; border-radius: 4px; background: rgba(255,255,255,0.1); color: var(--accent); font-weight: 700; }
   </style>
 </head>
 <body>
@@ -72,23 +46,21 @@
   <aside class="sidebar">
     <div class="sidebar-header">
       <div style="font-weight: 900; font-size: 20px; color: var(--accent);">CORE MASTER</div>
-      <div style="font-size: 10px; color: var(--muted); font-weight: 700;">PRO-MANAGEMENT 2026</div>
+      <div style="font-size: 10px; color: var(--muted); font-weight: 700;">GEO-MANAGEMENT 2026</div>
     </div>
     <div class="sidebar-content">
       <div class="nav-label">Main Console</div>
       <a href="../admin.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a>
       <a href="kunden.html" class="nav-link"><i data-lucide="users"></i> Kunden</a>
       <a href="objekte.html" class="nav-link active"><i data-lucide="building-2"></i> Objekte</a>
-      </div>
+    </div>
   </aside>
 
   <main class="main">
     <div class="content">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h2 style="margin:0;">Objekt-Zentrum 2026</h2>
-        <button class="btn-main" id="toggleBtn" onclick="toggleForm()" style="width:auto; padding:10px 20px;">
-          <i data-lucide="plus-circle" style="width:16px; vertical-align:middle; margin-right:8px;"></i> NEUES OBJEKT
-        </button>
+        <h2 style="margin:0;">Objekt- & Standortverwaltung</h2>
+        <button class="btn-main" id="toggleBtn" onclick="toggleForm()" style="width:auto; padding:10px 20px;">+ NEUES OBJEKT</button>
       </div>
 
       <div class="view-container">
@@ -97,46 +69,72 @@
             <table>
               <thead>
                 <tr>
-                  <th>Objektname</th>
+                  <th>Objekt / Adresse</th>
                   <th>Mandant</th>
-                  <th>Standort</th>
-                  <th>Status</th>
+                  <th>Zuständig / Turnus</th>
                   <th style="text-align:right;">Aktion</th>
                 </tr>
               </thead>
-              <tbody id="objekt-liste">
-                </tbody>
+              <tbody id="objekt-liste"></tbody>
             </table>
           </div>
         </div>
 
         <div class="form-panel" id="sidePanel">
-          <h3 style="margin-top:0; color:var(--accent);">Objekt erfassen</h3>
+          <h3 style="margin-top:0; color:var(--accent);">Objektdaten 2026</h3>
           
-          <label>Name des Objekts</label>
-          <input type="text" id="o_name" placeholder="z.B. Werkschutz Süd">
+          <label>Objekt Name</label>
+          <input type="text" id="o_name" placeholder="z.B. Einkaufszentrum Mitte">
 
-          <label>Zugehöriger Mandant</label>
+          <label>Mandant / Firma</label>
           <select id="o_kunde"></select>
 
-          <label class="full-width">Adresse</label>
-          <input type="text" id="o_address" class="full-width" placeholder="Straße / Hausnummer">
+          <div class="form-grid">
+            <div class="full-width">
+              <label>Anschrift</label>
+              <input type="text" id="o_address" placeholder="Musterstraße 123">
+            </div>
+            <div><label>PLZ</label><input type="text" id="o_zip"></div>
+            <div><label>Stadt</label><input type="text" id="o_city"></div>
+          </div>
 
           <div class="form-grid">
             <div>
-              <label>PLZ</label>
-              <input type="text" id="o_zip" placeholder="12345">
+              <label>Hausmeister / Kontakt</label>
+              <input type="text" id="o_caretaker" placeholder="Name">
             </div>
             <div>
-              <label>Stadt</label>
-              <input type="text" id="o_city" placeholder="Musterstadt">
+              <label>HM-Telefon</label>
+              <input type="text" id="o_phone" placeholder="0176...">
             </div>
           </div>
 
-          <label>Notizen / Details</label>
-          <textarea id="o_notes" placeholder="Zusätzliche Infos zum Objekt..."></textarea>
+          <label>Besuchs-Turnus</label>
+          <select id="o_turnus">
+            <option value="Täglich">Täglich</option>
+            <option value="Wöchentlich">Wöchentlich</option>
+            <option value="2-Wöchentlich">2-Wöchentlich</option>
+            <option value="Monatlich">Monatlich</option>
+            <option value="Auf Abruf">Auf Abruf</option>
+          </select>
 
-          <div class="btn-group">
+          <div class="geo-section">
+            <div style="font-size: 11px; font-weight: 900; color: var(--accent); margin-bottom: 10px;">
+              <i data-lucide="map-pin" style="width:12px; height:12px;"></i> GEOFENCING (GPS-CHECK)
+            </div>
+            <div class="form-grid">
+              <div><label>Längengrad (LAT)</label><input type="text" id="o_lat" placeholder="52.5200"></div>
+              <div><label>Breitengrad (LNG)</label><input type="text" id="o_lng" placeholder="13.4050"></div>
+            </div>
+            <small style="display:block; margin-top:5px; color:var(--muted); font-size:9px;">
+              Wird für den automatischen Check-In der Mitarbeiter benötigt.
+            </small>
+          </div>
+
+          <label>Interne Notizen</label>
+          <textarea id="o_notes" placeholder="Besonderheiten (z.B. Schlüssel-Code)"></textarea>
+
+          <div class="btn-group" style="display:flex; gap:10px; margin-top:20px;">
             <button class="btn-main" onclick="saveObjekt()">SPEICHERN</button>
             <button class="btn-main" onclick="toggleForm()" style="background:#374151;">ABBRECHEN</button>
           </div>
@@ -149,18 +147,10 @@
   <script>
     lucide.createIcons();
 
-    // Panel Umschalten (Anzeigen/Verbergen)
     function toggleForm() {
       const panel = document.getElementById('sidePanel');
-      const btn = document.getElementById('toggleBtn');
       panel.classList.toggle('active');
-      
-      if(panel.classList.contains('active')) {
-        btn.style.display = 'none';
-        loadKundenDropdown();
-      } else {
-        btn.style.display = 'block';
-      }
+      if(panel.classList.contains('active')) loadKundenDropdown();
     }
 
     async function loadKundenDropdown() {
@@ -176,10 +166,15 @@
       if(data) {
         tbody.innerHTML = data.map(o => `
           <tr>
-            <td><strong>${o.name}</strong></td>
-            <td><span style="color:var(--accent);">${o.clients?.company || 'Privat'}</span></td>
-            <td>${o.city || 'Kein Ort'}</td>
-            <td><span style="font-size:10px; background:rgba(34,197,94,0.2); color:#22c55e; padding:3px 8px; border-radius:10px;">AKTIV</span></td>
+            <td>
+              <div style="font-weight:800;">${o.name}</div>
+              <div style="font-size:11px; color:var(--muted);">${o.address || ''}, ${o.city || ''}</div>
+            </td>
+            <td><span style="color:var(--accent); font-weight:700;">${o.clients?.company || 'SaaS'}</span></td>
+            <td>
+              <div style="font-size:12px;">${o.notes || 'Hausmeister n.N.'}</div>
+              <span class="turnus-pill">${o.city ? 'Standard' : 'Turnus n.V.'}</span>
+            </td>
             <td style="text-align:right;">
               <button onclick="deleteObjekt('${o.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer;"><i data-lucide="trash-2" size="16"></i></button>
             </td>
@@ -190,6 +185,7 @@
     }
 
     async function saveObjekt() {
+      // Hinweis: Stelle sicher, dass diese Spalten (caretaker, phone, lat, lng, turnus) in deiner Supabase Tabelle 'objects' existieren!
       const obj = {
         name: document.getElementById('o_name').value,
         client_id: document.getElementById('o_kunde').value,
@@ -197,15 +193,19 @@
         zip: document.getElementById('o_zip').value,
         city: document.getElementById('o_city').value,
         notes: document.getElementById('o_notes').value,
-        workspace_id: 'DEINE_WORKSPACE_ID' // Hier musst du deine Workspace-ID logik einfügen
+        // Hier fügst du die neuen Felder für die DB hinzu:
+        // caretaker: document.getElementById('o_caretaker').value,
+        // phone: document.getElementById('o_phone').value,
+        // turnus: document.getElementById('o_turnus').value,
+        // lat: document.getElementById('o_lat').value,
+        // lng: document.getElementById('o_lng').value
       };
 
       const { error } = await _supabase.from('objects').insert([obj]);
       if(!error) {
-        toggleForm();
-        loadObjekte();
+        location.reload();
       } else {
-        alert("Fehler beim Speichern!");
+        alert("Fehler: " + error.message);
       }
     }
 
