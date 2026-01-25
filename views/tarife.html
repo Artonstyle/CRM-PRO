@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CORE MASTER 2026 | MASTER TARIFE</title>
+  
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div style="font-weight: 900; font-size: 18px; color: var(--accent);">CORE MASTER</div>
+      <div style="font-size: 10px; color: var(--muted); font-weight: 700;">PRICING MANAGER</div>
+    </div>
+    
+    <div class="sidebar-content">
+      <div class="nav-label">Main Console</div>
+      <a href="../admin.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+      <a href="kunden.html" class="nav-link"><i data-lucide="users"></i> Kunden</a>
+      
+      <div class="nav-label">SaaS Administration</div>
+      <a href="saas_freischaltung.html" class="nav-link"><i data-lucide="user-plus"></i> SaaS Freischaltung</a>
+      <a href="tarife.html" class="nav-link active"><i data-lucide="tags"></i> Master Tarife</a>
+      <a href="einstellungen.html" class="nav-link"><i data-lucide="settings"></i> Einstellungen</a>
+      <a href="support.html" class="nav-link"><i data-lucide="help-circle"></i> Support</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="content">
+      <h2 style="margin-top:0;">Tarif- & Lizenzmanagement 2026</h2>
+
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+        
+        <div class="card-glass" style="border-top: 4px solid var(--muted);">
+            <h3 style="text-align:center;">BASIC</h3>
+            <div style="font-size:28px; font-weight:900; text-align:center; margin:15px 0;">€ 199,00<small style="font-size:12px; color:var(--muted);">/mtl.</small></div>
+            <ul style="list-style:none; padding:0; font-size:13px; color:var(--text); line-height:2;">
+                <li><i data-lucide="check" style="width:14px; color:var(--accent);"></i> Bis zu 10 Mitarbeiter</li>
+                <li><i data-lucide="check" style="width:14px; color:var(--accent);"></i> 5 Objekte inklusive</li>
+                <li><i data-lucide="check" style="width:14px; color:var(--accent);"></i> Zeiterfassung Basis</li>
+                <li style="color:var(--muted); text-decoration:line-through;"><i data-lucide="x" style="width:14px;"></i> Video-Chat</li>
+            </ul>
+            <button class="btn-main" style="margin-top:20px; background:var(--glass-border);">TARIF BEARBEITEN</button>
+        </div>
+
+        <div class="card-glass" style="border-top: 4px solid var(--accent); position:relative;">
+            <div style="position:absolute; top:-10px; right:10px; background:var(--accent); color:white; font-size:10px; padding:2px 8px; border-radius:10px;">BESTSELLER</div>
+            <h3 style="text-align:center;">PRO</h3>
+            <div style="font-size:28px; font-weight:900; text-align:center; margin:15px 0;">€ 499,00<small style="font-size:12px; color:var(--muted);">/mtl.</small></div>
+            <ul style="list-style:none; padding:0; font-size:13px; color:var(--text); line-height:2;">
+                <li><i data-lucide="check" style="width:14px; color:var(--accent);"></i> Bis zu 50 Mitarbeiter</li>
+                <li><i data-lucide="check" style="width:14px; color:var(--accent);"></i> Unlimitierte Objekte</li>
+                <li><i data-lucide="check" style="width:14px; color:var(--accent);"></i> Volle Analyse-Tools</li>
+                <li><i data-lucide="check" style="width:14px; color:var(--accent);"></i> Video-Chat & Support</li>
+            </ul>
+            <button class="btn-main" style="margin-top:20px;">TARIF BEARBEITEN</button>
+        </div>
+
+        <div class="card-glass" style="border-top: 4px solid var(--green);">
+            <h3 style="text-align:center;">ENTERPRISE</h3>
+            <div style="font-size:28px; font-weight:900; text-align:center; margin:15px 0;">€ 999,00<small style="font-size:12px; color:var(--muted);">/mtl.</small></div>
+            <ul style="list-style:none; padding:0; font-size:13px; color:var(--text); line-height:2;">
+                <li><i data-lucide="check" style="width:14px; color:var(--accent);"></i> Unlimitierte Mitarbeiter</li>
+                <li><i data-lucide="check" style="width:14px; color:var(--accent);"></i> Custom Branding</li>
+                <li><i data-lucide="check" style="width:14px; color:var(--accent);"></i> API Schnittstelle</li>
+                <li><i data-lucide="check" style="width:14px; color:var(--accent);"></i> 24/7 VIP Support</li>
+            </ul>
+            <button class="btn-main" style="margin-top:20px; background:var(--glass-border);">TARIF BEARBEITEN</button>
+        </div>
+
+      </div>
+
+      <div class="card-glass" style="margin-top:30px;">
+          <h3>Gutschein-Codes & Rabatte</h3>
+          <div style="display:flex; gap:10px;">
+              <input type="text" placeholder="Code (z.B. START2026)" style="margin-bottom:0;">
+              <input type="number" placeholder="Rabatt in %" style="width:120px; margin-bottom:0;">
+              <button class="btn-main" style="width:auto; padding:0 30px;">CODE ERSTELLEN</button>
+          </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="../config.js"></script>
+  <script>lucide.createIcons();</script>
+</body>
+</html>
