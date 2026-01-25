@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CORE MASTER 2026 | COMMUNICATION</title>
+  
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .chat-container { display: flex; height: 60vh; gap: 20px; }
+    .chat-sidebar { width: 250px; background: var(--glass); border-radius: 12px; padding: 15px; overflow-y: auto; }
+    .chat-main { flex: 1; background: var(--glass); border-radius: 12px; display: flex; flex-direction: column; padding: 15px; }
+    .message-list { flex: 1; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; }
+    .message { padding: 10px; border-radius: 8px; max-width: 80%; font-size: 13px; }
+    .msg-received { background: var(--glass-border); align-self: flex-start; }
+    .msg-sent { background: var(--accent); color: #fff; align-self: flex-end; }
+    .contact-item { padding: 10px; cursor: pointer; border-radius: 8px; margin-bottom: 5px; transition: 0.2s; font-size: 13px;}
+    .contact-item:hover { background: var(--glass-border); }
+    .video-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+    .video-placeholder { aspect-ratio: 16/9; background: #111; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--glass-border); }
+  </style>
+</head>
+<body>
+
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div style="font-weight: 900; font-size: 18px; color: var(--accent);">CORE MASTER</div>
+      <div style="font-size: 10px; color: var(--muted); font-weight: 700;">COM-CENTER 2026</div>
+    </div>
+    
+    <div class="sidebar-content">
+      <div class="nav-label">Main Console</div>
+      <a href="../admin.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+      <a href="kunden.html" class="nav-link"><i data-lucide="users"></i> Kunden</a>
+      <a href="objekte.html" class="nav-link"><i data-lucide="building-2"></i> Objekte</a>
+      <a href="mitarbeiter.html" class="nav-link"><i data-lucide="hard-hat"></i> Mitarbeiter</a>
+      <a href="schichtplan.html" class="nav-link"><i data-lucide="calendar-days"></i> Schichtplan</a>
+      <a href="zeiterfassung.html" class="nav-link"><i data-lucide="timer"></i> Zeiterfassung</a>
+      <a href="aufgaben.html" class="nav-link"><i data-lucide="check-square"></i> Aufgaben</a>
+      
+      <div class="nav-label">Operations</div>
+      <a href="finanzen.html" class="nav-link"><i data-lucide="banknote"></i> Finanzen</a>
+      <a href="rechnungen.html" class="nav-link"><i data-lucide="file-text"></i> Rechnungen</a>
+      <a href="angebote.html" class="nav-link"><i data-lucide="file-spreadsheet"></i> Angebote</a>
+      <a href="lager.html" class="nav-link"><i data-lucide="package"></i> Lager</a>
+      <a href="dokumente.html" class="nav-link"><i data-lucide="folder"></i> Dokumente</a>
+      <a href="chat_video.html" class="nav-link active"><i data-lucide="video"></i> Chat & Video</a>
+      <a href="analyse.html" class="nav-link"><i data-lucide="bar-chart-3"></i> Analyse</a>
+
+      <div class="nav-label">SaaS Admin</div>
+      <a href="saas_freischaltung.html" class="nav-link"><i data-lucide="user-plus"></i> SaaS</a>
+      <a href="tarife.html" class="nav-link"><i data-lucide="tags"></i> Tarife</a>
+      <a href="einstellungen.html" class="nav-link"><i data-lucide="settings"></i> Settings</a>
+      <a href="support.html" class="nav-link"><i data-lucide="help-circle"></i> Support</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="content">
+      <h2 style="margin-top:0;">Communication Hub</h2>
+      
+      <div class="chat-container">
+        <div class="chat-sidebar">
+          <h4 style="margin-top:0;">Kontakte</h4>
+          <div id="contact-list">
+            <div class="contact-item">👥 Team Chat (Global)</div>
+            <div class="contact-item">🏢 Objektleitung Mitte</div>
+          </div>
+        </div>
+
+        <div class="chat-main">
+          <div class="message-list" id="chat-messages">
+            <div class="message msg-received">System: Willkommen im Secure Chat 2026.</div>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <input type="text" id="chat-input" placeholder="Nachricht schreiben..." style="margin-bottom:0;">
+            <button class="btn-main" style="width:auto; padding:0 20px;"><i data-lucide="send"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 30px;">
+          <h3>Video Konferenz</h3>
+          <div class="video-grid">
+              <div class="video-placeholder">
+                  <div style="text-align:center; color:var(--muted);">
+                      <i data-lucide="video-off" size="48"></i><br>Kamera aus
+                  </div>
+              </div>
+              <div class="video-placeholder">
+                <button class="btn-main" style="width:auto;">Meeting starten</button>
+              </div>
+          </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="../config.js"></script>
+  <script>
+    lucide.createIcons();
+    // Hier würde später die Supabase Realtime-Logik für den Chat reinkommen
+  </script>
+</body>
+</html>
