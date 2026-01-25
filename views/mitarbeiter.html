@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <title>CORE MASTER 2026 | PERSONAL</title>
+  <title>CORE MASTER 2026 | Mitarbeiter</title>
   <link rel="stylesheet" href="../style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -11,74 +11,62 @@
     body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
     
     .sidebar { width: 260px; border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; background: #000; height: 100vh; }
-    .custom-scrollbar { overflow-y: auto; flex: 1; padding-right: 5px; }
+    .sidebar-content { overflow-y: auto; flex: 1; padding-right: 5px; }
     .nav-link { display: flex; align-items: center; gap: 10px; color: #aaa; text-decoration: none; padding: 10px; border-radius: 8px; font-size: 14px; }
-    .nav-link.active { color: white; background: rgba(37, 99, 235, 0.1); border: 1px solid rgba(37, 99, 235, 0.2); }
-    .nav-group { font-size: 10px; color: #444; font-weight: 800; padding: 15px 12px 5px; text-transform: uppercase; }
+    .nav-link:hover { color: #fff; background: rgba(255,255,255,0.03); }
+    .nav-link.active { color: white; background: var(--accent); }
+    .nav-label { font-size: 10px; color: #444; font-weight: 800; padding: 15px 12px 5px; text-transform: uppercase; }
 
-    .main-content { flex: 1; overflow-y: auto; padding: 40px; }
-    .creation-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 25px; margin-bottom: 30px; }
-    .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
-    .field { display: flex; flex-direction: column; gap: 5px; }
-    label { font-size: 10px; font-weight: 800; color: #555; text-transform: uppercase; }
-    input, select { background: #000; border: 1px solid var(--border); padding: 12px; border-radius: 8px; color: #fff; }
-    
-    .btn-main { background: var(--accent); color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 700; cursor: pointer; }
-    .table-container { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+    .main { flex: 1; overflow-y: auto; padding: 40px; }
+    .table-container { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
     table { width: 100%; border-collapse: collapse; }
-    th { background: rgba(255,255,255,0.02); padding: 15px 20px; text-align: left; font-size: 11px; color: #444; text-transform: uppercase; }
-    td { padding: 18px 20px; border-top: 1px solid var(--border); font-size: 14px; }
+    th { background: rgba(255,255,255,0.02); padding: 15px; text-align: left; font-size: 11px; color: #444; }
+    td { padding: 15px; border-top: 1px solid var(--border); font-size: 14px; }
   </style>
 </head>
 <body>
 
   <aside class="sidebar">
-    <div style="font-weight: 900; font-size: 20px; color: var(--accent); margin-bottom: 30px; padding-left: 10px;">CORE MASTER</div>
-    <nav class="custom-scrollbar">
-      <div class="nav-group">Zentrale</div>
+    <div style="padding: 10px 12px 30px;">
+      <div style="font-weight: 900; font-size: 20px; color: var(--accent);">CORE MASTER</div>
+      <div style="font-size: 10px; color: #444; font-weight: 700;">ENTERPRISE CRM 2026</div>
+    </div>
+    
+    <div class="sidebar-content">
+      <div class="nav-label">Main Console</div>
       <a href="../admin.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a>
-      <a href="live-monitor.html" class="nav-link"><i data-lucide="activity"></i> Live-Monitor</a>
-      <div class="nav-group">CRM & Objekte</div>
       <a href="kunden.html" class="nav-link"><i data-lucide="users"></i> Kunden</a>
       <a href="objekte.html" class="nav-link"><i data-lucide="building-2"></i> Objekte</a>
-      <a href="geofencing.html" class="nav-link"><i data-lucide="map-pin"></i> Geofencing</a>
-      <div class="nav-group">Personal</div>
       <a href="mitarbeiter.html" class="nav-link active"><i data-lucide="hard-hat"></i> Mitarbeiter</a>
-      <a href="schichtplan.html" class="nav-link"><i data-lucide="calendar"></i> Schichtplan</a>
-      <a href="zeiterfassung.html" class="nav-link"><i data-lucide="clock"></i> Zeiterfassung</a>
-      <a href="lohn.html" class="nav-link"><i data-lucide="wallet"></i> Lohnabrechnung</a>
-      <div class="nav-group">Einsatz</div>
-      <a href="wachbuch.html" class="nav-link"><i data-lucide="book-open"></i> Wachbuch</a>
-      <a href="ereignisse.html" class="nav-link"><i data-lucide="alert-triangle"></i> Ereignisse</a>
-      <a href="rundgaenge.html" class="nav-link"><i data-lucide="navigation"></i> Rundgänge</a>
-      <a href="schlussel.html" class="nav-link"><i data-lucide="key"></i> Schlüssel</a>
-      <div class="nav-group">Backoffice</div>
-      <a href="angebote.html" class="nav-link"><i data-lucide="file-text"></i> Angebote</a>
-      <a href="rechnungen.html" class="nav-link"><i data-lucide="credit-card"></i> Rechnungen</a>
-      <a href="dokumente.html" class="nav-link"><i data-lucide="folder-closed"></i> Dokumente</a>
-      <div class="nav-group">System</div>
-      <a href="einstellungen.html" class="nav-link"><i data-lucide="settings"></i> Einstellungen</a>
-    </nav>
+      <a href="schichtplan.html" class="nav-link"><i data-lucide="calendar-days"></i> Schichtplan</a>
+      <a href="zeiterfassung.html" class="nav-link"><i data-lucide="timer"></i> Zeiterfassung</a>
+      <a href="aufgaben.html" class="nav-link"><i data-lucide="check-square"></i> Aufgaben</a>
+      
+      <div class="nav-group">Operations</div>
+      <a href="finanzen.html" class="nav-link"><i data-lucide="banknote"></i> Finanzen</a>
+      <a href="rechnungen.html" class="nav-link"><i data-lucide="file-text"></i> Rechnungen</a>
+      <a href="angebote.html" class="nav-link"><i data-lucide="file-spreadsheet"></i> Angebote</a>
+      <a href="lager.html" class="nav-link"><i data-lucide="package"></i> Lager</a>
+      <a href="dokumente.html" class="nav-link"><i data-lucide="folder"></i> Dokumente</a>
+      <a href="chat_video.html" class="nav-link"><i data-lucide="video"></i> Chat & Video</a>
+      <a href="analyse.html" class="nav-link"><i data-lucide="bar-chart-3"></i> Analyse</a>
+
+      <div class="nav-label">SaaS Admin</div>
+      <a href="saas_freischaltung.html" class="nav-link"><i data-lucide="user-plus"></i> SaaS</a>
+      <a href="tarife.html" class="nav-link"><i data-lucide="tags"></i> Tarife</a>
+      <a href="einstellungen.html" class="nav-link"><i data-lucide="settings"></i> Settings</a>
+      <a href="support.html" class="nav-link"><i data-lucide="help-circle"></i> Support</a>
+    </div>
   </aside>
 
-  <main class="main-content">
+  <main class="main">
     <header style="margin-bottom:30px;">
-      <h1 style="font-size:32px; letter-spacing:-1.5px;">Mitarbeiter-Stamm</h1>
-      <p style="color:#555;">Zentrale Personalverwaltung 2026</p>
+      <h1 style="font-size:24px; font-weight:800;">PERSONALÜBERSICHT</h1>
     </header>
-
-    <section class="creation-card">
-      <div class="form-grid">
-        <div class="field"><label>Vorname</label><input type="text" id="m_vn"></div>
-        <div class="field"><label>Nachname</label><input type="text" id="m_nn"></div>
-        <div class="field"><label>Funktion</label><input type="text" id="m_role" placeholder="z.B. Revierfahrer"></div>
-        <div class="field"><label>Aktion</label><button class="btn-main" onclick="saveStaff()">HINZUFÜGEN</button></div>
-      </div>
-    </section>
 
     <div class="table-container">
       <table>
-        <thead><tr><th>Name</th><th>Funktion</th><th>Status</th><th style="text-align:right;">Optionen</th></tr></thead>
+        <thead><tr><th>Name</th><th>Rolle</th><th>Status</th></tr></thead>
         <tbody id="mitarbeiter-liste"></tbody>
       </table>
     </div>
@@ -87,31 +75,12 @@
   <script src="../config.js"></script>
   <script>
     lucide.createIcons();
-    const WS_ID = '8648e581-297d-419b-9c71-292418e26895';
-
     async function loadStaff() {
       const { data } = await _supabase.from('employees').select('*');
       document.getElementById('mitarbeiter-liste').innerHTML = data.map(m => `
-        <tr>
-          <td><strong>${m.first_name} ${m.last_name}</strong></td>
-          <td style="color:#aaa;">${m.role || '-'}</td>
-          <td><span style="color:#22c55e;">● Aktiv</span></td>
-          <td style="text-align:right;"><button style="background:none; border:none; color:#444;"><i data-lucide="trash-2"></i></button></td>
-        </tr>
+        <tr><td><strong>${m.first_name} ${m.last_name}</strong></td><td>${m.role || '-'}</td><td><span style="color:#22c55e">Aktiv</span></td></tr>
       `).join('');
-      lucide.createIcons();
     }
-
-    async function saveStaff() {
-      await _supabase.from('employees').insert([{
-        first_name: document.getElementById('m_vn').value,
-        last_name: document.getElementById('m_nn').value,
-        role: document.getElementById('m_role').value,
-        workspace_id: WS_ID
-      }]);
-      loadStaff();
-    }
-
     document.addEventListener('DOMContentLoaded', loadStaff);
   </script>
 </body>
