@@ -2,96 +2,128 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <title>CORE MASTER 2026 | INTELLIGENT OBJECTS</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CORE MASTER 2026 | OBJECT ENGINE</title>
   <link rel="stylesheet" href="../style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     :root { --accent: #2563eb; --bg: #050505; --card: #0d0d0d; --border: rgba(255,255,255,0.08); }
-    body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; margin: 0; display: flex; height: 100vh; }
+    body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
     
-    .main-content { flex: 1; overflow-y: auto; padding: 40px; }
+    /* Sidebar Korrektur */
+    .sidebar { width: 260px; border-right: 1px solid var(--border); padding: 25px; display: flex; flex-direction: column; }
+    .main-content { flex: 1; overflow-y: auto; padding: 40px; background: #000; }
 
-    /* Such-Zentrale oben */
+    /* Smart Search Area */
     .search-section { 
       background: var(--card); border: 1px solid var(--border); border-radius: 20px; 
-      padding: 30px; margin-bottom: 30px; position: relative;
+      padding: 30px; margin-bottom: 30px; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.4);
     }
 
-    /* Autocomplete Vorschlagsliste */
     #autocomplete-results {
-      position: absolute; top: 90px; left: 30px; width: calc(100% - 60px);
-      background: #1a1a1a; border: 1px solid #333; border-radius: 8px;
-      z-index: 1000; display: none; max-height: 250px; overflow-y: auto;
+      position: absolute; top: 95px; left: 30px; width: calc(100% - 60px);
+      background: #111; border: 1px solid #333; border-radius: 12px;
+      z-index: 1000; display: none; max-height: 250px; overflow-y: auto; box-shadow: 0 10px 30px #000;
     }
-    .result-item { padding: 12px 20px; cursor: pointer; border-bottom: 1px solid #222; }
-    .result-item:hover { background: #2563eb; }
+    .result-item { padding: 15px 20px; cursor: pointer; border-bottom: 1px solid #222; font-size: 14px; }
+    .result-item:hover { background: var(--accent); color: white; }
 
-    /* Formular Grid */
-    .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 20px; }
-    .field { display: flex; flex-direction: column; gap: 5px; }
-    label { font-size: 10px; font-weight: 800; color: #555; text-transform: uppercase; }
-    input, select { background: #000; border: 1px solid var(--border); padding: 10px; border-radius: 6px; color: #fff; }
-    
-    /* GPS Badge */
-    .gps-badge { 
-        background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid #22c55e;
-        padding: 10px; border-radius: 8px; display: flex; align-items: center; gap: 8px; font-size: 12px;
+    /* Formular */
+    .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 25px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 10px; font-weight: 800; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
+    input, select { background: #000; border: 1px solid var(--border); padding: 12px; border-radius: 8px; color: #fff; font-size: 14px; }
+    input:focus { border-color: var(--accent); outline: none; }
+
+    /* Geofencing Status mit pulsierendem Punkt */
+    .geo-status-box { 
+        background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+        padding: 12px; border-radius: 10px; display: flex; align-items: center; justify-content: space-between;
     }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #444; transition: 0.3s; }
+    .status-active { 
+        background: #22c55e; 
+        box-shadow: 0 0 12px #22c55e; 
+        animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
-    .btn-save { background: var(--accent); color: #fff; border: none; padding: 12px 25px; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 20px; }
+    .btn-save { background: var(--accent); color: #fff; border: none; padding: 15px; border-radius: 10px; font-weight: 800; cursor: pointer; width: 100%; margin-top: 25px; transition: 0.2s; }
+    .btn-save:hover { background: #1d4ed8; transform: translateY(-1px); }
+
+    /* Tabelle */
+    .table-container { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: rgba(255,255,255,0.02); padding: 15px 20px; text-align: left; font-size: 11px; color: #444; text-transform: uppercase; }
+    td { padding: 18px 20px; border-top: 1px solid var(--border); font-size: 14px; }
   </style>
 </head>
 <body>
 
+  <aside class="sidebar">
+    <div style="font-weight: 900; font-size: 22px; color: var(--accent); margin-bottom: 40px; letter-spacing: -1px;">CORE MASTER</div>
+    <nav style="display: flex; flex-direction: column; gap: 8px;">
+      <a href="../admin.html" class="nav-link" style="color:#555; text-decoration:none; padding:12px;"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+      <a href="kunden.html" class="nav-link" style="color:#555; text-decoration:none; padding:12px;"><i data-lucide="users"></i> Kunden</a>
+      <a href="objekte.html" class="nav-link active" style="color:white; text-decoration:none; padding:12px; background:rgba(255,255,255,0.05); border-radius:10px;"><i data-lucide="building-2"></i> Objekte</a>
+      <a href="mitarbeiter.html" class="nav-link" style="color:#555; text-decoration:none; padding:12px;"><i data-lucide="hard-hat"></i> Mitarbeiter</a>
+      <a href="schichtplan.html" class="nav-link" style="color:#555; text-decoration:none; padding:12px;"><i data-lucide="calendar"></i> Schichtplan</a>
+      <div style="margin-top:20px; border-top:1px solid #111; padding-top:20px;">
+        <a href="einstellungen.html" class="nav-link" style="color:#555; text-decoration:none; padding:12px;"><i data-lucide="settings"></i> Einstellungen</a>
+      </div>
+    </nav>
+  </aside>
+
   <main class="main-content">
-    <header style="margin-bottom: 30px;">
-      <h1 style="font-size: 30px; margin: 0; letter-spacing: -1px;">Objekt-Intelligence 2026</h1>
-      <p style="color: #666;">Tippen Sie den Namen eines Standorts – den Rest erledigt das System.</p>
+    <header style="margin-bottom: 30px; display:flex; justify-content:space-between; align-items:flex-end;">
+      <div>
+        <h1 style="font-size: 32px; margin: 0; letter-spacing: -1.5px;">Objekt-Intelligence</h1>
+        <p style="color: #555; margin-top:5px;">Echtzeit-Standorterfassung & Geofencing 2026</p>
+      </div>
+      <div class="geo-status-box" style="min-width: 200px;">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <div id="pulse-dot" class="status-dot"></div>
+            <span id="geo-text" style="font-size:11px; font-weight:700; color:#555;">GEOFENCE INAKTIV</span>
+        </div>
+      </div>
     </header>
 
     <section class="search-section">
       <div class="field">
-        <label>Smart Search (Objekt-Name oder Adresse)</label>
-        <input type="text" id="smart-search" placeholder="z.B. Lidl Hemsbach..." oninput="searchLocation(this.value)" autocomplete="off" style="font-size: 18px; padding: 15px; border-color: #333;">
+        <label>Smart Search (Google-Style)</label>
+        <input type="text" id="smart-search" placeholder="Suche nach Name oder Adresse (z.B. Lidl Hemsbach)..." oninput="searchLocation(this.value)" autocomplete="off" style="font-size: 16px; padding: 15px; border-color: #222; background:#000;">
         <div id="autocomplete-results"></div>
       </div>
 
       <div class="form-grid">
         <input type="hidden" id="o_id">
-        <div class="field"><label>Name</label><input type="text" id="o_name"></div>
-        <div class="field"><label>Straße / Nr.</label><input type="text" id="o_street"></div>
+        <div class="field"><label>Objekt Name</label><input type="text" id="o_name"></div>
+        <div class="field"><label>Straße / Hausnr.</label><input type="text" id="o_street"></div>
         <div class="field"><label>PLZ</label><input type="text" id="o_zip"></div>
         <div class="field"><label>Stadt</label><input type="text" id="o_city"></div>
         
-        <div class="field"><label>Kunde</label><select id="o_kunde"></select></div>
-        <div class="field"><label>Turnus</label>
-            <select id="o_turnus">
-                <option>Täglich</option><option>Wöchentlich</option>
-            </select>
+        <div class="field"><label>Mandant / Kunde</label><select id="o_kunde"></select></div>
+        <div class="field" style="grid-column: span 3;">
+            <label>Turnus / Notiz (z.B. Täglich, Mo-Fr, Nachtschicht...)</label>
+            <input type="text" id="o_turnus" placeholder="Turnus oder spezielle Anweisungen eingeben...">
         </div>
-        <div class="field" style="grid-column: span 2;">
-            <label>Geofencing Status</label>
-            <div class="gps-badge">
-                <i data-lucide="shield-check"></i>
-                GPS Fix: <span id="gps-display">Warte auf Eingabe...</span>
-                <input type="hidden" id="o_lat">
-                <input type="hidden" id="o_lng">
-            </div>
-        </div>
+        
+        <input type="hidden" id="o_lat">
+        <input type="hidden" id="o_lng">
       </div>
-      <button class="btn-save" onclick="saveObjekt()">OBJEKT IM SYSTEM SPEICHERN</button>
+      <button class="btn-save" onclick="saveObjekt()">OBJEKT SYSTEMWEIT SPEICHERN</button>
     </section>
 
-    <div style="background: var(--card); border: 1px solid var(--border); border-radius: 15px; overflow: hidden;">
-      <table style="width: 100%; border-collapse: collapse;">
-        <thead style="background: #0a0a0a;">
-          <tr style="text-align: left; font-size: 11px; color: #444;">
-            <th style="padding: 15px;">OBJEKT</th>
-            <th>STADT</th>
-            <th>KUNDE</th>
-            <th>TURNUS</th>
-            <th style="text-align: right; padding-right: 15px;">AKTION</th>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Objekt / Adresse</th>
+            <th>Stadt</th>
+            <th>Kunde</th>
+            <th>Turnus-Notiz</th>
+            <th style="text-align: right; padding-right:20px;">Aktion</th>
           </tr>
         </thead>
         <tbody id="objekt-liste"></tbody>
@@ -104,15 +136,12 @@
     lucide.createIcons();
     const WS_ID = '8648e581-297d-419b-9c71-292418e26895';
 
-    // GOOGLE-STYLE LOCATION SEARCH
     async function searchLocation(query) {
       const resultsDiv = document.getElementById('autocomplete-results');
       if (query.length < 3) { resultsDiv.style.display = 'none'; return; }
-
       try {
         const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5&lang=de`);
         const data = await res.json();
-        
         resultsDiv.innerHTML = data.features.map(f => {
           const p = f.properties;
           const label = `${p.name || ''} ${p.street || ''} ${p.housenumber || ''}, ${p.postcode || ''} ${p.city || ''}`;
@@ -125,7 +154,6 @@
     function selectLocation(feature) {
       const p = feature.properties;
       const coords = feature.geometry.coordinates;
-
       document.getElementById('o_name').value = p.name || "";
       document.getElementById('o_street').value = (p.street || "") + " " + (p.housenumber || "");
       document.getElementById('o_zip').value = p.postcode || "";
@@ -133,26 +161,30 @@
       document.getElementById('o_lat').value = coords[1];
       document.getElementById('o_lng').value = coords[0];
       
-      document.getElementById('gps-display').innerText = `${coords[1].toFixed(4)}, ${coords[0].toFixed(4)}`;
+      // Grüner Punkt Aktivierung
+      document.getElementById('pulse-dot').classList.add('status-active');
+      document.getElementById('geo-text').innerText = "GEOFENCE AKTIVIERT";
+      document.getElementById('geo-text').style.color = "#22c55e";
+
       document.getElementById('autocomplete-results').style.display = 'none';
       document.getElementById('smart-search').value = p.name || p.city;
     }
 
     async function loadKunden() {
       const { data } = await _supabase.from('customers').select('id, company');
-      document.getElementById('o_kunde').innerHTML = data.map(k => `<option value="${k.id}">${k.company}</option>`).join('');
+      if(data) document.getElementById('o_kunde').innerHTML = data.map(k => `<option value="${k.id}">${k.company}</option>`).join('');
     }
 
     async function loadObjekte() {
       const { data } = await _supabase.from('objects').select('*, customers(company)').order('created_at', {ascending: false});
       document.getElementById('objekt-liste').innerHTML = data.map(o => `
-        <tr style="border-top: 1px solid var(--border);">
-          <td style="padding: 15px;"><strong>${o.name}</strong><br><small style="color:#444">${o.address || ''}</small></td>
+        <tr>
+          <td><strong style="color:white">${o.name}</strong><br><small style="color:#444">${o.address || ''}</small></td>
           <td>${o.city || '-'}</td>
-          <td>${o.customers?.company || 'Privat'}</td>
-          <td>${o.turnus}</td>
-          <td style="text-align: right; padding-right: 15px;">
-            <button onclick="deleteObjekt('${o.id}')" style="background:none; border:none; color:red; cursor:pointer;"><i data-lucide="trash-2" size="16"></i></button>
+          <td style="color:#aaa">${o.customers?.company || 'Privat'}</td>
+          <td style="font-style:italic; color:#666">${o.turnus || '-'}</td>
+          <td style="text-align: right; padding-right:20px;">
+            <button onclick="deleteObjekt('${o.id}')" style="background:none; border:none; color:#333; cursor:pointer;"><i data-lucide="trash-2" size="16"></i></button>
           </td>
         </tr>
       `).join('');
@@ -171,9 +203,15 @@
         lng: parseFloat(document.getElementById('o_lng').value),
         workspace_id: WS_ID
       };
-
       const { error } = await _supabase.from('objects').insert([payload]);
-      if(!error) location.reload(); else alert(error.message);
+      if(!error) location.reload(); else alert("Fehler: " + error.message);
+    }
+
+    async function deleteObjekt(id) {
+        if(confirm("Objekt endgültig löschen?")) {
+            await _supabase.from('objects').delete().eq('id', id);
+            loadObjekte();
+        }
     }
 
     document.addEventListener('DOMContentLoaded', () => { loadKunden(); loadObjekte(); });
