@@ -3,22 +3,65 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CORE MASTER 2026 | Personalverwaltung</title>
-  
+  <title>CORE MASTER 2026 | Mitarbeiter</title>
   <link rel="stylesheet" href="../style.css">
-  
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-
   <style>
-    /* Ergänzende Hilfsklassen für das Grid-System */
-    .form-section { margin-bottom: 25px; }
-    .form-section-title { font-size: 11px; font-weight: 800; color: var(--accent); text-transform: uppercase; margin-bottom: 15px; letter-spacing: 1px; border-bottom: 1px solid var(--glass-border); padding-bottom: 5px; }
-    .input-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-    .field-box { display: flex; flex-direction: column; gap: 5px; }
-    .field-box label { font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase; }
-    .field-box input, .field-box select, .field-box textarea { background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); color: white; padding: 10px; border-radius: 8px; font-size: 13px; }
-    .field-box input:focus { border-color: var(--accent); outline: none; }
+    /* Spezifisches Layout für die Side-Panel Struktur */
+    .employee-grid {
+      display: grid;
+      grid-template-columns: 1fr 400px; /* Hauptliste | Eingabe-Panel */
+      gap: 20px;
+      align-items: start;
+    }
+
+    /* Foto-Upload Area Style wie im Screenshot */
+    .photo-upload {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.03);
+      border: 2px dashed var(--glass-border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      margin-bottom: 20px;
+      transition: 0.2s;
+    }
+    .photo-upload:hover { border-color: var(--accent); background: rgba(37,99,235,0.05); }
+    .photo-upload span { font-size: 8px; color: var(--muted); text-transform: uppercase; margin-top: 5px; }
+
+    .input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+    
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 10px; font-weight: 800; color: var(--muted); text-transform: uppercase; }
+    .field input, .field select { 
+      background: rgba(0,0,0,0.2); 
+      border: 1px solid var(--glass-border); 
+      color: white; 
+      padding: 10px; 
+      border-radius: 8px; 
+      font-size: 13px;
+    }
+    .field input:focus { border-color: var(--accent); outline: none; }
+
+    /* Mitarbeiter Karte in der Liste */
+    .member-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px;
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .member-info { display: flex; align-items: center; gap: 12px; }
+    .avatar-circle {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--accent); display: flex; align-items: center;
+      justify-content: center; font-weight: 900; font-size: 12px;
+    }
   </style>
 </head>
 <body>
@@ -28,7 +71,6 @@
       <div style="font-weight: 900; font-size: 20px; color: var(--accent);">CORE MASTER</div>
       <div style="font-size: 10px; color: var(--muted); font-weight: 700;">ENTERPRISE CRM 2026</div>
     </div>
-    
     <div class="sidebar-content">
       <div class="nav-label">Main Console</div>
       <a href="../admin.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a>
@@ -38,7 +80,6 @@
       <a href="schichtplan.html" class="nav-link"><i data-lucide="calendar-days"></i> Schichtplan</a>
       <a href="zeiterfassung.html" class="nav-link"><i data-lucide="timer"></i> Zeiterfassung</a>
       <a href="aufgaben.html" class="nav-link"><i data-lucide="check-square"></i> Aufgaben</a>
-      
       <div class="nav-label">Operations</div>
       <a href="finanzen.html" class="nav-link"><i data-lucide="banknote"></i> Finanzen</a>
       <a href="rechnungen.html" class="nav-link"><i data-lucide="file-text"></i> Rechnungen</a>
@@ -47,7 +88,6 @@
       <a href="dokumente.html" class="nav-link"><i data-lucide="folder"></i> Dokumente</a>
       <a href="chat_video.html" class="nav-link"><i data-lucide="video"></i> Chat & Video</a>
       <a href="analyse.html" class="nav-link"><i data-lucide="bar-chart-3"></i> Analyse</a>
-
       <div class="nav-label">SaaS Admin</div>
       <a href="saas_freischaltung.html" class="nav-link"><i data-lucide="user-plus"></i> SaaS</a>
       <a href="tarife.html" class="nav-link"><i data-lucide="tags"></i> Tarife</a>
@@ -58,70 +98,75 @@
 
   <main class="main">
     <header class="header">
-      <h1 style="font-size: 20px; font-weight: 800;">PERSONALVERWALTUNG 2026</h1>
-      <button class="theme-btn" onclick="toggleAddForm()">+ MITARBEITER ANLEGEN</button>
+      <h1 style="font-size: 20px; font-weight: 800;">MITARBEITER VERWALTUNG</h1>
     </header>
 
-    <div class="content">
+    <div class="content employee-grid">
       
-      <section id="addStaffForm" class="card-glass" style="display: none; padding: 25px; margin-bottom: 30px; border-top: 3px solid var(--accent);">
-        
-        <div class="form-section">
-          <div class="form-section-title">Stammdaten & Kontakt</div>
-          <div class="input-group">
-            <div class="field-box"><label>Vorname</label><input type="text" id="m_first_name"></div>
-            <div class="field-box"><label>Nachname</label><input type="text" id="m_last_name"></div>
-            <div class="field-box"><label>E-Mail (Login)</label><input type="email" id="m_email"></div>
-            <div class="field-box"><label>Telefon</label><input type="text" id="m_phone"></div>
-            <div class="field-box"><label>Notfallnummer</label><input type="text" id="m_emergency"></div>
-          </div>
+      <div class="card-glass" style="padding: 0;">
+        <div style="padding: 20px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="font-size: 14px;">Aktives Personal</h3>
+            <span id="count" style="background: var(--accent); padding: 2px 8px; border-radius: 10px; font-size: 10px;">0</span>
         </div>
-
-        <div class="form-section">
-          <div class="form-section-title">Anschrift</div>
-          <div class="input-group">
-            <div class="field-box" style="grid-column: span 2;"><label>Straße / Nr.</label><input type="text" id="m_address"></div>
-            <div class="field-box"><label>PLZ</label><input type="text" id="m_zip"></div>
-            <div class="field-box"><label>Stadt</label><input type="text" id="m_city"></div>
+        <div id="staff-list">
           </div>
-        </div>
+      </div>
 
-        <div class="form-section">
-          <div class="form-section-title">Sozial & Abrechnung</div>
-          <div class="input-group">
-            <div class="field-box"><label>Steuer-ID</label><input type="text" id="m_tax_id"></div>
-            <div class="field-box"><label>Krankenkasse</label><input type="text" id="m_health"></div>
-            <div class="field-box"><label>SV-Nummer</label><input type="text" id="m_insurance_num"></div>
-            <div class="field-box"><label>Familienstand</label>
-              <select id="m_marital">
-                <option>Ledig</option>
-                <option>Verheiratet</option>
-                <option>Geschieden</option>
-              </select>
+      <div class="card-glass" style="padding: 25px; position: sticky; top: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div class="photo-upload" onclick="alert('Upload coming soon...')">
+                <i data-lucide="upload-cloud" size="20" style="color: var(--accent);"></i>
+                <span>Foto</span>
             </div>
-            <div class="field-box"><label>Kinder</label><input type="number" id="m_children" value="0"></div>
+            <div style="text-align: right;">
+                <h3 style="font-size: 16px; margin: 0;">Neuer Mitarbeiter</h3>
+                <p style="font-size: 10px; color: var(--muted);">Profil vervollständigen</p>
+            </div>
+        </div>
+
+        <div class="input-row">
+          <div class="field"><label>Vorname *</label><input type="text" id="m_vn"></div>
+          <div class="field"><label>Nachname *</label><input type="text" id="m_nn"></div>
+        </div>
+
+        <div class="input-row">
+          <div class="field"><label>Personalnummer</label><input type="text" id="m_pnr" placeholder="E001"></div>
+          <div class="field"><label>E-Mail</label><input type="email" id="m_mail"></div>
+        </div>
+
+        <div class="input-row">
+          <div class="field"><label>Telefon</label><input type="text" id="m_phone"></div>
+          <div class="field">
+            <label>Position</label>
+            <select id="m_pos">
+                <option>Sicherheitskraft</option>
+                <option>Revierfahrer</option>
+                <option>Einsatzleitung</option>
+                <option>Reinigungskraft</option>
+            </select>
           </div>
         </div>
 
-        <div style="display: flex; gap: 10px; margin-top: 20px;">
-          <button class="theme-btn" onclick="saveStaff()">DATENSATZ SPEICHERN</button>
-          <button class="theme-btn" style="background: rgba(255,255,255,0.05);" onclick="toggleAddForm()">ABBRECHEN</button>
+        <div class="input-row">
+          <div class="field">
+            <label>Beschäftigung</label>
+            <select id="m_type">
+                <option>Vollzeit</option>
+                <option>Teilzeit</option>
+                <option>Minijob</option>
+            </select>
+          </div>
+          <div class="field"><label>Stundenlohn (€)</label><input type="number" id="m_wage" step="0.50"></div>
         </div>
-      </section>
 
-      <div class="card-glass">
-        <table style="width: 100%; border-collapse: collapse;">
-          <thead>
-            <tr style="border-bottom: 1px solid var(--glass-border); text-align: left;">
-              <th style="padding: 15px; font-size: 11px; color: var(--muted);">MITARBEITER</th>
-              <th style="padding: 15px; font-size: 11px; color: var(--muted);">KONTAKT</th>
-              <th style="padding: 15px; font-size: 11px; color: var(--muted);">STEUER / SV</th>
-              <th style="padding: 15px; font-size: 11px; color: var(--muted); text-align: right;">AKTION</th>
-            </tr>
-          </thead>
-          <tbody id="staff-table-body">
-            </tbody>
-        </table>
+        <div class="field" style="margin-bottom: 15px;">
+            <label>Adresse</label>
+            <input type="text" id="m_addr" placeholder="Straße, Hausnummer, PLZ, Ort">
+        </div>
+
+        <button class="theme-btn" style="width: 100%; padding: 12px; margin-top: 10px;" onclick="saveStaff()">
+            MITARBEITER SPEICHERN
+        </button>
       </div>
 
     </div>
@@ -132,70 +177,49 @@
     lucide.createIcons();
     const WS_ID = '8648e581-297d-419b-9c71-292418e26895';
 
-    function toggleAddForm() {
-      const f = document.getElementById('addStaffForm');
-      f.style.display = f.style.display === 'none' ? 'block' : 'none';
-      if(f.style.display === 'block') window.scrollTo({top: 0, behavior: 'smooth'});
-    }
-
     async function loadStaff() {
-      const { data, error } = await _supabase.from('employees').select('*').order('created_at', {ascending: false});
-      if(error) return;
-
-      const tbody = document.getElementById('staff-table-body');
-      tbody.innerHTML = data.map(m => `
-        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-          <td style="padding: 15px;">
-            <div style="font-weight: 800; color: white;">${m.first_name} ${m.last_name}</div>
-            <div style="font-size: 10px; color: var(--accent);">${m.city || 'Kein Ort'}</div>
-          </td>
-          <td style="padding: 15px; font-size: 13px;">
-            <div>${m.email}</div>
-            <div style="color: var(--muted); font-size: 11px;">${m.phone || '-'}</div>
-          </td>
-          <td style="padding: 15px; font-size: 11px; color: var(--muted);">
-            ID: ${m.tax_id || '-'}<br>SV: ${m.insurance_number || '-'}
-          </td>
-          <td style="padding: 15px; text-align: right;">
-            <button onclick="deleteStaff('${m.id}')" style="background:none; border:none; color:rgba(255,255,255,0.2); cursor:pointer;">
-              <i data-lucide="trash-2" size="16"></i>
-            </button>
-          </td>
-        </tr>
+      const { data } = await _supabase.from('employees').select('*').order('created_at', {ascending: false});
+      document.getElementById('count').innerText = data.length;
+      document.getElementById('staff-list').innerHTML = data.map(m => `
+        <div class="member-card">
+          <div class="member-info">
+            <div class="avatar-circle">${m.first_name[0]}${m.last_name[0]}</div>
+            <div>
+                <div style="font-weight: 700; font-size: 14px;">${m.first_name} ${m.last_name}</div>
+                <div style="font-size: 11px; color: var(--muted);">${m.role || 'Mitarbeiter'}</div>
+            </div>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button onclick="deleteStaff('${m.id}')" style="background:none; border:none; color:var(--muted); cursor:pointer;"><i data-lucide="trash-2" size="14"></i></button>
+          </div>
+        </div>
       `).join('');
       lucide.createIcons();
     }
 
     async function saveStaff() {
-      const payload = {
-        workspace_id: WS_ID,
-        first_name: document.getElementById('m_first_name').value,
-        last_name: document.getElementById('m_last_name').value,
-        email: document.getElementById('m_email').value,
-        phone: document.getElementById('m_phone').value,
-        emergency_phone: document.getElementById('m_emergency').value,
-        address: document.getElementById('m_address').value,
-        zip: document.getElementById('m_zip').value,
-        city: document.getElementById('m_city').value,
-        tax_id: document.getElementById('m_tax_id').value,
-        health_insurance: document.getElementById('m_health').value,
-        insurance_number: document.getElementById('m_insurance_num').value,
-        marital_status: document.getElementById('m_marital').value,
-        children_count: parseInt(document.getElementById('m_children').value) || 0
-      };
+      const vn = document.getElementById('m_vn').value;
+      const nn = document.getElementById('m_nn').value;
+      if(!vn || !nn) return alert("Bitte Pflichtfelder ausfüllen");
 
-      const { error } = await _supabase.from('employees').insert([payload]);
-      if(error) alert("Fehler: " + error.message);
-      else location.reload();
+      await _supabase.from('employees').insert([{
+        workspace_id: WS_ID,
+        first_name: vn,
+        last_name: nn,
+        email: document.getElementById('m_mail').value,
+        phone: document.getElementById('m_phone').value,
+        role: document.getElementById('m_pos').value,
+        address: document.getElementById('m_addr').value
+      }]);
+      location.reload();
     }
 
     async function deleteStaff(id) {
-      if(confirm("Diesen Mitarbeiter wirklich unwiderruflich löschen?")) {
+      if(confirm("Löschen?")) {
         await _supabase.from('employees').delete().eq('id', id);
         loadStaff();
       }
     }
-
     document.addEventListener('DOMContentLoaded', loadStaff);
   </script>
 </body>
