@@ -8,6 +8,48 @@
   <link rel="stylesheet" href="../style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* Modal Styling */
+    #objektModal {
+      display: none; 
+      position: fixed; 
+      inset: 0; 
+      background: rgba(0,0,0,0.85); 
+      backdrop-filter: blur(5px);
+      align-items: center; 
+      justify-content: center; 
+      z-index: 1000;
+      padding: 20px;
+    }
+    .modal-content {
+      width: 100%;
+      max-width: 450px;
+      padding: 30px;
+      position: relative;
+    }
+    .modal-content h3 { margin-top: 0; margin-bottom: 20px; color: var(--accent); font-weight: 900; }
+    
+    label { font-size: 10px; color: var(--muted); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 5px; margin-top: 15px; }
+    input, select { width: 100%; padding: 12px; background: #000; border: 1px solid var(--glass-border); border-radius: 8px; color: #fff; font-size: 14px; }
+
+    .status-pill {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 800;
+      background: rgba(34, 197, 94, 0.1);
+      color: #22c55e;
+      border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th { text-align: left; padding: 12px; font-size: 10px; color: var(--muted); text-transform: uppercase; border-bottom: 1px solid var(--glass-border); }
+    td { padding: 15px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
+
+    .btn-delete { color: #ef4444; background: none; border: none; cursor: pointer; font-weight: 700; font-size: 11px; transition: 0.2s; }
+    .btn-delete:hover { text-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+  </style>
 </head>
 <body>
 
@@ -46,9 +88,12 @@
 
   <main class="main">
     <div class="content">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-          <h2 style="margin:0;">Objekt-Verwaltung</h2>
-          <button class="btn-main" onclick="openModal()" style="width:auto; padding:8px 20px;">+ NEUES OBJEKT</button>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
+          <div>
+            <h2 style="margin:0;">Objekt-Verwaltung 2026</h2>
+            <p style="margin:0; font-size:12px; color:var(--muted);">Standorte und Einsatzgebiete der Mandanten</p>
+          </div>
+          <button class="btn-main" onclick="openModal()" style="width:auto; padding:10px 25px;">+ NEUES OBJEKT ANLEGEN</button>
       </div>
 
       <div class="card-glass">
@@ -56,10 +101,10 @@
           <thead>
             <tr>
               <th>Objektname</th>
-              <th>Kunde / Mandant</th>
-              <th>Adresse</th>
+              <th>Zugehöriger Mandant</th>
+              <th>Adresse / Standort</th>
               <th>Status</th>
-              <th>Aktion</th>
+              <th style="text-align:right;">Aktion</th>
             </tr>
           </thead>
           <tbody id="objekt-liste">
@@ -69,70 +114,118 @@
     </div>
   </main>
 
-  <div id="objektModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:100;">
-      <div class="card-glass" style="width:400px; background:#111;">
-          <h3>Neues Objekt anlegen</h3>
+  <div id="objektModal">
+      <div class="card-glass modal-content">
+          <h3>Neues Objekt erfassen</h3>
+          
           <label>Name des Objekts</label>
-          <input type="text" id="o_name" placeholder="z.B. Werkschutz Tor 1">
-          <label>Zugehöriger Kunde</label>
-          <select id="o_kunde"></select>
-          <label>Adresse</label>
-          <input type="text" id="o_address" placeholder="Straße, PLZ, Stadt">
-          <div style="display:flex; gap:10px;">
-              <button class="btn-main" onclick="saveObjekt()">SPEICHERN</button>
-              <button class="btn-main" onclick="closeModal()" style="background:#334155;">ABBRECHEN</button>
+          <input type="text" id="o_name" placeholder="z.B. Logistikzentrum Nord">
+          
+          <label>Mandant auswählen</label>
+          <select id="o_kunde">
+            <option value="">Lade Kunden...</option>
+          </select>
+          
+          <label>Vollständige Adresse</label>
+          <input type="text" id="o_address" placeholder="Musterstraße 1, 12345 Stadt">
+          
+          <div style="display:flex; gap:12px; margin-top:30px;">
+              <button class="btn-main" onclick="saveObjekt()">OBJEKT SPEICHERN</button>
+              <button class="btn-main" onclick="closeModal()" style="background:#374151;">ABBRECHEN</button>
           </div>
       </div>
   </div>
 
   <script src="../config.js"></script>
   <script>
-    // Modal Logik
+    lucide.createIcons();
+
+    // Modal Funktionen
     function openModal() { 
         document.getElementById('objektModal').style.display = 'flex'; 
         loadKundenDropdown();
     }
-    function closeModal() { document.getElementById('objektModal').style.display = 'none'; }
-
-    // Kunden in das Dropdown laden
-    async function loadKundenDropdown() {
-        const { data } = await _supabase.from('clients').select('id, company');
-        const sel = document.getElementById('o_kunde');
-        if(data) sel.innerHTML = data.map(c => `<option value="${c.id}">${c.company}</option>`).join('');
+    function closeModal() { 
+        document.getElementById('objektModal').style.display = 'none'; 
     }
 
-    // Objekte aus DB laden (Hier müsstest du eine Tabelle 'objects' in Supabase haben)
+    // Kunden-Dropdown füllen
+    async function loadKundenDropdown() {
+        try {
+            const { data } = await _supabase.from('clients').select('id, company').order('company');
+            const sel = document.getElementById('o_kunde');
+            if(data && data.length > 0) {
+                sel.innerHTML = data.map(c => `<option value="${c.id}">${c.company}</option>`).join('');
+            } else {
+                sel.innerHTML = '<option value="">Keine Kunden vorhanden</option>';
+            }
+        } catch (err) { console.error(err); }
+    }
+
+    // Objekte aus DB laden (Relation mit Clients)
     async function loadObjekte() {
-        const { data, error } = await _supabase.from('objects').select('*, clients(company)');
         const tbody = document.getElementById('objekt-liste');
-        if(data) {
-            tbody.innerHTML = data.map(o => `
-                <tr>
-                    <td><strong>${o.name}</strong></td>
-                    <td>${o.clients?.company || 'Kein Kunde'}</td>
-                    <td style="color:var(--muted);">${o.address || '-'}</td>
-                    <td><span class="status-pill">Aktiv</span></td>
-                    <td><button style="color:var(--danger); background:none; border:none; cursor:pointer;">LÖSCHEN</button></td>
-                </tr>
-            `).join('');
+        try {
+            // Wir holen Objekte und laden den Firmennamen des Kunden direkt mit
+            const { data, error } = await _supabase
+                .from('objects')
+                .select(`*, clients(company)`)
+                .order('created_at', { ascending: false });
+
+            if(error) throw error;
+
+            if(data && data.length > 0) {
+                tbody.innerHTML = data.map(o => `
+                    <tr>
+                        <td><div style="font-weight:800; color:#fff;">${o.name}</div><small style="color:var(--muted); font-size:10px;">ID: ${o.id.substring(0,8)}</small></td>
+                        <td><span style="color:var(--accent); font-weight:700;">${o.clients?.company || 'Nicht zugewiesen'}</span></td>
+                        <td style="color:var(--muted);">${o.address || 'Keine Adresse'}</td>
+                        <td><span class="status-pill">AKTIV</span></td>
+                        <td style="text-align:right;">
+                            <button class="btn-delete" onclick="deleteObjekt('${o.id}')">LÖSCHEN</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px; color:var(--muted);">Keine Objekte in der Datenbank 2026 gefunden.</td></tr>';
+            }
+        } catch (err) {
+            console.error("Fehler beim Laden:", err);
+        }
+        lucide.createIcons();
+    }
+
+    // Speichern
+    async function saveObjekt() {
+        const name = document.getElementById('o_name').value;
+        const clientId = document.getElementById('o_kunde').value;
+        const address = document.getElementById('o_address').value;
+
+        if(!name || !clientId) return alert("Bitte Name und Mandant angeben!");
+
+        const { error } = await _supabase.from('objects').insert([
+            { name: name, client_id: clientId, address: address }
+        ]);
+
+        if(!error) {
+            document.getElementById('o_name').value = "";
+            document.getElementById('o_address').value = "";
+            closeModal();
+            loadObjekte();
         } else {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--muted);">Keine Objekte gefunden.</td></tr>';
+            alert("Fehler: " + error.message);
         }
     }
 
-    async function saveObjekt() {
-        const obj = {
-            name: document.getElementById('o_name').value,
-            client_id: document.getElementById('o_kunde').value,
-            address: document.getElementById('o_address').value
-        };
-        const { error } = await _supabase.from('objects').insert([obj]);
-        if(!error) { closeModal(); loadObjekte(); } else { alert("Fehler: " + error.message); }
+    // Löschen
+    async function deleteObjekt(id) {
+        if(!confirm("Objekt wirklich entfernen?")) return;
+        const { error } = await _supabase.from('objects').delete().eq('id', id);
+        if(!error) loadObjekte();
     }
 
     document.addEventListener('DOMContentLoaded', () => {
         loadObjekte();
-        closeModal(); // Startet geschlossen
     });
   </script>
 </body>
