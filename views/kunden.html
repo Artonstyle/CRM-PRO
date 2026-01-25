@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <title>CORE MASTER 2026 | KUNDEN</title>
+  <title>CORE MASTER 2026 | Kunden</title>
   <link rel="stylesheet" href="../style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
@@ -10,88 +10,77 @@
     :root { --accent: #2563eb; --bg: #050505; --card: #0d0d0d; --border: rgba(255,255,255,0.08); }
     body { background: var(--bg); color: #fff; font-family: 'Inter', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
     
-    /* Sidebar */
+    /* Deine Sidebar Struktur */
     .sidebar { width: 260px; border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; background: #000; height: 100vh; }
-    .custom-scrollbar { overflow-y: auto; flex: 1; padding-right: 5px; }
-    .custom-scrollbar::-webkit-scrollbar { width: 3px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: #222; border-radius: 10px; }
+    .sidebar-content { overflow-y: auto; flex: 1; padding-right: 5px; }
     .nav-link { display: flex; align-items: center; gap: 10px; color: #aaa; text-decoration: none; padding: 10px; border-radius: 8px; font-size: 14px; }
-    .nav-link.active { color: white; background: rgba(37, 99, 235, 0.1); border: 1px solid rgba(37, 99, 235, 0.2); }
-    .nav-group { font-size: 10px; color: #444; font-weight: 800; padding: 15px 12px 5px; text-transform: uppercase; }
+    .nav-link:hover { color: #fff; background: rgba(255,255,255,0.03); }
+    .nav-link.active { color: white; background: var(--accent); }
+    .nav-label { font-size: 10px; color: #444; font-weight: 800; padding: 15px 12px 5px; text-transform: uppercase; }
 
-    /* Content */
-    .main-content { flex: 1; overflow-y: auto; padding: 40px; }
-    .btn-main { background: var(--accent); color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 700; cursor: pointer; }
-    
-    /* Management Area */
-    .mgmt-panel { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 25px; margin-bottom: 30px; display: none; border-left: 4px solid var(--accent); }
-    .form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-top: 15px; }
-    .field { display: flex; flex-direction: column; gap: 5px; }
-    label { font-size: 10px; font-weight: 800; color: #555; text-transform: uppercase; }
-    input, select { background: #000; border: 1px solid var(--border); padding: 12px; border-radius: 8px; color: #fff; }
-
-    .table-container { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+    .main { flex: 1; overflow-y: auto; padding: 40px; }
+    .mgmt-panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 25px; margin-bottom: 20px; border-left: 4px solid var(--accent); display: none; }
+    .table-container { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
     table { width: 100%; border-collapse: collapse; }
-    th { background: rgba(255,255,255,0.02); padding: 15px 20px; text-align: left; font-size: 11px; color: #444; text-transform: uppercase; }
-    td { padding: 18px 20px; border-top: 1px solid var(--border); font-size: 14px; }
+    th { background: rgba(255,255,255,0.02); padding: 15px; text-align: left; font-size: 11px; color: #444; }
+    td { padding: 15px; border-top: 1px solid var(--border); font-size: 14px; }
+    .btn-main { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; }
   </style>
 </head>
 <body>
 
   <aside class="sidebar">
-    <div style="font-weight: 900; font-size: 20px; color: var(--accent); margin-bottom: 30px; padding-left: 10px;">CORE MASTER</div>
-    <nav class="custom-scrollbar">
-      <div class="nav-group">Zentrale</div>
+    <div style="padding: 10px 12px 30px;">
+      <div style="font-weight: 900; font-size: 20px; color: var(--accent);">CORE MASTER</div>
+      <div style="font-size: 10px; color: #444; font-weight: 700;">ENTERPRISE CRM 2026</div>
+    </div>
+    
+    <div class="sidebar-content">
+      <div class="nav-label">Main Console</div>
       <a href="../admin.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a>
-      <a href="live-monitor.html" class="nav-link"><i data-lucide="activity"></i> Live-Monitor</a>
-      <div class="nav-group">CRM & Objekte</div>
       <a href="kunden.html" class="nav-link active"><i data-lucide="users"></i> Kunden</a>
       <a href="objekte.html" class="nav-link"><i data-lucide="building-2"></i> Objekte</a>
-      <a href="geofencing.html" class="nav-link"><i data-lucide="map-pin"></i> Geofencing</a>
-      <div class="nav-group">Personal</div>
       <a href="mitarbeiter.html" class="nav-link"><i data-lucide="hard-hat"></i> Mitarbeiter</a>
-      <a href="schichtplan.html" class="nav-link"><i data-lucide="calendar"></i> Schichtplan</a>
-      <a href="zeiterfassung.html" class="nav-link"><i data-lucide="clock"></i> Zeiterfassung</a>
-      <a href="lohn.html" class="nav-link"><i data-lucide="wallet"></i> Lohnabrechnung</a>
-      <div class="nav-group">Einsatz</div>
-      <a href="wachbuch.html" class="nav-link"><i data-lucide="book-open"></i> Wachbuch</a>
-      <a href="ereignisse.html" class="nav-link"><i data-lucide="alert-triangle"></i> Ereignisse</a>
-      <a href="rundgaenge.html" class="nav-link"><i data-lucide="navigation"></i> Rundgänge</a>
-      <a href="schlussel.html" class="nav-link"><i data-lucide="key"></i> Schlüssel</a>
-      <div class="nav-group">Backoffice</div>
-      <a href="angebote.html" class="nav-link"><i data-lucide="file-text"></i> Angebote</a>
-      <a href="rechnungen.html" class="nav-link"><i data-lucide="credit-card"></i> Rechnungen</a>
-      <a href="dokumente.html" class="nav-link"><i data-lucide="folder-closed"></i> Dokumente</a>
-      <div class="nav-group">System</div>
-      <a href="einstellungen.html" class="nav-link"><i data-lucide="settings"></i> Einstellungen</a>
-      <a href="logs.html" class="nav-link"><i data-lucide="terminal"></i> System-Logs</a>
-    </nav>
+      <a href="schichtplan.html" class="nav-link"><i data-lucide="calendar-days"></i> Schichtplan</a>
+      <a href="zeiterfassung.html" class="nav-link"><i data-lucide="timer"></i> Zeiterfassung</a>
+      <a href="aufgaben.html" class="nav-link"><i data-lucide="check-square"></i> Aufgaben</a>
+      
+      <div class="nav-group">Operations</div>
+      <a href="finanzen.html" class="nav-link"><i data-lucide="banknote"></i> Finanzen</a>
+      <a href="rechnungen.html" class="nav-link"><i data-lucide="file-text"></i> Rechnungen</a>
+      <a href="angebote.html" class="nav-link"><i data-lucide="file-spreadsheet"></i> Angebote</a>
+      <a href="lager.html" class="nav-link"><i data-lucide="package"></i> Lager</a>
+      <a href="dokumente.html" class="nav-link"><i data-lucide="folder"></i> Dokumente</a>
+      <a href="chat_video.html" class="nav-link"><i data-lucide="video"></i> Chat & Video</a>
+      <a href="analyse.html" class="nav-link"><i data-lucide="bar-chart-3"></i> Analyse</a>
+
+      <div class="nav-label">SaaS Admin</div>
+      <a href="saas_freischaltung.html" class="nav-link"><i data-lucide="user-plus"></i> SaaS</a>
+      <a href="tarife.html" class="nav-link"><i data-lucide="tags"></i> Tarife</a>
+      <a href="einstellungen.html" class="nav-link"><i data-lucide="settings"></i> Settings</a>
+      <a href="support.html" class="nav-link"><i data-lucide="help-circle"></i> Support</a>
+    </div>
   </aside>
 
-  <main class="main-content">
-    <header style="margin-bottom:30px; display:flex; justify-content:space-between; align-items:center;">
-      <h1>Kunden & Objekte</h1>
-      <button class="btn-main" onclick="addNewKunde()">+ NEUER MANDANT</button>
+  <main class="main">
+    <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+      <h1 style="font-size:24px; font-weight:800;">KUNDENVERWALTUNG</h1>
+      <button class="btn-main" onclick="alert('Neuer Kunde')">+ MANDANT</button>
     </header>
 
-    <section id="mgmtPanel" class="mgmt-panel">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h2 id="activeKundeName" style="margin:0; font-size:20px;">Kunde verwalten</h2>
-        <button onclick="closeMgmt()" style="background:none; border:none; color:#555; cursor:pointer;"><i data-lucide="x-circle"></i> Schließen</button>
-      </div>
-      <div class="form-grid">
-        <div class="field"><label>Neues Objekt Name</label><input type="text" id="obj_name"></div>
-        <div class="field"><label>Straße / Nr.</label><input type="text" id="obj_street"></div>
-        <div class="field"><label>Stadt</label><input type="text" id="obj_city"></div>
-        <div class="field"><label>Aktion</label><button class="btn-main" onclick="saveObjForKunde()">OBJEKT SPEICHERN</button></div>
-      </div>
-      <div id="objektListSmall" style="margin-top:20px; border-top:1px solid #111; padding-top:20px;">
+    <div id="mgmtArea" class="mgmt-panel">
+        <h3 id="targetName">Objekte für Mandant</h3>
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr auto; gap:10px; margin-top:15px;">
+            <input type="text" id="obj_n" placeholder="Objekt Name">
+            <input type="text" id="obj_a" placeholder="Adresse">
+            <input type="text" id="obj_c" placeholder="Stadt">
+            <button class="btn-main" onclick="saveObj()">HINZUFÜGEN</button>
         </div>
-    </section>
+    </div>
 
     <div class="table-container">
       <table>
-        <thead><tr><th>Unternehmen</th><th>Status</th><th>Objekte</th><th style="text-align:right;">Management</th></tr></thead>
+        <thead><tr><th>Unternehmen</th><th>Status</th><th>Optionen</th></tr></thead>
         <tbody id="kunden-liste"></tbody>
       </table>
     </div>
@@ -100,53 +89,27 @@
   <script src="../config.js"></script>
   <script>
     lucide.createIcons();
-    const WS_ID = '8648e581-297d-419b-9c71-292418e26895';
-    let currentKunde = null;
-
+    let selId = null;
     async function loadKunden() {
-      const { data } = await _supabase.from('customers').select('*, objects(count)');
+      const { data } = await _supabase.from('customers').select('*');
       document.getElementById('kunden-liste').innerHTML = data.map(k => `
         <tr>
-          <td><strong style="color:white;">${k.company}</strong></td>
-          <td><span style="color:#22c55e;">Aktiv</span></td>
-          <td>${k.objects?.[0]?.count || 0} Standorte</td>
-          <td style="text-align:right;"><button class="btn-main" style="background:#111;" onclick="openMgmt('${k.id}', '${k.company}')">OBJEKTE VERWALTEN</button></td>
+          <td><strong>${k.company}</strong></td>
+          <td><span style="color:#22c55e">Aktiv</span></td>
+          <td style="text-align:right;"><button class="btn-main" style="padding:5px 12px; font-size:11px;" onclick="openMgmt('${k.id}', '${k.company}')">OBJEKTE</button></td>
         </tr>
       `).join('');
     }
-
     function openMgmt(id, name) {
-      currentKunde = id;
-      document.getElementById('activeKundeName').innerText = name;
-      document.getElementById('mgmtPanel').style.display = 'block';
-      loadKundeObjects(id);
-      window.scrollTo({top: 0, behavior: 'smooth'});
+        selId = id;
+        document.getElementById('targetName').innerText = "Objekt-Zuweisung: " + name;
+        document.getElementById('mgmtArea').style.display = 'block';
     }
-
-    function closeMgmt() { document.getElementById('mgmtPanel').style.display = 'none'; }
-
-    async function loadKundeObjects(id) {
-      const { data } = await _supabase.from('objects').select('*').eq('customer_id', id);
-      document.getElementById('objektListSmall').innerHTML = data.map(o => `
-        <div style="display:flex; justify-content:space-between; padding:10px; background:#000; border-radius:8px; margin-bottom:5px; font-size:13px;">
-          <span><strong>${o.name}</strong> - ${o.city}</span>
-          <span style="color:#2563eb; cursor:pointer;">Bearbeiten</span>
-        </div>
-      `).join('');
+    async function saveObj() {
+        await _supabase.from('objects').insert([{ name: document.getElementById('obj_n').value, customer_id: selId, workspace_id: '8648e581-297d-419b-9c71-292418e26895' }]);
+        alert("Objekt gespeichert!");
+        document.getElementById('mgmtArea').style.display = 'none';
     }
-
-    async function saveObjForKunde() {
-        await _supabase.from('objects').insert([{
-            name: document.getElementById('obj_name').value,
-            address: document.getElementById('obj_street').value,
-            city: document.getElementById('obj_city').value,
-            customer_id: currentKunde,
-            workspace_id: WS_ID
-        }]);
-        loadKundeObjects(currentKunde);
-        loadKunden();
-    }
-
     document.addEventListener('DOMContentLoaded', loadKunden);
   </script>
 </body>
