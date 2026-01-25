@@ -3,52 +3,68 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CORE MASTER 2026 | OBJEKTVERWALTUNG</title>
+  <title>CORE MASTER 2026 | OBJEKTE</title>
   
   <link rel="stylesheet" href="../style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
-    /* Modal Styling */
-    #objektModal {
-      display: none; 
-      position: fixed; 
-      inset: 0; 
-      background: rgba(0,0,0,0.85); 
-      backdrop-filter: blur(5px);
-      align-items: center; 
-      justify-content: center; 
-      z-index: 1000;
-      padding: 20px;
-    }
-    .modal-content {
-      width: 100%;
-      max-width: 450px;
-      padding: 30px;
-      position: relative;
-    }
-    .modal-content h3 { margin-top: 0; margin-bottom: 20px; color: var(--accent); font-weight: 900; }
-    
-    label { font-size: 10px; color: var(--muted); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 5px; margin-top: 15px; }
-    input, select { width: 100%; padding: 12px; background: #000; border: 1px solid var(--glass-border); border-radius: 8px; color: #fff; font-size: 14px; }
-
-    .status-pill {
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 10px;
-      font-weight: 800;
-      background: rgba(34, 197, 94, 0.1);
-      color: #22c55e;
-      border: 1px solid rgba(34, 197, 94, 0.2);
+    /* Layout Splitting */
+    .view-container {
+      display: flex;
+      gap: 20px;
+      transition: all 0.3s ease;
+      align-items: flex-start;
     }
 
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .list-section { flex: 1; transition: all 0.3s ease; }
+
+    /* Das neue Formular-Panel (Slide-in Effekt) */
+    .form-panel {
+      width: 0;
+      opacity: 0;
+      overflow: hidden;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      transition: all 0.3s ease;
+      position: sticky;
+      top: 20px;
+    }
+
+    .form-panel.active {
+      width: 400px;
+      opacity: 1;
+      padding: 25px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .full-width { grid-column: span 2; }
+
+    label { font-size: 10px; color: var(--muted); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 5px; margin-top: 10px; }
+    input, select, textarea { 
+      width: 100%; 
+      padding: 10px; 
+      background: rgba(0,0,0,0.3); 
+      border: 1px solid var(--glass-border); 
+      border-radius: 8px; 
+      color: #fff; 
+      font-size: 13px; 
+    }
+    textarea { resize: vertical; min-height: 80px; }
+
+    .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+
+    /* Tabellen-Styling */
+    table { width: 100%; border-collapse: collapse; }
     th { text-align: left; padding: 12px; font-size: 10px; color: var(--muted); text-transform: uppercase; border-bottom: 1px solid var(--glass-border); }
-    td { padding: 15px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
-
-    .btn-delete { color: #ef4444; background: none; border: none; cursor: pointer; font-weight: 700; font-size: 11px; transition: 0.2s; }
-    .btn-delete:hover { text-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+    td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
   </style>
 </head>
 <body>
@@ -56,177 +72,144 @@
   <aside class="sidebar">
     <div class="sidebar-header">
       <div style="font-weight: 900; font-size: 20px; color: var(--accent);">CORE MASTER</div>
-      <div style="font-size: 10px; color: var(--muted); font-weight: 700;">OBJEKT-MANAGEMENT</div>
+      <div style="font-size: 10px; color: var(--muted); font-weight: 700;">PRO-MANAGEMENT 2026</div>
     </div>
-    
     <div class="sidebar-content">
       <div class="nav-label">Main Console</div>
       <a href="../admin.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a>
       <a href="kunden.html" class="nav-link"><i data-lucide="users"></i> Kunden</a>
       <a href="objekte.html" class="nav-link active"><i data-lucide="building-2"></i> Objekte</a>
-      <a href="mitarbeiter.html" class="nav-link"><i data-lucide="hard-hat"></i> Mitarbeiter</a>
-      <a href="schichtplan.html" class="nav-link"><i data-lucide="calendar-days"></i> Schichtplan</a>
-      <a href="zeiterfassung.html" class="nav-link"><i data-lucide="timer"></i> Zeiterfassung</a>
-      <a href="aufgaben.html" class="nav-link"><i data-lucide="check-square"></i> Aufgaben</a>
-      
-      <div class="nav-label">Operations</div>
-      <a href="finanzen.html" class="nav-link"><i data-lucide="banknote"></i> Finanzen</a>
-      <a href="rechnungen.html" class="nav-link"><i data-lucide="file-text"></i> Rechnungen</a>
-      <a href="angebote.html" class="nav-link"><i data-lucide="file-spreadsheet"></i> Angebote</a>
-      <a href="lager.html" class="nav-link"><i data-lucide="package"></i> Lager</a>
-      <a href="dokumente.html" class="nav-link"><i data-lucide="folder"></i> Dokumente</a>
-      <a href="chat_video.html" class="nav-link"><i data-lucide="video"></i> Chat & Video</a>
-      <a href="analyse.html" class="nav-link"><i data-lucide="bar-chart-3"></i> Analyse</a>
-
-      <div class="nav-label">SaaS Administration</div>
-      <a href="saas_freischaltung.html" class="nav-link"><i data-lucide="user-plus"></i> SaaS Freischaltung</a>
-      <a href="tarife.html" class="nav-link"><i data-lucide="tags"></i> Master Tarife</a>
-      <a href="einstellungen.html" class="nav-link"><i data-lucide="settings"></i> Einstellungen</a>
-      <a href="support.html" class="nav-link"><i data-lucide="help-circle"></i> System Support</a>
-    </div>
+      </div>
   </aside>
 
   <main class="main">
     <div class="content">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
-          <div>
-            <h2 style="margin:0;">Objekt-Verwaltung 2026</h2>
-            <p style="margin:0; font-size:12px; color:var(--muted);">Standorte und Einsatzgebiete der Mandanten</p>
-          </div>
-          <button class="btn-main" onclick="openModal()" style="width:auto; padding:10px 25px;">+ NEUES OBJEKT ANLEGEN</button>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 style="margin:0;">Objekt-Zentrum 2026</h2>
+        <button class="btn-main" id="toggleBtn" onclick="toggleForm()" style="width:auto; padding:10px 20px;">
+          <i data-lucide="plus-circle" style="width:16px; vertical-align:middle; margin-right:8px;"></i> NEUES OBJEKT
+        </button>
       </div>
 
-      <div class="card-glass">
-        <table>
-          <thead>
-            <tr>
-              <th>Objektname</th>
-              <th>Zugehöriger Mandant</th>
-              <th>Adresse / Standort</th>
-              <th>Status</th>
-              <th style="text-align:right;">Aktion</th>
-            </tr>
-          </thead>
-          <tbody id="objekt-liste">
-            </tbody>
-        </table>
+      <div class="view-container">
+        <div class="list-section">
+          <div class="card-glass">
+            <table>
+              <thead>
+                <tr>
+                  <th>Objektname</th>
+                  <th>Mandant</th>
+                  <th>Standort</th>
+                  <th>Status</th>
+                  <th style="text-align:right;">Aktion</th>
+                </tr>
+              </thead>
+              <tbody id="objekt-liste">
+                </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="form-panel" id="sidePanel">
+          <h3 style="margin-top:0; color:var(--accent);">Objekt erfassen</h3>
+          
+          <label>Name des Objekts</label>
+          <input type="text" id="o_name" placeholder="z.B. Werkschutz Süd">
+
+          <label>Zugehöriger Mandant</label>
+          <select id="o_kunde"></select>
+
+          <label class="full-width">Adresse</label>
+          <input type="text" id="o_address" class="full-width" placeholder="Straße / Hausnummer">
+
+          <div class="form-grid">
+            <div>
+              <label>PLZ</label>
+              <input type="text" id="o_zip" placeholder="12345">
+            </div>
+            <div>
+              <label>Stadt</label>
+              <input type="text" id="o_city" placeholder="Musterstadt">
+            </div>
+          </div>
+
+          <label>Notizen / Details</label>
+          <textarea id="o_notes" placeholder="Zusätzliche Infos zum Objekt..."></textarea>
+
+          <div class="btn-group">
+            <button class="btn-main" onclick="saveObjekt()">SPEICHERN</button>
+            <button class="btn-main" onclick="toggleForm()" style="background:#374151;">ABBRECHEN</button>
+          </div>
+        </div>
       </div>
     </div>
   </main>
-
-  <div id="objektModal">
-      <div class="card-glass modal-content">
-          <h3>Neues Objekt erfassen</h3>
-          
-          <label>Name des Objekts</label>
-          <input type="text" id="o_name" placeholder="z.B. Logistikzentrum Nord">
-          
-          <label>Mandant auswählen</label>
-          <select id="o_kunde">
-            <option value="">Lade Kunden...</option>
-          </select>
-          
-          <label>Vollständige Adresse</label>
-          <input type="text" id="o_address" placeholder="Musterstraße 1, 12345 Stadt">
-          
-          <div style="display:flex; gap:12px; margin-top:30px;">
-              <button class="btn-main" onclick="saveObjekt()">OBJEKT SPEICHERN</button>
-              <button class="btn-main" onclick="closeModal()" style="background:#374151;">ABBRECHEN</button>
-          </div>
-      </div>
-  </div>
 
   <script src="../config.js"></script>
   <script>
     lucide.createIcons();
 
-    // Modal Funktionen
-    function openModal() { 
-        document.getElementById('objektModal').style.display = 'flex'; 
+    // Panel Umschalten (Anzeigen/Verbergen)
+    function toggleForm() {
+      const panel = document.getElementById('sidePanel');
+      const btn = document.getElementById('toggleBtn');
+      panel.classList.toggle('active');
+      
+      if(panel.classList.contains('active')) {
+        btn.style.display = 'none';
         loadKundenDropdown();
-    }
-    function closeModal() { 
-        document.getElementById('objektModal').style.display = 'none'; 
+      } else {
+        btn.style.display = 'block';
+      }
     }
 
-    // Kunden-Dropdown füllen
     async function loadKundenDropdown() {
-        try {
-            const { data } = await _supabase.from('clients').select('id, company').order('company');
-            const sel = document.getElementById('o_kunde');
-            if(data && data.length > 0) {
-                sel.innerHTML = data.map(c => `<option value="${c.id}">${c.company}</option>`).join('');
-            } else {
-                sel.innerHTML = '<option value="">Keine Kunden vorhanden</option>';
-            }
-        } catch (err) { console.error(err); }
+      const { data } = await _supabase.from('clients').select('id, company');
+      const sel = document.getElementById('o_kunde');
+      if(data) sel.innerHTML = data.map(c => `<option value="${c.id}">${c.company}</option>`).join('');
     }
 
-    // Objekte aus DB laden (Relation mit Clients)
     async function loadObjekte() {
-        const tbody = document.getElementById('objekt-liste');
-        try {
-            // Wir holen Objekte und laden den Firmennamen des Kunden direkt mit
-            const { data, error } = await _supabase
-                .from('objects')
-                .select(`*, clients(company)`)
-                .order('created_at', { ascending: false });
-
-            if(error) throw error;
-
-            if(data && data.length > 0) {
-                tbody.innerHTML = data.map(o => `
-                    <tr>
-                        <td><div style="font-weight:800; color:#fff;">${o.name}</div><small style="color:var(--muted); font-size:10px;">ID: ${o.id.substring(0,8)}</small></td>
-                        <td><span style="color:var(--accent); font-weight:700;">${o.clients?.company || 'Nicht zugewiesen'}</span></td>
-                        <td style="color:var(--muted);">${o.address || 'Keine Adresse'}</td>
-                        <td><span class="status-pill">AKTIV</span></td>
-                        <td style="text-align:right;">
-                            <button class="btn-delete" onclick="deleteObjekt('${o.id}')">LÖSCHEN</button>
-                        </td>
-                    </tr>
-                `).join('');
-            } else {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:40px; color:var(--muted);">Keine Objekte in der Datenbank 2026 gefunden.</td></tr>';
-            }
-        } catch (err) {
-            console.error("Fehler beim Laden:", err);
-        }
+      const { data, error } = await _supabase.from('objects').select('*, clients(company)');
+      const tbody = document.getElementById('objekt-liste');
+      
+      if(data) {
+        tbody.innerHTML = data.map(o => `
+          <tr>
+            <td><strong>${o.name}</strong></td>
+            <td><span style="color:var(--accent);">${o.clients?.company || 'Privat'}</span></td>
+            <td>${o.city || 'Kein Ort'}</td>
+            <td><span style="font-size:10px; background:rgba(34,197,94,0.2); color:#22c55e; padding:3px 8px; border-radius:10px;">AKTIV</span></td>
+            <td style="text-align:right;">
+              <button onclick="deleteObjekt('${o.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer;"><i data-lucide="trash-2" size="16"></i></button>
+            </td>
+          </tr>
+        `).join('');
         lucide.createIcons();
+      }
     }
 
-    // Speichern
     async function saveObjekt() {
-        const name = document.getElementById('o_name').value;
-        const clientId = document.getElementById('o_kunde').value;
-        const address = document.getElementById('o_address').value;
+      const obj = {
+        name: document.getElementById('o_name').value,
+        client_id: document.getElementById('o_kunde').value,
+        address: document.getElementById('o_address').value,
+        zip: document.getElementById('o_zip').value,
+        city: document.getElementById('o_city').value,
+        notes: document.getElementById('o_notes').value,
+        workspace_id: 'DEINE_WORKSPACE_ID' // Hier musst du deine Workspace-ID logik einfügen
+      };
 
-        if(!name || !clientId) return alert("Bitte Name und Mandant angeben!");
-
-        const { error } = await _supabase.from('objects').insert([
-            { name: name, client_id: clientId, address: address }
-        ]);
-
-        if(!error) {
-            document.getElementById('o_name').value = "";
-            document.getElementById('o_address').value = "";
-            closeModal();
-            loadObjekte();
-        } else {
-            alert("Fehler: " + error.message);
-        }
-    }
-
-    // Löschen
-    async function deleteObjekt(id) {
-        if(!confirm("Objekt wirklich entfernen?")) return;
-        const { error } = await _supabase.from('objects').delete().eq('id', id);
-        if(!error) loadObjekte();
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
+      const { error } = await _supabase.from('objects').insert([obj]);
+      if(!error) {
+        toggleForm();
         loadObjekte();
-    });
+      } else {
+        alert("Fehler beim Speichern!");
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadObjekte);
   </script>
 </body>
 </html>
