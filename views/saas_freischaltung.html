@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CORE MASTER ADMIN 2026 | SAAS</title>
+  <title>CORE MASTER ADMIN 2026</title>
   
   <link rel="stylesheet" href="../style.css">
   
@@ -13,28 +13,31 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
-    /* Spezifisches Layout für dieses Tool basierend auf deinem Original */
+    /* Layout-Anpassungen für exakte Übereinstimmung mit dem Screenshot */
     .grid-top { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px; margin-bottom: 20px; }
+    .card-glass { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 12px; padding: 25px; }
+    
     .flex-row { display: flex; gap: 12px; margin-bottom: 12px; }
+    .field { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    
     .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 20px; }
     .stat-card { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 12px; padding: 15px; }
     .stat-card small { display: block; color: var(--muted); font-size: 10px; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
     .stat-card span { font-size: 20px; font-weight: 800; }
     
-    .btn-auto { background: #374151; color: #fff; border: none; border-radius: 8px; padding: 0 20px; cursor: pointer; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+    label { font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    input, select { width: 100%; padding: 10px; background: #111; border: 1px solid var(--glass-border); border-radius: 8px; color: #fff; box-sizing: border-box; }
+    
+    .btn-auto { background: #374151; color: #fff; border: none; border-radius: 8px; padding: 0 15px; cursor: pointer; font-size: 11px; font-weight: 800; }
     .btn-test { background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 10px; font-weight: 700; cursor: pointer; }
     
-    .package-item { display:flex; justify-content:space-between; align-items:center; padding:10px; border-bottom:1px solid rgba(255,255,255,0.05); cursor: pointer; border-radius: 6px; }
+    .package-item { display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid rgba(255,255,255,0.05); cursor: pointer; }
     .package-item:hover { background: rgba(59, 130, 246, 0.1); }
 
-    .search-box { background: #111; border: 1px solid var(--accent); color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 12px; width: 200px; margin-left: auto; }
-    table { width: 100%; border-collapse: collapse; }
+    .search-box { background: #111; border: 1px solid var(--accent); color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 12px; width: 200px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
     th { text-align: left; color: var(--muted); padding: 12px; font-size: 10px; border-bottom: 1px solid var(--glass-border); text-transform: uppercase; }
-    td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
-
-    #context-menu { position: fixed; display: none; background: #1f2937; border: 1px solid var(--glass-border); border-radius: 8px; z-index: 1000; min-width: 140px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
-    .menu-item { padding: 10px 15px; font-size: 12px; cursor: pointer; color: #fff; }
-    .menu-item:hover { background: var(--danger); }
+    td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
   </style>
 </head>
 <body onclick="hideMenu()">
@@ -42,38 +45,17 @@
   <aside class="sidebar">
     <div class="sidebar-header">
       <div style="font-weight: 900; font-size: 18px; color: var(--accent);">CORE MASTER</div>
-      <div style="font-size: 10px; color: var(--muted); font-weight: 700;">ENTERPRISE CRM 2026</div>
+      <div style="font-size: 9px; color: var(--muted); font-weight: 800;">ADMIN 2026</div>
     </div>
-    
     <div class="sidebar-content">
       <div class="nav-label">Main Console</div>
       <a href="../admin.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a>
-      <a href="kunden.html" class="nav-link"><i data-lucide="users"></i> Kunden</a>
-      <a href="objekte.html" class="nav-link"><i data-lucide="building-2"></i> Objekte</a>
-      <a href="mitarbeiter.html" class="nav-link"><i data-lucide="hard-hat"></i> Mitarbeiter</a>
-      <a href="schichtplan.html" class="nav-link"><i data-lucide="calendar-days"></i> Schichtplan</a>
-      <a href="zeiterfassung.html" class="nav-link"><i data-lucide="timer"></i> Zeiterfassung</a>
-      <a href="aufgaben.html" class="nav-link"><i data-lucide="check-square"></i> Aufgaben</a>
-      
-      <div class="nav-label">Operations</div>
-      <a href="finanzen.html" class="nav-link"><i data-lucide="banknote"></i> Finanzen</a>
-      <a href="rechnungen.html" class="nav-link"><i data-lucide="file-text"></i> Rechnungen</a>
-      <a href="angebote.html" class="nav-link"><i data-lucide="file-spreadsheet"></i> Angebote</a>
-      <a href="lager.html" class="nav-link"><i data-lucide="package"></i> Lager</a>
-      <a href="dokumente.html" class="nav-link"><i data-lucide="folder"></i> Dokumente</a>
-      <a href="chat_video.html" class="nav-link"><i data-lucide="video"></i> Chat & Video</a>
-      <a href="analyse.html" class="nav-link"><i data-lucide="bar-chart-3"></i> Analyse</a>
-
       <div class="nav-label">SaaS Admin</div>
       <a href="saas_freischaltung.html" class="nav-link active"><i data-lucide="user-plus"></i> SaaS</a>
-      <a href="tarife.html" class="nav-link"><i data-lucide="tags"></i> Tarife</a>
-      <a href="einstellungen.html" class="nav-link"><i data-lucide="settings"></i> Settings</a>
-      <a href="support.html" class="nav-link"><i data-lucide="help-circle"></i> Support</a>
     </div>
-
-    <div style="padding: 20px; border-top: 1px solid var(--glass-border);">
+    <div style="padding: 20px; border-top: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 8px;">
       <button class="btn-main" style="font-size: 10px; padding: 8px;" onclick="downloadBackup()">BACKUP</button>
-      <button class="btn-main" style="font-size: 10px; padding: 8px; margin-top:5px; background:var(--glass);" onclick="document.getElementById('uploadInput').click()">LADEN</button>
+      <button class="btn-main" style="font-size: 10px; padding: 8px; background: #1f2937;" onclick="document.getElementById('uploadInput').click()">LADEN</button>
       <input type="file" id="uploadInput" style="display:none" onchange="loadBackup(event)">
     </div>
   </aside>
@@ -84,121 +66,114 @@
         <div class="stat-card"><small>Aktiv</small><span id="stat_active">0</span></div>
         <div class="stat-card"><small>Offline</small><span id="stat_offline" style="color:var(--danger);">0</span></div>
         <div class="stat-card"><small>Umsatz</small><span id="stat_revenue">0,00 €</span></div>
-        <div class="stat-card"><small>Ablauf (30T)</small><span id="stat_expiring" style="color:var(--gold);">0</span></div>
+        <div class="stat-card"><small>Ablauf (30T)</small><span id="stat_expiring" style="color:#f59e0b;">0</span></div>
         <div class="stat-card"><small>Support</small><span id="stat_support" style="color:var(--danger);">0</span></div>
       </div>
 
       <div class="grid-top">
         <div class="card-glass">
-          <h3>Firma Management</h3>
+          <h3 style="margin-top:0; text-transform:uppercase; font-size:14px; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; margin-bottom: 20px;">Firma Management</h3>
+          
           <div class="flex-row">
-            <div style="flex:1;"><label>Firma</label><input type="text" id="c_name"></div>
-            <div style="flex:1;"><label>Telefon</label><input type="text" id="c_phone"></div>
+            <div class="field" style="flex:2;"><label>Firma</label><input type="text" id="c_name"></div>
+            <div class="field" style="flex:1.5;"><label>Telefon</label><input type="text" id="c_phone"></div>
           </div>
+
           <div class="flex-row">
-            <div style="flex:1;"><label>Vorname</label><input type="text" id="c_fname"></div>
-            <div style="flex:1;"><label>Nachname</label><input type="text" id="c_lname"></div>
-            <div style="flex:2;"><label>E-Mail Adresse</label><input type="email" id="c_mail"></div>
+            <div class="field"><label>Vorname</label><input type="text" id="c_fname"></div>
+            <div class="field"><label>Nachname</label><input type="text" id="c_lname"></div>
+            <div class="field" style="flex:1.5;"><label>E-Mail Adresse</label><input type="email" id="c_mail"></div>
           </div>
+
           <div class="flex-row">
-            <div style="flex:2;"><label>Strasse / Hausnr.</label><input type="text" id="c_address"></div>
-            <div style="flex:0.8;"><label>PLZ</label><input type="text" id="c_plz"></div>
-            <div style="flex:1.5;"><label>Ort</label><input type="text" id="c_city"></div>
+            <div class="field" style="flex:2;"><label>Strasse / Hausnr.</label><input type="text" id="c_address"></div>
+            <div class="field" style="flex:0.6;"><label>PLZ</label><input type="text" id="c_plz"></div>
+            <div class="field"><label>Ort</label><input type="text" id="c_city"></div>
           </div>
+
           <div class="flex-row">
-            <div style="flex:1.5;"><label>Tarif-Paket</label><select id="c_package"></select></div>
-            <div style="flex:1;"><label>Zyklus</label>
-              <select id="c_cycle"><option value="1">Monatlich</option><option value="12">Jährlich</option></select>
+            <div class="field" style="flex:2;"><label>Tarif-Paket</label>
+              <select id="c_package">
+                </select>
+            </div>
+            <div class="field"><label>Zyklus</label>
+              <select id="c_cycle">
+                <option value="1">Monatlich</option>
+                <option value="12">Jährlich</option>
+              </select>
             </div>
           </div>
-          <label>Login-Schlüssel</label>
-          <div class="flex-row">
-            <div style="flex:1;"><input type="text" id="c_token"></div>
-            <button class="btn-auto" onclick="genToken()">AUTO</button>
+
+          <div class="field">
+            <label>Login-Schlüssel</label>
+            <div style="display:flex; gap:10px;">
+              <input type="text" id="c_token">
+              <button class="btn-auto" onclick="genToken()">AUTO</button>
+            </div>
           </div>
-          <button class="btn-main" onclick="saveData()">LIZENZ SPEICHERN & FREISCHALTEN</button>
+
+          <button class="btn-main" style="margin-top:20px; padding: 15px; font-size: 12px;" onclick="saveData()">LIZENZ SPEICHERN & FREISCHALTEN</button>
         </div>
 
         <div class="card-glass">
-          <h3>Master Tarife</h3>
+          <h3 style="margin-top:0; text-transform:uppercase; font-size:14px; border-bottom: 1px solid var(--glass-border); padding-bottom: 10px; margin-bottom: 20px;">Master Tarife</h3>
           <div class="flex-row">
-            <div style="flex:1.5;"><label>Tarif Name</label><input type="text" id="p_name"></div>
-            <div style="flex:0.8;"><label>Preis €</label><input type="number" id="p_price"></div>
-            <div style="flex:1;"><label>Mitarbeiter</label><input type="number" id="p_limit"></div>
-            <div style="flex:1;"><label>Test (Tage)</label><input type="number" id="p_test_days" value="0"></div>
+            <div class="field" style="flex:1.5;"><label>Tarif Name</label><input type="text" id="p_name"></div>
+            <div class="field" style="flex:0.8;"><label>Preis €</label><input type="number" id="p_price"></div>
+            <div class="field"><label>Mitarbeiter</label><input type="number" id="p_limit"></div>
+            <div class="field"><label>Test (Tage)</label><input type="number" id="p_test_days" value="0"></div>
           </div>
-          <div class="flex-row" style="margin-bottom:10px;">
-              <button class="btn-test" onclick="autoSetTest(7)">7 TAGE TEST</button>
-              <button class="btn-test" onclick="autoSetTest(14)">14 TAGE TEST</button>
-              <div style="margin-left:auto; display:flex; align-items:center; gap:5px;">
-                  <input type="checkbox" id="p_is_free" style="width:auto; margin:0;"> <label style="margin:0;">FREE</label>
-              </div>
+          
+          <div style="display:flex; gap:10px; margin-bottom:15px; align-items:center;">
+            <button class="btn-test" onclick="autoSetTest(7)">7 TAGE TEST</button>
+            <button class="btn-test" onclick="autoSetTest(14)">14 TAGE TEST</button>
+            <div style="margin-left:auto; display:flex; align-items:center; gap:5px;">
+              <input type="checkbox" id="p_is_free" style="width:auto;"> <label style="margin:0;">FREE</label>
+            </div>
           </div>
-          <button class="btn-main" id="btn-save-pkg" onclick="savePackage()">TARIF SPEICHERN</button>
-          <div id="package-preview" style="margin-top:10px;"></div>
+
+          <button class="btn-main" style="padding: 12px;" onclick="savePackage()">TARIF SPEICHERN</button>
+          
+          <div id="package-preview" style="margin-top:20px;">
+            </div>
         </div>
       </div>
 
       <div class="card-glass">
-          <h3 style="display:flex; align-items:center;">
-            Kundenübersicht 
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h3 style="margin:0; text-transform:uppercase; font-size:14px;">Kundenübersicht</h3>
+          <div style="display:flex; gap:10px;">
             <input type="text" id="search" class="search-box" placeholder="Suchen..." oninput="refreshUI()">
-            <button onclick="exportFullPDF()" style="background:var(--accent); border:none; color:#fff; padding:6px 15px; border-radius:8px; font-size:10px; cursor:pointer; margin-left:15px; font-weight:700;">PDF EXPORT</button>
-          </h3>
-          <table>
-              <thead>
-                  <tr>
-                      <th>Nr.</th>
-                      <th>Firma / Inhaber</th>
-                      <th>Paket / Mitarbeiter</th>
-                      <th>Gültig bis</th>
-                      <th>Preis</th>
-                      <th>Status</th>
-                      <th>Aktion</th>
-                  </tr>
-              </thead>
-              <tbody id="client-list"></tbody>
-          </table>
+            <button class="btn-main" style="width:auto; padding:6px 15px; font-size:10px;" onclick="exportFullPDF()">PDF EXPORT</button>
+          </div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Nr.</th>
+              <th>Firma / Inhaber</th>
+              <th>Paket / Mitarbeiter</th>
+              <th>Gültig bis</th>
+              <th>Preis</th>
+              <th>Status</th>
+              <th>Aktion</th>
+            </tr>
+          </thead>
+          <tbody id="client-list"></tbody>
+        </table>
       </div>
     </div>
   </main>
 
-  <div id="context-menu">
-      <div class="menu-item" id="menu-delete-btn">Löschen</div>
-  </div>
-
   <script>
     lucide.createIcons();
-    
-    // Original Logik
+
     let packages = [
         { name: "Starter", price: 29, limit: 15, isFree: false, testDays: 0 },
         { name: "Pro", price: 99, limit: 50, isFree: false, testDays: 0 },
         { name: "Premium", price: 149, limit: 100, isFree: false, testDays: 0 }
     ];
     let clients = [];
-    let editIndex = -1; let editPkgIndex = -1;
-    let contextType = ""; let contextIndex = -1;
-
-    function showMenu(e, type, index) {
-        e.preventDefault(); contextType = type; contextIndex = index;
-        const menu = document.getElementById('context-menu');
-        const btn = document.getElementById('menu-delete-btn');
-        btn.innerText = type === "package" ? "Tarif löschen" : "Kunde löschen";
-        btn.onclick = type === "package" ? deletePackageFromMenu : deleteClientFromMenu;
-        menu.style.display = 'block'; menu.style.left = e.pageX + 'px'; menu.style.top = e.pageY + 'px';
-    }
-    function hideMenu() { document.getElementById('context-menu').style.display = 'none'; }
-    function deletePackageFromMenu() { if(contextIndex > -1) { packages.splice(contextIndex, 1); refreshUI(); } hideMenu(); }
-    function deleteClientFromMenu() { if(contextIndex > -1) { clients.splice(contextIndex, 1); refreshUI(); } hideMenu(); }
-
-    function autoSetTest(days) {
-        document.getElementById('p_test_days').value = days;
-        document.getElementById('p_name').value = "Test " + days + " Tage";
-        document.getElementById('p_limit').value = 15;
-        document.getElementById('p_price').value = 0;
-        document.getElementById('p_is_free').checked = true;
-    }
 
     function genToken() {
         const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -208,65 +183,33 @@
     }
 
     function refreshUI() {
-        document.getElementById('c_package').innerHTML = packages.map(p => `<option value="${p.name}">${p.name} (${p.limit} MA) | ${p.price}€</option>`).join('');
-        document.getElementById('package-preview').innerHTML = packages.map((p, i) => `
-            <div class="package-item" oncontextmenu="showMenu(event, 'package', ${i})">
-                <span><strong>${p.name}</strong> (${p.limit} MA)</span>
+        // Dropdown befüllen
+        const select = document.getElementById('c_package');
+        select.innerHTML = packages.map(p => `<option value="${p.name}">${p.name} (${p.limit} Mitarbeiter) | ${p.price}€</option>`).join('');
+
+        // Tarif Vorschau (rechts)
+        const preview = document.getElementById('package-preview');
+        preview.innerHTML = packages.map(p => `
+            <div class="package-item">
+                <span><strong>${p.name}</strong> (${p.limit} Mitarbeiter)</span>
                 <span>${p.price} €</span>
             </div>`).join('');
-        
+
+        // Kundenliste
         const tbody = document.getElementById('client-list');
-        const searchTerm = document.getElementById('search').value.toLowerCase();
-        let rev = 0, act = 0, off = 0;
-        const filtered = clients.filter(c => c.company.toLowerCase().includes(searchTerm) || c.lname.toLowerCase().includes(searchTerm));
-
-        tbody.innerHTML = filtered.map((c, i) => {
-            const p = packages.find(pkg => pkg.name === c.package) || {price:0, limit:0};
-            let d = new Date(c.date); d.setMonth(d.getMonth() + c.cycle);
-            const isAktiv = c.status === "Aktiv";
-            if(isAktiv) { act++; rev += (p.price * c.cycle); } else { off++; }
-
-            return `<tr oncontextmenu="showMenu(event, 'client', ${i})">
+        tbody.innerHTML = clients.map((c, i) => `
+            <tr>
                 <td>${i + 1}</td>
                 <td><strong>${c.company}</strong><br><small>${c.fname} ${c.lname}</small></td>
-                <td>${c.package} (${p.limit} MA)</td>
-                <td>${d.toLocaleDateString('de-DE')}</td>
-                <td style="color:var(--green); font-weight:700;">${(p.price * c.cycle).toFixed(2)} €</td>
-                <td><span style="color:${isAktiv ? 'var(--green)' : 'var(--danger)'}; font-weight:800; cursor:pointer" onclick="toggleStatus(${i})">● ${c.status}</span></td>
-                <td><button onclick="editClient(${i})" style="background:none; border:none; color:var(--accent); cursor:pointer;">EDIT</button></td>
-            </tr>`;
-        }).join('');
-
-        document.getElementById('stat_active').innerText = act;
-        document.getElementById('stat_offline').innerText = off;
-        document.getElementById('stat_revenue').innerText = rev.toLocaleString('de-DE', {minimumFractionDigits: 2}) + " €";
+                <td>${c.package}</td>
+                <td>-</td>
+                <td style="color:#22c55e; font-weight:700;">${c.price.toFixed(2)} €</td>
+                <td><span style="color:#22c55e; font-weight:800;">● Aktiv</span></td>
+                <td><button style="background:none; border:none; color:var(--accent); cursor:pointer; font-weight:700;">EDIT</button></td>
+            </tr>`).join('');
     }
 
-    function saveData() {
-        const client = {
-            company: document.getElementById('c_name').value, phone: document.getElementById('c_phone').value,
-            fname: document.getElementById('c_fname').value, lname: document.getElementById('c_lname').value, email: document.getElementById('c_mail').value,
-            address: document.getElementById('c_address').value, plz: document.getElementById('c_plz').value, city: document.getElementById('c_city').value,
-            token: document.getElementById('c_token').value, package: document.getElementById('c_package').value, 
-            cycle: parseInt(document.getElementById('c_cycle').value), status: "Aktiv", date: new Date().toISOString()
-        };
-        clients.push(client); refreshUI();
-    }
-
-    function savePackage() {
-        const pkg = { 
-            name: document.getElementById('p_name').value, price: parseFloat(document.getElementById('p_price').value || 0), 
-            limit: parseInt(document.getElementById('p_limit').value || 0), testDays: parseInt(document.getElementById('p_test_days').value || 0),
-            isFree: document.getElementById('p_is_free').checked
-        };
-        packages.push(pkg); refreshUI();
-    }
-
-    function downloadBackup() {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({packages, clients}));
-        const dl = document.createElement('a'); dl.setAttribute("href", dataStr); dl.setAttribute("download", "Backup_2026.json"); dl.click();
-    }
-
+    // Initialer Aufruf
     refreshUI();
   </script>
 </body>
