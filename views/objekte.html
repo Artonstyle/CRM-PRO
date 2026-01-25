@@ -10,8 +10,7 @@
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
-    /* Layout */
-    .view-container { display: flex; gap: 20px; align-items: flex-start; transition: all 0.3s ease; }
+    .view-container { display: flex; gap: 20px; align-items: flex-start; }
     .list-section { flex: 1; }
 
     /* Side Panel */
@@ -23,9 +22,8 @@
     }
     .form-panel.active { width: 450px; opacity: 1; padding: 25px; overflow-y: auto; max-height: 90vh; }
 
-    /* Form Elements */
+    /* Form Design */
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .full-width { grid-column: span 2; }
     label { font-size: 10px; color: var(--muted); font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 4px; margin-top: 12px; }
     input, select, textarea { 
       width: 100%; padding: 10px; background: rgba(0,0,0,0.4); 
@@ -37,7 +35,7 @@
       border-radius: 10px; border: 1px dashed var(--accent); 
     }
 
-    /* Table */
+    /* Table Design */
     table { width: 100%; border-collapse: collapse; }
     th { text-align: left; padding: 12px; font-size: 10px; color: var(--muted); text-transform: uppercase; border-bottom: 1px solid var(--glass-border); }
     td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
@@ -58,13 +56,29 @@
       <a href="mitarbeiter.html" class="nav-link"><i data-lucide="hard-hat"></i> Mitarbeiter</a>
       <a href="schichtplan.html" class="nav-link"><i data-lucide="calendar-days"></i> Schichtplan</a>
       <a href="zeiterfassung.html" class="nav-link"><i data-lucide="timer"></i> Zeiterfassung</a>
-      </div>
+      <a href="aufgaben.html" class="nav-link"><i data-lucide="check-square"></i> Aufgaben</a>
+      
+      <div class="nav-label">Operations</div>
+      <a href="finanzen.html" class="nav-link"><i data-lucide="banknote"></i> Finanzen</a>
+      <a href="rechnungen.html" class="nav-link"><i data-lucide="file-text"></i> Rechnungen</a>
+      <a href="angebote.html" class="nav-link"><i data-lucide="file-spreadsheet"></i> Angebote</a>
+      <a href="lager.html" class="nav-link"><i data-lucide="package"></i> Lager</a>
+      <a href="dokumente.html" class="nav-link"><i data-lucide="folder"></i> Dokumente</a>
+      <a href="chat_video.html" class="nav-link"><i data-lucide="video"></i> Chat & Video</a>
+      <a href="analyse.html" class="nav-link"><i data-lucide="bar-chart-3"></i> Analyse</a>
+      
+      <div class="nav-label">SaaS Admin</div>
+      <a href="saas_freischaltung.html" class="nav-link"><i data-lucide="user-plus"></i> SaaS</a>
+      <a href="tarife.html" class="nav-link"><i data-lucide="tags"></i> Tarife</a>
+      <a href="einstellungen.html" class="nav-link"><i data-lucide="settings"></i> Settings</a>
+      <a href="support.html" class="nav-link"><i data-lucide="help-circle"></i> Support</a>
+    </div>
   </aside>
 
   <main class="main">
     <div class="content">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h2 style="margin:0;">Objekt-Verwaltung</h2>
+        <h2 style="margin:0;">Objekt-Verwaltung 2026</h2>
         <button class="btn-main" id="toggleBtn" onclick="toggleForm()" style="width:auto; padding:10px 20px;">+ NEUES OBJEKT</button>
       </div>
 
@@ -80,23 +94,22 @@
                   <th style="text-align:right;">Aktion</th>
                 </tr>
               </thead>
-              <tbody id="objekt-liste">
-                </tbody>
+              <tbody id="objekt-liste"></tbody>
             </table>
           </div>
         </div>
 
         <div class="form-panel" id="sidePanel">
-          <h3 style="margin-top:0; color:var(--accent);">Neues Objekt erfassen</h3>
+          <h3 style="margin-top:0; color:var(--accent);">Objekt-Stammdaten</h3>
           
-          <label>Objekt Name</label>
+          <label>Name des Objekts</label>
           <input type="text" id="o_name" placeholder="z.B. Werkschutz Süd">
 
           <label>Mandant auswählen</label>
           <select id="o_kunde"></select>
 
-          <label>Anschrift (Straße / Nr.)</label>
-          <input type="text" id="o_address" placeholder="Musterstraße 1">
+          <label>Straße / Nr.</label>
+          <input type="text" id="o_address" placeholder="Anschrift">
 
           <div class="form-grid">
             <div><label>PLZ</label><input type="text" id="o_zip" placeholder="12345"></div>
@@ -104,28 +117,24 @@
           </div>
 
           <div class="form-grid">
-            <div><label>Hausmeister</label><input type="text" id="o_caretaker" placeholder="Name"></div>
-            <div><label>HM-Telefon</label><input type="text" id="o_phone" placeholder="0176..."></div>
+            <div><label>Zuständig</label><input type="text" id="o_caretaker" placeholder="Name"></div>
+            <div><label>Telefon</label><input type="text" id="o_phone" placeholder="0176..."></div>
           </div>
 
-          <label>Besuchs-Turnus</label>
+          <label>Turnus</label>
           <select id="o_turnus">
             <option value="Täglich">Täglich</option>
             <option value="Wöchentlich">Wöchentlich</option>
-            <option value="2-Wöchentlich">2-Wöchentlich</option>
             <option value="Monatlich">Monatlich</option>
           </select>
 
           <div class="geo-section">
-            <div style="font-size: 11px; font-weight: 900; color: var(--accent); margin-bottom: 10px;">GEOFENCING (GPS-CHECK)</div>
+            <div style="font-size: 11px; font-weight: 900; color: var(--accent); margin-bottom: 10px;">GEOFENCING</div>
             <div class="form-grid">
-              <div><label>Längengrad (LAT)</label><input type="text" id="o_lat" placeholder="52.5200"></div>
-              <div><label>Breitengrad (LNG)</label><input type="text" id="o_lng" placeholder="13.4050"></div>
+              <div><label>LAT</label><input type="text" id="o_lat" placeholder="52.52"></div>
+              <div><label>LNG</label><input type="text" id="o_lng" placeholder="13.40"></div>
             </div>
           </div>
-
-          <label>Interne Notizen</label>
-          <textarea id="o_notes" placeholder="Besonderheiten..."></textarea>
 
           <div style="display:flex; gap:10px; margin-top:20px;">
             <button class="btn-main" onclick="saveObjekt()">SPEICHERN</button>
@@ -163,8 +172,8 @@
         tbody.innerHTML = data.map(o => `
           <tr>
             <td><strong>${o.name}</strong><br><small style="color:var(--muted);">${o.address || ''}</small></td>
-            <td><span style="color:var(--accent); font-weight:700;">${o.customers?.company || 'Privat'}</span></td>
-            <td>${o.city || '-'}<br><small>${o.turnus || 'Wöchentlich'}</small></td>
+            <td><span style="color:var(--accent); font-weight:700;">${o.customers?.company || 'Unbekannt'}</span></td>
+            <td>${o.city || '-'}<br><small>${o.turnus || 'Standard'}</small></td>
             <td style="text-align:right;">
               <button onclick="deleteObjekt('${o.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer;"><i data-lucide="trash-2" size="16"></i></button>
             </td>
@@ -175,18 +184,17 @@
     }
 
     async function saveObjekt() {
-      // 1. Hole gültige Workspace-ID (behebt Constraint-Fehler)
+      // 1. Hole Workspace ID
       const { data: ws } = await _supabase.from('workspaces').select('id').limit(1).single();
-      const wsId = ws ? ws.id : '8648e581-297d-419b-9c71-292418e26895';
+      const workspaceId = ws ? ws.id : '8648e581-297d-419b-9c71-292418e26895';
 
       const obj = {
         name: document.getElementById('o_name').value,
         customer_id: document.getElementById('o_kunde').value,
-        workspace_id: wsId,
+        workspace_id: workspaceId,
         address: document.getElementById('o_address').value,
         zip: document.getElementById('o_zip').value,
         city: document.getElementById('o_city').value,
-        notes: document.getElementById('o_notes').value,
         caretaker: document.getElementById('o_caretaker').value,
         phone: document.getElementById('o_phone').value,
         turnus: document.getElementById('o_turnus').value,
@@ -203,7 +211,7 @@
     }
 
     async function deleteObjekt(id) {
-      if(!confirm("Wirklich löschen?")) return;
+      if(!confirm("Löschen?")) return;
       await _supabase.from('objects').delete().eq('id', id);
       loadObjekte();
     }
