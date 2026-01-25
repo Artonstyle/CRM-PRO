@@ -41,55 +41,61 @@
       <div class="nav-label">SaaS Admin</div>
       <a href="views/saas_freischaltung.html" class="nav-link"><i data-lucide="user-plus"></i> SaaS</a>
       <a href="views/tarife.html" class="nav-link"><i data-lucide="tags"></i> Tarife</a>
-      <a href="views/support.html" class="nav-link"><i data-lucide="help-circle"></i> Support</a>
       
-      <div class="nav-label">Erscheinungsbild</div>
-      <a href="#" class="nav-link" id="themeToggle">
-        <i data-lucide="sun-moon"></i> Theme wechseln
-      </a>
       <a href="views/einstellungen.html" class="nav-link"><i data-lucide="settings"></i> Settings</a>
+    </div>
+
+    <div class="theme-switch-wrapper">
+      <button class="theme-btn" id="themeToggle">
+        <i data-lucide="sun" id="themeIcon"></i> 
+        <span id="themeText">Heller Modus</span>
+      </button>
     </div>
   </aside>
 
   <main class="main">
-    <header class="header" style="display: flex; justify-content: space-between; align-items: center; padding: 20px 30px; border-bottom: 1px solid var(--glass-border);">
-      <h1 style="font-size: 20px; font-weight: 800; margin: 0;">DASHBOARD ÜBERSICHT</h1>
+    <header class="header" style="display: flex; justify-content: space-between; align-items: center; padding: 20px 30px; border-bottom: 1px solid var(--glass-border); background: var(--glass);">
+      <h1 style="font-size: 20px; font-weight: 800; margin: 0; color: var(--text);">DASHBOARD ÜBERSICHT</h1>
       <div style="display: flex; gap: 15px; align-items: center;">
-        <span style="font-size: 12px; color: var(--muted);">Status: <span style="color: var(--ok, #22c55e);">Online</span></span>
-        <div style="width: 35px; height: 35px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; color: white;">A</div>
+        <span style="font-size: 12px; color: var(--muted);">System-Status: <span style="color: var(--ok, #22c55e); font-weight: 700;">● Online</span></span>
+        <div style="width: 35px; height: 35px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: white; box-shadow: var(--shadow);">A</div>
       </div>
     </header>
 
     <div class="content">
-      <div class="grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+      <div class="grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
         <div class="stat-card card-glass">
-          <div style="font-size: 10px; color: var(--muted); font-weight: 800;">AKTIVE OBJEKTE</div>
-          <div style="font-size: 24px; font-weight: 800; margin: 5px 0;">24</div>
+          <div style="font-size: 10px; color: var(--muted); font-weight: 800; text-transform: uppercase;">Aktive Objekte</div>
+          <div style="font-size: 28px; font-weight: 800; margin: 5px 0; color: var(--text);">24</div>
           <div style="font-size: 11px; color: var(--accent);">+3 diesen Monat</div>
         </div>
         <div class="stat-card card-glass">
-          <div style="font-size: 10px; color: var(--muted); font-weight: 800;">MITARBEITER IM DIENST</div>
-          <div style="font-size: 24px; font-weight: 800; margin: 5px 0;">12</div>
-          <div style="font-size: 11px; color: var(--muted);">Live-Status</div>
+          <div style="font-size: 10px; color: var(--muted); font-weight: 800; text-transform: uppercase;">Personal im Dienst</div>
+          <div style="font-size: 28px; font-weight: 800; margin: 5px 0; color: var(--text);">12</div>
+          <div style="font-size: 11px; color: var(--ok, #22c55e);">Live im Einsatz</div>
         </div>
         <div class="stat-card card-glass">
-          <div style="font-size: 10px; color: var(--muted); font-weight: 800;">OFFENE AUFGABEN</div>
-          <div style="font-size: 24px; font-weight: 800; margin: 5px 0;">08</div>
-          <div style="font-size: 11px; color: var(--danger);">Handlungsbedarf</div>
+          <div style="font-size: 10px; color: var(--muted); font-weight: 800; text-transform: uppercase;">Offene Tickets</div>
+          <div style="font-size: 28px; font-weight: 800; margin: 5px 0; color: var(--text);">08</div>
+          <div style="font-size: 11px; color: var(--danger);">Priorität: Hoch</div>
         </div>
         <div class="stat-card card-glass">
-          <div style="font-size: 10px; color: var(--muted); font-weight: 800;">UMSATZ JANUAR</div>
-          <div style="font-size: 24px; font-weight: 800; margin: 5px 0;">42.8k €</div>
-          <div style="font-size: 11px; color: var(--accent);">+12.4%</div>
+          <div style="font-size: 10px; color: var(--muted); font-weight: 800; text-transform: uppercase;">Umsatz Prognose</div>
+          <div style="font-size: 28px; font-weight: 800; margin: 5px 0; color: var(--text);">42.850 €</div>
+          <div style="font-size: 11px; color: var(--accent);">Januar 2026</div>
         </div>
       </div>
 
-      <div class="card-glass" style="margin-top: 20px; padding: 40px; text-align: center;">
-          <h2>Willkommen im Core Master Kontrollzentrum</h2>
-          <p style="color: var(--muted); max-width: 600px; margin: 10px auto;">
-            Alle Systeme für das Jahr 2026 sind aktiv. Nutzen Sie die Sidebar links, um Ihre Mandanten, 
-            Einsatzpläne und Finanzen zu verwalten.
+      <div class="card-glass" style="margin-top: 25px; padding: 60px 40px; text-align: center; border: 1px dashed var(--glass-border);">
+          <div style="background: rgba(59, 130, 246, 0.1); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+            <i data-lucide="shield-check" style="color: var(--accent); width: 30px; height: 30px;"></i>
+          </div>
+          <h2 style="color: var(--text); margin-bottom: 10px;">Willkommen im Core Master Kontrollzentrum</h2>
+          <p style="color: var(--muted); max-width: 600px; margin: 0 auto 25px; line-height: 1.6;">
+            Alle Sicherheitssysteme für das Geschäftsjahr 2026 sind einsatzbereit. 
+            Überwachen Sie Ihre Mandanten und optimieren Sie Ihre Betriebsabläufe zentral von dieser Konsole aus.
           </p>
+          <button class="btn-main" style="max-width: 250px;">PROJEKT-ÜBERSICHT ÖFFNEN</button>
       </div>
     </div>
   </main>
@@ -101,19 +107,36 @@
 
     // 2. Theme-Logik
     const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    const themeText = document.getElementById('themeText');
     
-    // Check beim Laden: Hat der User ein Theme gespeichert?
-    if (localStorage.getItem('theme') === 'light') {
-      document.body.classList.add('light-mode');
+    // Funktion zum UI-Update des Buttons
+    function updateThemeUI(isLight) {
+      if (isLight) {
+        document.body.classList.add('light-mode');
+        themeIcon.setAttribute('data-lucide', 'moon');
+        themeText.innerText = "Dunkler Modus";
+      } else {
+        document.body.classList.remove('light-mode');
+        themeIcon.setAttribute('data-lucide', 'sun');
+        themeText.innerText = "Heller Modus";
+      }
+      lucide.createIcons(); // Icons neu zeichnen
+    }
+
+    // Check beim Laden
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+      updateThemeUI(true);
     }
 
     themeToggle.addEventListener('click', (e) => {
-      e.preventDefault(); // Verhindert, dass die Seite nach oben springt
-      document.body.classList.toggle('light-mode');
+      e.preventDefault();
+      const isCurrentlyLight = document.body.classList.contains('light-mode');
+      const nextIsLight = !isCurrentlyLight;
       
-      // Einstellung speichern
-      const isLight = document.body.classList.contains('light-mode');
-      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+      updateThemeUI(nextIsLight);
+      localStorage.setItem('theme', nextIsLight ? 'light' : 'dark');
     });
   </script>
 </body>
