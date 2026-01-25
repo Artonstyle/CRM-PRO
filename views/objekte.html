@@ -3,17 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CORE MASTER 2026 | OBJEKTE & GEO-CONTROL</title>
+  <title>CORE MASTER 2026 | OBJEKTE</title>
   
   <link rel="stylesheet" href="../style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 
   <style>
-    .view-container { display: flex; gap: 20px; transition: all 0.3s ease; align-items: flex-start; }
+    .view-container { display: flex; gap: 20px; align-items: flex-start; }
     .list-section { flex: 1; }
 
-    /* Side Panel Styling */
     .form-panel {
       width: 0; opacity: 0; overflow: hidden;
       background: var(--glass); border: 1px solid var(--glass-border);
@@ -33,12 +32,13 @@
     }
 
     .geo-section {
-      margin-top: 15px; padding: 15px; background: rgba(var(--accent-rgb), 0.05);
+      margin-top: 15px; padding: 15px; background: rgba(0,123,255,0.05);
       border-radius: 10px; border: 1px dashed var(--accent);
     }
 
-    /* Status Pillen */
-    .turnus-pill { font-size: 10px; padding: 2px 8px; border-radius: 4px; background: rgba(255,255,255,0.1); color: var(--accent); font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 12px; font-size: 10px; color: var(--muted); text-transform: uppercase; border-bottom: 1px solid var(--glass-border); }
+    td { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
   </style>
 </head>
 <body>
@@ -46,20 +46,37 @@
   <aside class="sidebar">
     <div class="sidebar-header">
       <div style="font-weight: 900; font-size: 20px; color: var(--accent);">CORE MASTER</div>
-      <div style="font-size: 10px; color: var(--muted); font-weight: 700;">GEO-MANAGEMENT 2026</div>
+      <div style="font-size: 10px; color: var(--muted); font-weight: 700;">PRO-MANAGEMENT 2026</div>
     </div>
     <div class="sidebar-content">
       <div class="nav-label">Main Console</div>
       <a href="../admin.html" class="nav-link"><i data-lucide="layout-dashboard"></i> Dashboard</a>
       <a href="kunden.html" class="nav-link"><i data-lucide="users"></i> Kunden</a>
       <a href="objekte.html" class="nav-link active"><i data-lucide="building-2"></i> Objekte</a>
+      <a href="mitarbeiter.html" class="nav-link"><i data-lucide="hard-hat"></i> Mitarbeiter</a>
+      <a href="schichtplan.html" class="nav-link"><i data-lucide="calendar-days"></i> Schichtplan</a>
+      <a href="zeiterfassung.html" class="nav-link"><i data-lucide="timer"></i> Zeiterfassung</a>
+      <a href="aufgaben.html" class="nav-link"><i data-lucide="check-square"></i> Aufgaben</a>
+      <div class="nav-label">Operations</div>
+      <a href="finanzen.html" class="nav-link"><i data-lucide="banknote"></i> Finanzen</a>
+      <a href="rechnungen.html" class="nav-link"><i data-lucide="file-text"></i> Rechnungen</a>
+      <a href="angebote.html" class="nav-link"><i data-lucide="file-spreadsheet"></i> Angebote</a>
+      <a href="lager.html" class="nav-link"><i data-lucide="package"></i> Lager</a>
+      <a href="dokumente.html" class="nav-link"><i data-lucide="folder"></i> Dokumente</a>
+      <a href="chat_video.html" class="nav-link"><i data-lucide="video"></i> Chat & Video</a>
+      <a href="analyse.html" class="nav-link"><i data-lucide="bar-chart-3"></i> Analyse</a>
+      <div class="nav-label">SaaS Admin</div>
+      <a href="saas_freischaltung.html" class="nav-link"><i data-lucide="user-plus"></i> SaaS</a>
+      <a href="tarife.html" class="nav-link"><i data-lucide="tags"></i> Tarife</a>
+      <a href="einstellungen.html" class="nav-link"><i data-lucide="settings"></i> Settings</a>
+      <a href="support.html" class="nav-link"><i data-lucide="help-circle"></i> Support</a>
     </div>
   </aside>
 
   <main class="main">
     <div class="content">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h2 style="margin:0;">Objekt- & Standortverwaltung</h2>
+        <h2 style="margin:0;">Objekt-Verwaltung 2026</h2>
         <button class="btn-main" id="toggleBtn" onclick="toggleForm()" style="width:auto; padding:10px 20px;">+ NEUES OBJEKT</button>
       </div>
 
@@ -70,8 +87,8 @@
               <thead>
                 <tr>
                   <th>Objekt / Adresse</th>
-                  <th>Mandant</th>
-                  <th>Zuständig / Turnus</th>
+                  <th>Mandant (Kunde)</th>
+                  <th>Stadt / Turnus</th>
                   <th style="text-align:right;">Aktion</th>
                 </tr>
               </thead>
@@ -81,32 +98,25 @@
         </div>
 
         <div class="form-panel" id="sidePanel">
-          <h3 style="margin-top:0; color:var(--accent);">Objektdaten 2026</h3>
+          <h3 style="margin-top:0; color:var(--accent);">Objekt erfassen</h3>
           
-          <label>Objekt Name</label>
-          <input type="text" id="o_name" placeholder="z.B. Einkaufszentrum Mitte">
+          <label>Name des Objekts</label>
+          <input type="text" id="o_name" placeholder="z.B. Werkschutz Nord">
 
-          <label>Mandant / Firma</label>
+          <label>Zugehöriger Mandant</label>
           <select id="o_kunde"></select>
 
+          <label>Anschrift</label>
+          <input type="text" id="o_address" placeholder="Straße / Hausnummer">
+
           <div class="form-grid">
-            <div class="full-width">
-              <label>Anschrift</label>
-              <input type="text" id="o_address" placeholder="Musterstraße 123">
-            </div>
-            <div><label>PLZ</label><input type="text" id="o_zip"></div>
-            <div><label>Stadt</label><input type="text" id="o_city"></div>
+            <div><label>PLZ</label><input type="text" id="o_zip" placeholder="12345"></div>
+            <div><label>Stadt</label><input type="text" id="o_city" placeholder="Musterstadt"></div>
           </div>
 
           <div class="form-grid">
-            <div>
-              <label>Hausmeister / Kontakt</label>
-              <input type="text" id="o_caretaker" placeholder="Name">
-            </div>
-            <div>
-              <label>HM-Telefon</label>
-              <input type="text" id="o_phone" placeholder="0176...">
-            </div>
+            <div><label>Hausmeister</label><input type="text" id="o_caretaker" placeholder="Name"></div>
+            <div><label>HM-Telefon</label><input type="text" id="o_phone" placeholder="0176..."></div>
           </div>
 
           <label>Besuchs-Turnus</label>
@@ -115,26 +125,20 @@
             <option value="Wöchentlich">Wöchentlich</option>
             <option value="2-Wöchentlich">2-Wöchentlich</option>
             <option value="Monatlich">Monatlich</option>
-            <option value="Auf Abruf">Auf Abruf</option>
           </select>
 
           <div class="geo-section">
-            <div style="font-size: 11px; font-weight: 900; color: var(--accent); margin-bottom: 10px;">
-              <i data-lucide="map-pin" style="width:12px; height:12px;"></i> GEOFENCING (GPS-CHECK)
-            </div>
+            <div style="font-size: 11px; font-weight: 900; color: var(--accent); margin-bottom: 10px;">GEOFENCING (GPS)</div>
             <div class="form-grid">
-              <div><label>Längengrad (LAT)</label><input type="text" id="o_lat" placeholder="52.5200"></div>
-              <div><label>Breitengrad (LNG)</label><input type="text" id="o_lng" placeholder="13.4050"></div>
+              <div><label>LAT</label><input type="text" id="o_lat" placeholder="52.5200"></div>
+              <div><label>LNG</label><input type="text" id="o_lng" placeholder="13.4050"></div>
             </div>
-            <small style="display:block; margin-top:5px; color:var(--muted); font-size:9px;">
-              Wird für den automatischen Check-In der Mitarbeiter benötigt.
-            </small>
           </div>
 
           <label>Interne Notizen</label>
-          <textarea id="o_notes" placeholder="Besonderheiten (z.B. Schlüssel-Code)"></textarea>
+          <textarea id="o_notes" placeholder="Besonderheiten..."></textarea>
 
-          <div class="btn-group" style="display:flex; gap:10px; margin-top:20px;">
+          <div style="display:flex; gap:10px; margin-top:20px;">
             <button class="btn-main" onclick="saveObjekt()">SPEICHERN</button>
             <button class="btn-main" onclick="toggleForm()" style="background:#374151;">ABBRECHEN</button>
           </div>
@@ -154,27 +158,25 @@
     }
 
     async function loadKundenDropdown() {
-      const { data } = await _supabase.from('clients').select('id, company');
+      // WICHTIG: Hier nutzen wir die Tabelle 'clients' für dein Dropdown
+      const { data } = await _supabase.from('clients').select('id, company').order('company');
       const sel = document.getElementById('o_kunde');
       if(data) sel.innerHTML = data.map(c => `<option value="${c.id}">${c.company}</option>`).join('');
     }
 
     async function loadObjekte() {
-      const { data, error } = await _supabase.from('objects').select('*, clients(company)');
+      const { data, error } = await _supabase
+        .from('objects')
+        .select('*, clients(company)')
+        .order('created_at', { ascending: false });
+
       const tbody = document.getElementById('objekt-liste');
-      
       if(data) {
         tbody.innerHTML = data.map(o => `
           <tr>
-            <td>
-              <div style="font-weight:800;">${o.name}</div>
-              <div style="font-size:11px; color:var(--muted);">${o.address || ''}, ${o.city || ''}</div>
-            </td>
-            <td><span style="color:var(--accent); font-weight:700;">${o.clients?.company || 'SaaS'}</span></td>
-            <td>
-              <div style="font-size:12px;">${o.notes || 'Hausmeister n.N.'}</div>
-              <span class="turnus-pill">${o.city ? 'Standard' : 'Turnus n.V.'}</span>
-            </td>
+            <td><strong>${o.name}</strong><br><small style="color:var(--muted);">${o.address || ''}</small></td>
+            <td><span style="color:var(--accent);">${o.clients?.company || 'Privat'}</span></td>
+            <td>${o.city || '-'}<br><small>${o.turnus || 'Wöchentlich'}</small></td>
             <td style="text-align:right;">
               <button onclick="deleteObjekt('${o.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer;"><i data-lucide="trash-2" size="16"></i></button>
             </td>
@@ -185,20 +187,20 @@
     }
 
     async function saveObjekt() {
-      // Hinweis: Stelle sicher, dass diese Spalten (caretaker, phone, lat, lng, turnus) in deiner Supabase Tabelle 'objects' existieren!
+      // MAPPE DIE FELDER GENAU AUF DEINE SQL-STRUKTUR
       const obj = {
         name: document.getElementById('o_name').value,
-        client_id: document.getElementById('o_kunde').value,
+        customer_id: document.getElementById('o_kunde').value, // Korrekt: customer_id
         address: document.getElementById('o_address').value,
         zip: document.getElementById('o_zip').value,
         city: document.getElementById('o_city').value,
         notes: document.getElementById('o_notes').value,
-        // Hier fügst du die neuen Felder für die DB hinzu:
-        // caretaker: document.getElementById('o_caretaker').value,
-        // phone: document.getElementById('o_phone').value,
-        // turnus: document.getElementById('o_turnus').value,
-        // lat: document.getElementById('o_lat').value,
-        // lng: document.getElementById('o_lng').value
+        caretaker: document.getElementById('o_caretaker').value,
+        phone: document.getElementById('o_phone').value,
+        turnus: document.getElementById('o_turnus').value,
+        lat: document.getElementById('o_lat').value ? parseFloat(document.getElementById('o_lat').value) : null,
+        lng: document.getElementById('o_lng').value ? parseFloat(document.getElementById('o_lng').value) : null,
+        workspace_id: '8648e581-297d-419b-9c71-292418e26895' // Beispiel UUID (muss existieren!)
       };
 
       const { error } = await _supabase.from('objects').insert([obj]);
@@ -207,6 +209,12 @@
       } else {
         alert("Fehler: " + error.message);
       }
+    }
+
+    async function deleteObjekt(id) {
+      if(!confirm("Löschen?")) return;
+      await _supabase.from('objects').delete().eq('id', id);
+      loadObjekte();
     }
 
     document.addEventListener('DOMContentLoaded', loadObjekte);
