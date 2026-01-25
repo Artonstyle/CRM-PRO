@@ -3,86 +3,105 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CORE MASTER 2026 | Mitarbeiter</title>
+  <title>CORE MASTER 2026 | Personalverwaltung</title>
   <link rel="stylesheet" href="../style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
-    /* Das Haupt-Layout: Links Liste, Rechts Formular */
+    :root {
+      --panel-bg: #0f172a; /* Tiefes Nachtblau */
+      --input-bg: rgba(30, 41, 59, 0.5); /* Bläuliches Dunkelgrau */
+      --border-blue: rgba(51, 65, 85, 0.8);
+      --text-muted: #94a3b8;
+    }
+
     .content-wrapper {
       display: grid;
-      grid-template-columns: 1fr 450px; /* Breite des Formulars angepasst */
+      grid-template-columns: 1fr 450px;
       gap: 25px;
       align-items: start;
     }
 
-    /* Weißes Formular-Design basierend auf deinem Bild */
+    /* Dunkles Side-Panel Design */
     .side-editor {
-      background: #ffffff;
+      background: var(--panel-bg);
       border-radius: 16px;
       padding: 30px;
-      color: #333; /* Dunkler Text für Lesbarkeit auf Weiß */
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      color: #f1f5f9;
+      border: 1px solid var(--border-blue);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+      position: sticky;
+      top: 20px;
     }
 
     .side-editor label {
-      font-size: 11px;
-      font-weight: 700;
-      color: #666;
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--accent); /* Dein Blau aus der style.css */
       margin-bottom: 6px;
       display: block;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
     .side-editor input, .side-editor select, .side-editor textarea {
       width: 100%;
       padding: 12px;
-      border: 1px solid #e2e8f0;
+      border: 1px solid var(--border-blue);
       border-radius: 8px;
       font-size: 14px;
-      background: #f8fafc;
+      background: var(--input-bg);
       margin-bottom: 15px;
-      color: #1e293b;
+      color: #fff;
+      transition: all 0.2s;
     }
 
     .side-editor input:focus {
       outline: none;
       border-color: var(--accent);
-      background: #fff;
+      background: rgba(30, 41, 59, 0.8);
     }
 
-    /* Foto-Upload Bereich */
+    /* Foto-Upload Bereich Dunkel */
     .upload-zone {
       display: flex;
       align-items: center;
       gap: 15px;
       margin-bottom: 25px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #f1f5f9;
+      padding: 15px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 12px;
+      border: 1px dashed var(--border-blue);
     }
     .upload-circle {
-      width: 60px;
-      height: 60px;
+      width: 50px;
+      height: 50px;
       border-radius: 50%;
-      background: #f1f5f9;
+      background: var(--input-bg);
       display: flex;
       align-items: center;
       justify-content: center;
       color: var(--accent);
-      border: 1px dashed #cbd5e1;
       cursor: pointer;
     }
 
     .row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
 
-    /* Buttons im Bild-Stil */
+    /* Buttons im Dark-Blue Stil */
     .btn-group {
       display: flex;
       justify-content: flex-end;
       gap: 10px;
       margin-top: 20px;
     }
-    .btn-cancel { background: #f1f5f9; color: #64748b; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
-    .btn-save { background: #1e293b; color: #fff; border: none; padding: 10px 25px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    .btn-cancel { background: transparent; color: var(--text-muted); border: 1px solid var(--border-blue); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    .btn-cancel:hover { background: rgba(255,255,255,0.05); }
+    .btn-save { background: var(--accent); color: #fff; border: none; padding: 10px 25px; border-radius: 8px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); }
+    .btn-save:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    /* Custom Scrollbar für das Panel */
+    textarea::-webkit-scrollbar { width: 5px; }
+    textarea::-webkit-scrollbar-thumb { background: var(--border-blue); border-radius: 10px; }
   </style>
 </head>
 <body>
@@ -101,6 +120,7 @@
       <a href="schichtplan.html" class="nav-link"><i data-lucide="calendar-days"></i> Schichtplan</a>
       <a href="zeiterfassung.html" class="nav-link"><i data-lucide="timer"></i> Zeiterfassung</a>
       <a href="aufgaben.html" class="nav-link"><i data-lucide="check-square"></i> Aufgaben</a>
+      
       <div class="nav-label">Operations</div>
       <a href="finanzen.html" class="nav-link"><i data-lucide="banknote"></i> Finanzen</a>
       <a href="rechnungen.html" class="nav-link"><i data-lucide="file-text"></i> Rechnungen</a>
@@ -109,6 +129,7 @@
       <a href="dokumente.html" class="nav-link"><i data-lucide="folder"></i> Dokumente</a>
       <a href="chat_video.html" class="nav-link"><i data-lucide="video"></i> Chat & Video</a>
       <a href="analyse.html" class="nav-link"><i data-lucide="bar-chart-3"></i> Analyse</a>
+
       <div class="nav-label">SaaS Admin</div>
       <a href="saas_freischaltung.html" class="nav-link"><i data-lucide="user-plus"></i> SaaS</a>
       <a href="tarife.html" class="nav-link"><i data-lucide="tags"></i> Tarife</a>
@@ -119,87 +140,81 @@
 
   <main class="main">
     <header class="header">
-      <h1 style="font-size: 20px; font-weight: 800;">PERSONALVERWALTUNG</h1>
+      <h1 style="font-size: 20px; font-weight: 800;">PERSONAL MANAGEMENT</h1>
     </header>
 
     <div class="content content-wrapper">
       
       <div class="card-glass" style="padding: 0;">
-        <div style="padding: 20px; border-bottom: 1px solid var(--glass-border);">
-            <h3 style="font-size: 14px;">Mitarbeiter Liste</h3>
+        <div style="padding: 20px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between;">
+            <h3 style="font-size: 14px;">Mitarbeiterstamm</h3>
+            <span style="color: var(--accent); font-size: 12px; font-weight: 700;" id="staff-count">0 Aktiv</span>
         </div>
         <div id="staff-list"></div>
       </div>
 
       <div class="side-editor">
         <div class="upload-zone">
-            <div class="upload-circle"><i data-lucide="upload"></i></div>
+            <div class="upload-circle" onclick="document.getElementById('m_photo_input').click()">
+                <i data-lucide="camera"></i>
+                <input type="file" id="m_photo_input" style="display:none">
+            </div>
             <div>
-                <span style="font-weight:700; font-size:14px; display:block;">Foto</span>
-                <span style="font-size:12px; color:#94a3b8;">Datei auswählen...</span>
+                <span style="font-weight:700; font-size:14px; display:block; color:#fff;">Profilbild</span>
+                <span style="font-size:11px; color:var(--text-muted);">PNG oder JPG hochladen</span>
             </div>
         </div>
 
         <div class="row">
-            <div><label>Vorname *</label><input type="text" id="m_vn"></div>
-            <div><label>Nachname *</label><input type="text" id="m_nn"></div>
+            <div><label>Vorname *</label><input type="text" id="m_vn" placeholder="z.B. Maria"></div>
+            <div><label>Nachname *</label><input type="text" id="m_nn" placeholder="z.B. Schneider"></div>
         </div>
 
         <div class="row">
-            <div><label>Personalnummer</label><input type="text" id="m_pnr"></div>
-            <div><label>E-Mail</label><input type="email" id="m_mail"></div>
+            <div><label>Personal-ID</label><input type="text" id="m_pnr" placeholder="E-2026-001"></div>
+            <div><label>E-Mail</label><input type="email" id="m_mail" placeholder="name@firma.de"></div>
         </div>
 
         <div class="row">
-            <div><label>Telefon</label><input type="text" id="m_phone"></div>
+            <div><label>Mobiltelefon</label><input type="text" id="m_phone" placeholder="+49..."></div>
             <div>
                 <label>Position</label>
                 <select id="m_pos">
-                    <option>Reinigungskraft</option>
                     <option>Objektleiter</option>
-                    <option>Sicherheitsdienst</option>
+                    <option>Sicherheitskraft</option>
+                    <option>Reinigungsservice</option>
+                    <option>Verwaltung</option>
                 </select>
             </div>
         </div>
 
         <div class="row">
             <div>
-                <label>Beschäftigungsart</label>
-                <select id="m_type">
-                    <option>Vollzeit</option>
-                    <option>Teilzeit</option>
-                    <option>Minijob</option>
+                <label>Status</label>
+                <select id="m_status">
+                    <option>Aktiv</option>
+                    <option>Urlaub</option>
+                    <option>Krank</option>
+                    <option>Inaktiv</option>
                 </select>
             </div>
             <div><label>Stundenlohn (€)</label><input type="number" id="m_wage" value="16.50"></div>
         </div>
 
-        <div class="row">
-            <div><label>Eintrittsdatum</label><input type="date" id="m_date"></div>
-            <div>
-                <label>Status</label>
-                <select id="m_status">
-                    <option>Aktiv</option>
-                    <option>Inaktiv</option>
-                    <option>Urlaub</option>
-                </select>
-            </div>
-        </div>
-
-        <label>Adresse</label>
-        <input type="text" id="m_addr">
+        <label>Anschrift</label>
+        <input type="text" id="m_addr" placeholder="Straße und Hausnummer">
 
         <div class="row">
             <div><label>PLZ</label><input type="text" id="m_zip"></div>
             <div><label>Stadt</label><input type="text" id="m_city"></div>
         </div>
 
-        <label>Notizen</label>
-        <textarea id="m_notes" rows="3"></textarea>
+        <label>Interne Notizen</label>
+        <textarea id="m_notes" rows="2" placeholder="Besonderheiten, Qualifikationen..."></textarea>
 
         <div class="btn-group">
-            <button class="btn-cancel" onclick="resetForm()">Abbrechen</button>
-            <button class="btn-save" onclick="saveStaff()">Erstellen</button>
+            <button class="btn-cancel" onclick="resetForm()">LEEREN</button>
+            <button class="btn-save" onclick="saveStaff()">ERSTELLEN</button>
         </div>
       </div>
 
@@ -213,16 +228,23 @@
 
     async function loadStaff() {
       const { data } = await _supabase.from('employees').select('*').order('created_at', {ascending: false});
+      document.getElementById('staff-count').innerText = data.length + " Personen";
       document.getElementById('staff-list').innerHTML = data.map(m => `
-        <div style="display:flex; align-items:center; padding:15px; border-bottom:1px solid var(--glass-border); justify-content:space-between;">
+        <div style="display:flex; align-items:center; padding:15px; border-bottom:1px solid var(--glass-border); justify-content:space-between; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
             <div style="display:flex; align-items:center; gap:12px;">
-                <div style="width:35px; height:35px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:12px;">${m.first_name[0]}</div>
+                <div style="width:38px; height:38px; border-radius:50%; background:linear-gradient(45deg, var(--accent), #1e40af); display:flex; align-items:center; justify-content:center; font-weight:900; font-size:12px; color:white; border: 2px solid rgba(255,255,255,0.1);">${m.first_name[0]}${m.last_name[0]}</div>
                 <div>
-                    <div style="font-weight:700;">${m.first_name} ${m.last_name}</div>
-                    <div style="font-size:11px; color:var(--muted);">${m.role || 'Personal'}</div>
+                    <div style="font-weight:700; color: #f1f5f9;">${m.first_name} ${m.last_name}</div>
+                    <div style="font-size:10px; color:var(--accent); font-weight:700; text-transform:uppercase;">${m.role || 'Personal'}</div>
                 </div>
             </div>
-            <button onclick="deleteStaff('${m.id}')" style="background:none; border:none; color:var(--muted); cursor:pointer;"><i data-lucide="trash-2" size="14"></i></button>
+            <div style="display:flex; align-items:center; gap:15px;">
+                <div style="text-align:right; font-size:11px; color:var(--muted);">
+                    ${m.city || 'Kein Ort'}<br>
+                    <span style="color:#22c55e;">● Online</span>
+                </div>
+                <button onclick="deleteStaff('${m.id}')" style="background:none; border:none; color:rgba(255,255,255,0.1); cursor:pointer;"><i data-lucide="trash-2" size="14"></i></button>
+            </div>
         </div>
       `).join('');
       lucide.createIcons();
@@ -244,15 +266,10 @@
       
       const { error } = await _supabase.from('employees').insert([payload]);
       if(error) alert(error.message);
-      else {
-        alert("Mitarbeiter erstellt!");
-        location.reload();
-      }
+      else location.reload();
     }
 
-    function resetForm() {
-        document.querySelectorAll('input, textarea').forEach(el => el.value = '');
-    }
+    function resetForm() { document.querySelectorAll('input, textarea').forEach(el => el.value = ''); }
 
     document.addEventListener('DOMContentLoaded', loadStaff);
   </script>
