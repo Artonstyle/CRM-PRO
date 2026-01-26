@@ -2,90 +2,84 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CORE MASTER 2026 | Personal</title>
+  <title>CORE MASTER 2026</title>
   <link rel="stylesheet" href="../style.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     :root { --sidebar-w: 260px; --core-bg: #0f111a; --core-card: #161b22; --core-accent: #2563eb; --core-border: #30363d; }
     body { display: flex; background: var(--core-bg); color: white; font-family: 'Inter', sans-serif; margin: 0; min-height: 100vh; }
-    
-    /* SIDEBAR */
     .sidebar { width: var(--sidebar-w); background: var(--core-card); border-right: 1px solid var(--core-border); position: fixed; height: 100vh; display: flex; flex-direction: column; }
-    .nav-logo { padding: 30px 25px; font-weight: 900; font-size: 22px; color: var(--core-accent); }
+    .nav-logo { padding: 30px 25px; font-weight: 900; font-size: 22px; color: var(--core-accent); text-transform: uppercase; }
     .nav-item { padding: 15px 25px; display: flex; align-items: center; gap: 12px; color: #8b949e; text-decoration: none; cursor: pointer; font-size: 14px; }
     .nav-item.active { background: rgba(37, 99, 235, 0.1); color: var(--core-accent); border-right: 3px solid var(--core-accent); }
-    
-    /* CONTENT */
-    .content { margin-left: var(--sidebar-w); flex: 1; padding: 40px; max-width: 1100px; }
-    .form-card { background: var(--core-card); border: 1px solid var(--core-border); border-radius: 12px; padding: 25px; margin-bottom: 25px; }
-    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 15px; }
-    
+    .content { margin-left: var(--sidebar-w); flex: 1; padding: 40px; max-width: 1000px; }
+    .card { background: var(--core-card); border: 1px solid var(--core-border); border-radius: 12px; padding: 25px; margin-bottom: 25px; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; }
     label { display: block; font-size: 10px; color: #8b949e; text-transform: uppercase; font-weight: 700; margin-bottom: 8px; }
-    input, select, textarea { width: 100%; padding: 12px; background: #0d1117; border: 1px solid var(--core-border); border-radius: 8px; color: #fff; font-size: 14px; }
-    
-    .btn-save { background: var(--core-accent); color: white; border: none; padding: 20px; border-radius: 8px; font-weight: 800; cursor: pointer; width: 100%; text-transform: uppercase; margin-top: 20px; }
-    .photo-prev { width: 100px; height: 100px; border-radius: 50%; background: #0d1117; border: 2px dashed var(--core-border); margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-    .photo-prev img { width: 100%; height: 100%; object-fit: cover; }
+    input, select, textarea { width: 100%; padding: 12px; background: #0d1117; border: 1px solid var(--core-border); border-radius: 8px; color: #fff; }
+    .btn-save { background: var(--core-accent); color: white; border: none; padding: 18px; border-radius: 8px; font-weight: 800; cursor: pointer; width: 100%; text-transform: uppercase; }
+    .avatar-upload { width: 100px; height: 100px; border-radius: 50%; background: #0d1117; border: 2px dashed var(--core-border); margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .avatar-upload img { width: 100%; height: 100%; object-fit: cover; }
   </style>
 </head>
 <body>
 
   <aside class="sidebar">
     <div class="nav-logo">CORE MASTER</div>
-    <div class="nav-item"><i data-lucide="layout-dashboard"></i> Dashboard</div>
+    <div class="nav-item" onclick="location.href='dashboard.html'"><i data-lucide="layout-dashboard"></i> Dashboard</div>
     <div class="nav-item active"><i data-lucide="users"></i> Mitarbeiter</div>
     <div class="nav-item"><i data-lucide="calendar"></i> Schichtplan</div>
+    <div class="nav-item"><i data-lucide="file-text"></i> Dokumente</div>
     <div class="nav-item"><i data-lucide="settings"></i> Einstellungen</div>
   </aside>
 
   <main class="content">
-    <h1>Neuer Mitarbeiter</h1>
+    <h1 style="margin-top:0">Neuer Mitarbeiter (18 Datenfelder)</h1>
 
-    <div class="form-card" style="text-align:center">
-      <div id="p-view" class="photo-prev"><i data-lucide="camera" color="#30363d"></i></div>
-      <input type="file" id="p-file" style="display:none" onchange="showP()">
-      <button onclick="document.getElementById('p-file').click()" style="background:none; border:1px solid var(--core-accent); color:var(--core-accent); padding:8px 15px; border-radius:5px; cursor:pointer; font-size:11px;">BILD AUSWÄHLEN</button>
+    <div class="card" style="text-align:center">
+      <div id="p-prev" class="avatar-upload"><i data-lucide="camera" color="#30363d"></i></div>
+      <input type="file" id="p-input" style="display:none" onchange="preview()">
+      <button onclick="document.getElementById('p-input').click()" style="background:none; border:1px solid var(--core-accent); color:var(--core-accent); padding:5px 15px; border-radius:15px; cursor:pointer; font-size:10px;">BILD HOCHLADEN</button>
     </div>
 
-    <div class="form-card">
-      <div class="grid-3">
-        <div><label>Vorname</label><input type="text" id="v_vn"></div>
-        <div><label>Nachname</label><input type="text" id="v_nn"></div>
-        <div><label>Personalnummer</label><input type="text" id="v_pnr"></div>
+    <div class="card">
+      <div class="grid">
+        <div><label>Vorname</label><input type="text" id="m_vn"></div>
+        <div><label>Nachname</label><input type="text" id="m_nn"></div>
+        <div><label>Personalnummer</label><input type="text" id="m_pnr"></div>
       </div>
-      <div class="grid-3">
-        <div><label>E-Mail</label><input type="email" id="v_mail"></div>
-        <div><label>Telefon</label><input type="text" id="v_tel"></div>
-        <div><label>Position</label><input type="text" id="v_pos"></div>
-      </div>
-    </div>
-
-    <div class="form-card">
-      <div class="grid-3">
-        <div><label>Lohn / Std (€)</label><input type="number" id="v_wage" step="0.01"></div>
-        <div><label>Wochenstunden</label><input type="number" id="v_hours"></div>
-        <div><label>Beschäftigung</label><select id="v_type"><option>Vollzeit</option><option>Teilzeit</option><option>Minijob</option></select></div>
-      </div>
-      <div class="grid-3">
-        <div><label>IBAN</label><input type="text" id="v_iban"></div>
-        <div><label>BIC</label><input type="text" id="v_bic"></div>
-        <div><label>Krankenkasse</label><input type="text" id="v_ins"></div>
+      <div class="grid">
+        <div><label>E-Mail</label><input type="email" id="m_mail"></div>
+        <div><label>Telefon</label><input type="text" id="m_tel"></div>
+        <div><label>Geburtsdatum</label><input type="date" id="m_geb"></div>
       </div>
     </div>
 
-    <div class="form-card">
-      <div><label>Vollständige Adresse</label><input type="text" id="v_addr"></div>
-      <div class="grid-3" style="margin-top:20px;">
-        <div><label>Eintritt</label><input type="date" id="v_entry"></div>
-        <div><label>Status</label><select id="v_status"><option>Aktiv</option><option>Inaktiv</option></select></div>
-        <div><label>Geburtsdatum</label><input type="date" id="v_geb"></div>
+    <div class="card">
+      <div class="grid">
+        <div><label>Position</label><input type="text" id="m_pos"></div>
+        <div><label>Lohn / Std (€)</label><input type="number" id="m_wage" step="0.01"></div>
+        <div><label>Stunden / Woche</label><input type="number" id="m_hours"></div>
       </div>
-      <div style="margin-top:20px;"><label>Notizen</label><textarea id="v_notes" rows="2"></textarea></div>
+      <div class="grid">
+        <div><label>IBAN</label><input type="text" id="m_iban"></div>
+        <div><label>BIC</label><input type="text" id="m_bic"></div>
+        <div><label>Krankenkasse</label><input type="text" id="m_ins"></div>
+      </div>
     </div>
 
-    <button class="btn-save" onclick="saveData()">MITARBEITER FINAL SPEICHERN</button>
+    <div class="card">
+      <div style="margin-bottom:20px"><label>Adresse</label><input type="text" id="m_addr"></div>
+      <div class="grid">
+        <div><label>Eintritt</label><input type="date" id="m_entry"></div>
+        <div><label>Beschäftigung</label><select id="m_type"><option>Vollzeit</option><option>Teilzeit</option><option>Minijob</option></select></div>
+        <div><label>Status</label><select id="m_status"><option>Aktiv</option><option>Inaktiv</option></select></div>
+      </div>
+      <div style="margin-top:20px"><label>Notizen</label><textarea id="m_notes" rows="2"></textarea></div>
+    </div>
+
+    <button class="btn-save" onclick="save()">Mitarbeiter final speichern</button>
   </main>
 
   <script src="../config.js"></script>
@@ -93,50 +87,48 @@
     lucide.createIcons();
     const WS_ID = '8648e581-297d-419b-9c71-292418e26895';
 
-    function showP() {
-      const f = document.getElementById('p-file').files[0];
+    function preview() {
+      const f = document.getElementById('p-input').files[0];
       if(f) {
         const r = new FileReader();
-        r.onload = e => document.getElementById('p-view').innerHTML = `<img src="${e.target.result}">`;
+        r.onload = e => document.getElementById('p-prev').innerHTML = `<img src="${e.target.result}">`;
         r.readAsDataURL(f);
       }
     }
 
-    async function saveData() {
-      // Foto Upload
+    async function save() {
       let url = null;
-      const f = document.getElementById('p-file').files[0];
+      const f = document.getElementById('p-input').files[0];
       if(f) {
         const path = `${WS_ID}/${Date.now()}_${f.name}`;
         await _supabase.storage.from('avatars').upload(path, f);
         url = _supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl;
       }
 
-      // Speichern
       const { error } = await _supabase.from('employees').insert([{
         workspace_id: WS_ID,
-        first_name: document.getElementById('v_vn').value,
-        last_name: document.getElementById('v_nn').value,
-        email: document.getElementById('v_mail').value,
-        role: document.getElementById('v_pos').value,
-        employee_number: document.getElementById('v_pnr').value,
-        hourly_wage: parseFloat(document.getElementById('v_wage').value) || 0,
-        address: document.getElementById('v_addr').value,
-        notes: document.getElementById('v_notes').value,
+        first_name: document.getElementById('m_vn').value,
+        last_name: document.getElementById('m_nn').value,
+        email: document.getElementById('m_mail').value,
+        role: document.getElementById('m_pos').value,
         avatar_url: url,
-        phone: document.getElementById('v_tel').value,
-        iban: document.getElementById('v_iban').value,
-        bic: document.getElementById('v_bic').value,
-        insurance: document.getElementById('v_ins').value,
-        weekly_hours: document.getElementById('v_hours').value,
-        employment_type: document.getElementById('v_type').value,
-        status: document.getElementById('v_status').value,
-        entry_date: document.getElementById('v_entry').value || null,
-        birth_date: document.getElementById('v_geb').value || null
+        employee_number: document.getElementById('m_pnr').value,
+        hourly_wage: parseFloat(document.getElementById('m_wage').value) || 0,
+        address: document.getElementById('m_addr').value,
+        notes: document.getElementById('m_notes').value,
+        phone: document.getElementById('m_tel').value,
+        iban: document.getElementById('m_iban').value,
+        bic: document.getElementById('m_bic').value,
+        insurance: document.getElementById('m_ins').value,
+        weekly_hours: document.getElementById('m_hours').value,
+        employment_type: document.getElementById('m_type').value,
+        status: document.getElementById('m_status').value,
+        entry_date: document.getElementById('m_entry').value || null,
+        birth_date: document.getElementById('m_geb').value || null
       }]);
 
       if(error) alert("Fehler: " + error.message);
-      else { alert("Erfolgreich gespeichert!"); location.reload(); }
+      else { alert("Erfolg! Mitarbeiter wurde angelegt."); location.reload(); }
     }
   </script>
 </body>
